@@ -1,0 +1,642 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>745</width>
+    <height>581</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Olga</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>1</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="baseSize">
+    <size>
+     <width>0</width>
+     <height>360</height>
+    </size>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="spacing">
+     <number>1</number>
+    </property>
+    <property name="leftMargin">
+     <number>4</number>
+    </property>
+    <property name="topMargin">
+     <number>4</number>
+    </property>
+    <property name="rightMargin">
+     <number>4</number>
+    </property>
+    <property name="bottomMargin">
+     <number>4</number>
+    </property>
+    <item>
+     <widget class="QTableView" name="mainTableView">
+      <property name="baseSize">
+       <size>
+        <width>0</width>
+        <height>360</height>
+       </size>
+      </property>
+      <property name="alternatingRowColors">
+       <bool>true</bool>
+      </property>
+      <property name="wordWrap">
+       <bool>false</bool>
+      </property>
+      <attribute name="horizontalHeaderDefaultSectionSize">
+       <number>80</number>
+      </attribute>
+      <attribute name="horizontalHeaderMinimumSectionSize">
+       <number>10</number>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>18</number>
+      </attribute>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>745</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionLoadStructures"/>
+    <addaction name="actionLoadSettings"/>
+    <addaction name="actionSaveSettings"/>
+    <addaction name="actionExportData"/>
+   </widget>
+   <widget class="QMenu" name="menuAdd">
+    <property name="title">
+     <string>Add</string>
+    </property>
+    <addaction name="actionAddLabellingPosition"/>
+    <addaction name="actionAddDistance"/>
+    <addaction name="actionAddDomain"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuAdd"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <property name="windowTitle">
+    <string>Toolbar</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionLoadStructures"/>
+   <addaction name="actionExportStructures"/>
+   <addaction name="actionLoadSettings"/>
+   <addaction name="actionSaveSettings"/>
+   <addaction name="actionExportData"/>
+   <addaction name="separator"/>
+   <addaction name="actionExportCylinders"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QDockWidget" name="labellingPositionsDockWidget">
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <property name="windowTitle">
+    <string>Labelling Positions</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <property name="leftMargin">
+      <number>4</number>
+     </property>
+     <property name="topMargin">
+      <number>4</number>
+     </property>
+     <property name="rightMargin">
+      <number>4</number>
+     </property>
+     <property name="bottomMargin">
+      <number>4</number>
+     </property>
+     <item>
+      <widget class="QTableView" name="labellingPositionsTableView">
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>80</number>
+       </attribute>
+       <attribute name="horizontalHeaderMinimumSectionSize">
+        <number>10</number>
+       </attribute>
+       <attribute name="verticalHeaderDefaultSectionSize">
+        <number>18</number>
+       </attribute>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="distancesDockWidget">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <property name="windowTitle">
+    <string>Distances</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_4">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <property name="leftMargin">
+      <number>4</number>
+     </property>
+     <property name="topMargin">
+      <number>4</number>
+     </property>
+     <property name="rightMargin">
+      <number>4</number>
+     </property>
+     <property name="bottomMargin">
+      <number>4</number>
+     </property>
+     <item>
+      <widget class="QTableView" name="distancesTableView">
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>80</number>
+       </attribute>
+       <attribute name="horizontalHeaderMinimumSectionSize">
+        <number>10</number>
+       </attribute>
+       <attribute name="verticalHeaderDefaultSectionSize">
+        <number>18</number>
+       </attribute>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="domainsDockWidget">
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <property name="windowTitle">
+    <string>Domains</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_5">
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <property name="leftMargin">
+      <number>4</number>
+     </property>
+     <property name="topMargin">
+      <number>4</number>
+     </property>
+     <property name="rightMargin">
+      <number>4</number>
+     </property>
+     <property name="bottomMargin">
+      <number>4</number>
+     </property>
+     <item>
+      <widget class="QTableView" name="domainsTableView">
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>80</number>
+       </attribute>
+       <attribute name="horizontalHeaderMinimumSectionSize">
+        <number>10</number>
+       </attribute>
+       <attribute name="verticalHeaderDefaultSectionSize">
+        <number>18</number>
+       </attribute>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="logDockWidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="baseSize">
+    <size>
+     <width>0</width>
+     <height>80</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>Error log</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="spacing">
+      <number>4</number>
+     </property>
+     <property name="leftMargin">
+      <number>4</number>
+     </property>
+     <property name="topMargin">
+      <number>4</number>
+     </property>
+     <property name="rightMargin">
+      <number>4</number>
+     </property>
+     <property name="bottomMargin">
+      <number>4</number>
+     </property>
+     <item>
+      <widget class="QTextEdit" name="logTextEdit">
+       <property name="baseSize">
+        <size>
+         <width>0</width>
+         <height>80</height>
+        </size>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <action name="actionAddLabellingPosition">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/mail-tagged.svgz</normaloff>:/icons/mail-tagged.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>Add Labelling Position</string>
+   </property>
+   <property name="toolTip">
+    <string>Add Labelling Position</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actionAddDistance">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/ruler-icon.png</normaloff>:/icons/ruler-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Distance</string>
+   </property>
+   <property name="toolTip">
+    <string>Add Distance</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionAddDomain">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/Red_cylinder.png</normaloff>:/icons/Red_cylinder.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Domain</string>
+   </property>
+   <property name="toolTip">
+    <string>Add Body</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionLoadStructures">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/svn-update.svgz</normaloff>:/icons/svn-update.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Import structure(s)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="actionSaveSettings">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/document-save.svgz</normaloff>:/icons/document-save.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Save settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Save labelling positions, distances or body descriptions</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionLoadSettings">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/document-open.svgz</normaloff>:/icons/document-open.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Open settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Load labelling positions, distances or body descriptions</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionUniformSampling">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/quickopen.svgz</normaloff>:/icons/quickopen.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>Uniform Sampling</string>
+   </property>
+   <property name="toolTip">
+    <string>Generate structures by uniform sampling</string>
+   </property>
+  </action>
+  <action name="actionMetropolisSampling">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/roll.svgz</normaloff>:/icons/roll.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>Metropolis Sampling</string>
+   </property>
+   <property name="toolTip">
+    <string>Generate structures by metropolis sampling</string>
+   </property>
+  </action>
+  <action name="actionExportData">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/application-x-gnumeric.svgz</normaloff>:/icons/application-x-gnumeric.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Export data</string>
+   </property>
+   <property name="toolTip">
+    <string>Export calculated values</string>
+   </property>
+  </action>
+  <action name="actionExportStructures">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/svn-commit.svgz</normaloff>:/icons/svn-commit.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>Export Structures</string>
+   </property>
+  </action>
+  <action name="actionExportCylinders">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/cylinders.png</normaloff>:/icons/cylinders.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export cylinders</string>
+   </property>
+   <property name="toolTip">
+    <string>Export cylinders domain representation for pymol</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionLoadStructures</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>loadStructures()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>301</x>
+     <y>265</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionLoadSettings</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>loadJson()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>301</x>
+     <y>265</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSaveSettings</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>saveJson()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>301</x>
+     <y>265</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionMetropolisSampling</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>metropolisSampling()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>301</x>
+     <y>265</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionExportData</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>exportData()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>301</x>
+     <y>265</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionExportStructures</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>exportStructures()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>372</x>
+     <y>290</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionAddDistance</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>insertDistances()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>372</x>
+     <y>290</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionAddDomain</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>insertDomains()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>372</x>
+     <y>290</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionAddLabellingPosition</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>insertPositions()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>372</x>
+     <y>290</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionExportCylinders</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>exportCylinders()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>372</x>
+     <y>290</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>loadJson()</slot>
+  <slot>saveJson()</slot>
+  <slot>metropolisSampling()</slot>
+  <slot>exportData()</slot>
+  <slot>exportStructures()</slot>
+  <slot>insertDistances(int,unsigned)</slot>
+  <slot>insertDistances()</slot>
+  <slot>insertDomains()</slot>
+  <slot>insertPositions()</slot>
+  <slot>exportCylinders()</slot>
+ </slots>
+</ui>

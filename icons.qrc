@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/ruler-icon.png</file>
+        <file>icons/Red_cylinder.png</file>
+        <file>icons/quickopen-file.svgz</file>
+        <file>icons/quickopen.svgz</file>
+        <file>icons/roll.svgz</file>
+        <file>icons/application-exit.svgz</file>
+        <file>icons/document-export.svgz</file>
+        <file>icons/document-import.svgz</file>
+        <file>icons/document-open-folder.svgz</file>
+        <file>icons/document-open.svgz</file>
+        <file>icons/document-save-as.svgz</file>
+        <file>icons/document-save.svgz</file>
+        <file>icons/mail-tagged.svgz</file>
+        <file>icons/application-x-gnumeric.svgz</file>
+        <file>icons/svn-update.svgz</file>
+        <file>icons/svn-commit.svgz</file>
+        <file>icons/cylinders.png</file>
+    </qresource>
+</RCC>
