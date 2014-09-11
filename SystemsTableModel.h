@@ -7,7 +7,7 @@
 #include <QItemSelectionModel>
 
 #include <MolecularSystem.h>
-#include <MolecularSystemDomain.h>
+#include "AV/MolecularSystemDomain.h"
 #include "DomainTableModel.h"
 #include "DistanceTableModel.h"
 #include "PositionTableModel.h"

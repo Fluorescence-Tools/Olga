@@ -4,7 +4,7 @@
 #include <QAbstractTableModel>
 #include <QVector>
 #include <QJsonArray>
-#include "MolecularSystemDomain.h"
+#include "AV/MolecularSystemDomain.h"
 
 class DomainTableModel : public QAbstractTableModel
 {

@@ -11,22 +11,22 @@ TARGET = Olga
 
 TEMPLATE = app
 
-QMAKE_CXXFLAGS += -std=c++11 -pthread -Wl,--no-as-needed
-QMAKE_LFLAGS += -std=c++11 -pthread -Wl,--no-as-needed
+QMAKE_CXXFLAGS += -std=c++11 #-pthread -Wl,--no-as-needed
+QMAKE_LFLAGS += -std=c++11 #-pthread -Wl,--no-as-needed
 
-
-INCLUDEPATH += ../include ../include/AV
+INCLUDEPATH += ../include
 
 unix:{
-INCLUDEPATH += /usr/include/eigen3
+INCLUDEPATH += /usr/include/eigen3 /home/dimura/opt/Pteros/include
+LIBS += -L"/home/dimura/opt/Pteros/lib"
 }
 
 win32:{
-INCLUDEPATH += ..\ext-qt-5.2.1-x64-mingw482r2-sjlj\include ..\ext-qt-5.2.1-x64-mingw482r2-sjlj\include\Eigen
-LIBS += -L"..\ext-qt-5.2.1-x64-mingw482r2-sjlj\dlls"
+INCLUDEPATH += C:/boost64/include/boost-1_56 ../include/Eigen C:/Pteros/include/
+LIBS += -L"C:/Pteros/lib"
 }
 
-LIBS += -lBALL
+LIBS += -lpteros -lpteros_analysis -ltng_io
 
 RESOURCES += \
     icons.qrc
@@ -41,8 +41,13 @@ HEADERS += \
     DomainTableModel.h \
     mainwindow.h \
     MolecularSystem.h \
-    ../include/AV/av_routines.h \
-    DistanceDelegate.h
+    DistanceDelegate.h \
+    AV/av_routines.h \
+    AV/Distance.h \
+    AV/MolecularSystemDomain.h \
+    AV/Position.h \
+    AV/PositionSimulation.h \
+    AV/PositionSimulationResult.h
 
 SOURCES += \
     PositionTableModel.cpp \
@@ -52,11 +57,11 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     MolecularSystem.cpp \
-    ../include/AV/Distance.cpp \
-    ../include/AV/MolecularSystemDomain.cpp \
-    ../include/AV/Position.cpp \
-    ../include/AV/PositionSimulation.cpp \
-    ../include/AV/PositionSimulationResult.cpp \
-    ../include/AV/av_routines.cpp \
-    DistanceDelegate.cpp
+    DistanceDelegate.cpp \
+    AV/av_routines.cpp \
+    AV/Distance.cpp \
+    AV/MolecularSystemDomain.cpp \
+    AV/Position.cpp \
+    AV/PositionSimulation.cpp \
+    AV/PositionSimulationResult.cpp
 

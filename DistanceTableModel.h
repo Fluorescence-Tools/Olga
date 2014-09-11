@@ -4,7 +4,7 @@
 #include <QVector>
 #include <QAbstractTableModel>
 
-#include "Distance.h"
+#include "AV/Distance.h"
 
 class DistanceTableModel : public QAbstractTableModel
 {
@@ -25,7 +25,7 @@ public:
     QJsonObject jsonArray() const;
     const std::vector<Distance>& distances() const
     {
-        return _distances;
+	return _distances;
     }
 signals:
 

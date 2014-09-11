@@ -5,7 +5,7 @@
 #include <QVector>
 #include <QJsonArray>
 
-#include "Position.h"
+#include "AV/Position.h"
 
 class PositionTableModel : public QAbstractTableModel
 {
