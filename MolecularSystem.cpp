@@ -117,7 +117,13 @@ bool MolecularSystem::save(const QString &_filename) const
 
 double MolecularSystem::chi2(const std::vector<Position> &positions, const std::vector<Distance> &distances) const
 {
-	return Position::chi2(system,positions,distances);
+	double d=Position::chi2(system,positions,distances);
+	if (std::isnan(d))
+	{
+		std::cerr<<"Some distances could not be calculated for structure "<<
+			   this->name()<<std::endl;
+	}
+	return d;
 }
 
 float pterosVDW(const pteros::System &system, int i)
@@ -175,7 +181,7 @@ bool MolecularSystem::loadSystem(const QString& _filename,pteros::System &system
 
 bool MolecularSystem::loadPml() const
 {
-/*	std::map<QString,BALL::System> bodies;//name,molecule
+/*	std::map<QString,pteros::System> bodies;//name,molecule
 	QFile file(_filename);
 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 		return false;
@@ -244,7 +250,10 @@ bool MolecularSystem::loadPml() const
 
 			if(itBody->second.getMolecule(0)==0)
 			{
-				std::cerr << _filename.toLocal8Bit().data() <<": molecule has not been loaded ("<<name.toLocal8Bit().data()<<"), can not rotate"<<std::endl;
+				std::cerr << _filename.toLocal8Bit().data() <<
+					     ": molecule has not been loaded ("<<
+					     name.toLocal8Bit().data()<<
+					     "), can not rotate"<<std::endl;
 				continue;
 			}
 			itBody->second.getMolecule(0)->apply(translation);
@@ -290,7 +299,7 @@ bool MolecularSystem::loadPml() const
 	for(it_type iterator = bodies.begin(); iterator != bodies.end(); iterator++)
 	{
 		system.append( *(iterator->second.getMolecule(0)) );
-	}*/
-	return true;
+	}
+	return true;*/
 }
 

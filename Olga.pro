@@ -14,16 +14,20 @@ TEMPLATE = app
 QMAKE_CXXFLAGS += -std=c++11 #-pthread -Wl,--no-as-needed
 QMAKE_LFLAGS += -std=c++11 #-pthread -Wl,--no-as-needed
 
-INCLUDEPATH += ../include
+INCLUDEPATH += ../include /usr/include/eigen3
 
 unix:{
-INCLUDEPATH += /usr/include/eigen3 /home/dimura/opt/Pteros/include
+INCLUDEPATH += /home/dimura/opt/Pteros/include
 LIBS += -L"/home/dimura/opt/Pteros/lib"
 }
 
 win32:{
-INCLUDEPATH += C:/boost64/include/boost-1_56 ../include/Eigen C:/Pteros/include/
-LIBS += -L"C:/Pteros/lib"
+QTPLUGIN += qsvg
+INCLUDEPATH += /home/dimura/opt/Pteros-win/include
+LIBS += -L"/home/dimura/opt/Pteros-win/lib"
+LIBS += -L"/usr/x86_64-w64-mingw32/plugins/accessible"
+LIBS += -L"/usr/x86_64-w64-mingw32/plugins/imageformats"
+LIBS += -L"/usr/x86_64-w64-mingw32/plugins/platforms"
 }
 
 LIBS += -lpteros -lpteros_analysis -ltng_io

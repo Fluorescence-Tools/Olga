@@ -47,6 +47,7 @@ private slots:
     void ShowPositionsContextMenu(const QPoint& pos);
 
     void copySelectedText(const QItemSelectionModel* selModel) const;
+    void pasteText(QAbstractItemView *view) const;
 
 private:
     void readSettings();

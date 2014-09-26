@@ -75,13 +75,13 @@ void MainWindow::setupMenus()
     ui->labellingPositionsTableView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(ui->mainTableView, SIGNAL(customContextMenuRequested(const QPoint&)),
-        this, SLOT(ShowSystemsContextMenu(const QPoint&)));
+	this, SLOT(ShowSystemsContextMenu(const QPoint&)));
     connect(ui->domainsTableView, SIGNAL(customContextMenuRequested(const QPoint&)),
-        this, SLOT(ShowDomainsContextMenu(const QPoint&)));
+	this, SLOT(ShowDomainsContextMenu(const QPoint&)));
     connect(ui->distancesTableView, SIGNAL(customContextMenuRequested(const QPoint&)),
-        this, SLOT(ShowDistancesContextMenu(const QPoint&)));
+	this, SLOT(ShowDistancesContextMenu(const QPoint&)));
     connect(ui->labellingPositionsTableView, SIGNAL(customContextMenuRequested(const QPoint&)),
-        this, SLOT(ShowPositionsContextMenu(const QPoint&)));
+	this, SLOT(ShowPositionsContextMenu(const QPoint&)));
 
     distancesMenu.addAction("Delete selected distances",this,SLOT(deleteSelectedDistances()));
     positionsMenu.addAction("Delete selected positions",this,SLOT(deleteSelectedPositions()));
@@ -90,19 +90,19 @@ void MainWindow::setupMenus()
 
     QAction* action=systemsMenu.addAction("&Copy");
     connect(action, &QAction::triggered, [=]() {
-            copySelectedText(ui->mainTableView->selectionModel());
-        }  );
+	    copySelectedText(ui->mainTableView->selectionModel());
+	}  );
     action=distancesMenu.addAction("&Copy");
     connect(action, &QAction::triggered, [=]() {
-        copySelectedText(ui->distancesTableView->selectionModel());
+	copySelectedText(ui->distancesTableView->selectionModel());
     }  );
     action=positionsMenu.addAction("&Copy");
     connect(action, &QAction::triggered, [=]() {
-        copySelectedText(ui->labellingPositionsTableView->selectionModel());
+	copySelectedText(ui->labellingPositionsTableView->selectionModel());
     }  );
     action=domainsMenu.addAction("&Copy");
     connect(action, &QAction::triggered, [=]() {
-        copySelectedText(ui->domainsTableView->selectionModel());
+	copySelectedText(ui->domainsTableView->selectionModel());
     }  );
 
     ui->distancesTableView->installEventFilter(this);
@@ -113,17 +113,22 @@ void MainWindow::setupMenus()
 
 bool MainWindow::eventFilter(QObject *object, QEvent *event)
 {
-    if( (object == ui->mainTableView || object == ui->distancesTableView ||
-         object == ui->labellingPositionsTableView || object == ui->domainsTableView) &&
-            event->type() == QEvent::KeyPress) {
-        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-        if (keyEvent->matches(QKeySequence::Copy)) {
-            QAbstractItemView* viewObject=static_cast<QAbstractItemView *>(object);
-            copySelectedText(viewObject->selectionModel());
-            return true;
-        }
-    }
-    return false;
+	if( (object == ui->mainTableView || object == ui->distancesTableView ||
+	     object == ui->labellingPositionsTableView || object == ui->domainsTableView) &&
+	    event->type() == QEvent::KeyPress) {
+		QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+		if (keyEvent->matches(QKeySequence::Copy)) {
+			QAbstractItemView* viewObject=static_cast<QAbstractItemView *>(object);
+			copySelectedText(viewObject->selectionModel());
+			return true;
+		} else if (keyEvent->matches(QKeySequence::Paste))
+		{
+			QAbstractItemView* viewObject=static_cast<QAbstractItemView *>(object);
+			pasteText(viewObject);
+			return true;
+		}
+	}
+	return false;
 }
 
 QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) const
@@ -131,7 +136,7 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
     const QAbstractItemModel* model=selectionModel->model();
     QModelIndexList indexes = selectionModel->selectedIndexes();
     if(indexes.size() < 1){
-        return "";
+	return "";
     }
     std::sort(indexes.begin(), indexes.end());
 
@@ -139,21 +144,21 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
     QModelIndex previous=indexes.takeFirst();
     for(const QModelIndex& index:indexes)
     {
-        QString text = model->data(previous).toString();
-        // At this point `text` contains the text in one cell
-        selectedText.append(text);
-        // If you are at the start of the row the row number of the previous index
-        // isn't the same.  Text is followed by a row separator, which is a newline.
-        if (index.row() != previous.row())
-        {
-            selectedText.append(QLatin1Char('\n'));
-        }
-        // Otherwise it's the same row, so append a column separator, which is a tab.
-        else
-        {
-            selectedText.append(QLatin1Char('\t'));
-        }
-        previous = index;
+	QString text = model->data(previous).toString();
+	// At this point `text` contains the text in one cell
+	selectedText.append(text);
+	// If you are at the start of the row the row number of the previous index
+	// isn't the same.  Text is followed by a row separator, which is a newline.
+	if (index.row() != previous.row())
+	{
+	    selectedText.append(QLatin1Char('\n'));
+	}
+	// Otherwise it's the same row, so append a column separator, which is a tab.
+	else
+	{
+	    selectedText.append(QLatin1Char('\t'));
+	}
+	previous = index;
     }
     selectedText.append(model->data(previous).toString());
     selectedText.append(QLatin1Char('\n'));
@@ -163,10 +168,10 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     /*if (maybeSave()) {
-        writeSettings();
-        event->accept();
+	writeSettings();
+	event->accept();
     } else {
-        event->ignore();
+	event->ignore();
     }*/
     writeSettings();
     event->accept();
@@ -177,11 +182,11 @@ void MainWindow::loadStructures()
     QStringList fileNames = QFileDialog::getOpenFileNames(this,tr("Load strcutures from files or folders"),"",tr("Molecular Structure Files (*.pdb *.pml *.mol2 *.mol *.hin *.xyz *.kcf *.sd *.ac)"));
     foreach(const QString& fileName,fileNames)
     {
-        if (!fileName.isEmpty())
-        {
-            statusBar()->showMessage(tr("Loading %1...").arg(fileName),2000);
-            systemsModel.loadSystem(fileName);
-        }
+	if (!fileName.isEmpty())
+	{
+	    statusBar()->showMessage(tr("Loading %1...").arg(fileName),2000);
+	    systemsModel.loadSystem(fileName);
+	}
     }
     ui->mainTableView->resizeColumnsToContents();
 }
@@ -194,17 +199,17 @@ void MainWindow::metropolisSampling()
 void MainWindow::loadJson()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Open Settings File"), "",
-                                                    tr("FPS settings (*.fps.json);;All Files (*)"));
+						    tr("Open Settings File"), "",
+						    tr("FPS settings (*.fps.json);;All Files (*)"));
     if (fileName.isEmpty())
-        return;
+	return;
 
     QFile file(fileName);
 
     if (!file.open(QIODevice::ReadOnly|QIODevice::Text)) {
-        QMessageBox::information(this, tr("Unable to open file"),
-                                 file.errorString());
-        return;
+	QMessageBox::information(this, tr("Unable to open file"),
+				 file.errorString());
+	return;
     }
     QJsonDocument doc=QJsonDocument::fromJson(file.readAll());
     QJsonObject docObj=doc.object();
@@ -228,20 +233,20 @@ bool MainWindow::saveJson()
 {
     QString fileName = QFileDialog::getSaveFileName(this,tr("Save Settings"),"",tr("FPS settings (*.fps.json);;Any file (*)"));
     if (fileName.isEmpty())
-            return false;
+	    return false;
     /*QFileInfo fileInfo( fileName );
     if (fileInfo.suffix().isEmpty())
     {
-        fileName += ".o.json";
+	fileName += ".o.json";
     }*/
 
     QFile file(fileName);
     if (!file.open(QFile::WriteOnly | QFile::Text)) {
-        QMessageBox::warning(this, tr("Application"),
-                             tr("Cannot write file %1:\n%2.")
-                             .arg(fileName)
-                             .arg(file.errorString()));
-        return false;
+	QMessageBox::warning(this, tr("Application"),
+			     tr("Cannot write file %1:\n%2.")
+			     .arg(fileName)
+			     .arg(file.errorString()));
+	return false;
     }
 
     QJsonObject obj;
@@ -261,21 +266,21 @@ bool MainWindow::exportData()
 {
     QString fileName = QFileDialog::getSaveFileName(this,tr("Export data"),"",tr("Tab-separated values (*.ha4);;Any file (*)"));
     if (fileName.isEmpty()){
-            return false;
+	    return false;
     }
     /*QFileInfo fileInfo( fileName );
     if (fileInfo.suffix().isEmpty())
     {
-        fileName += ".csv";
+	fileName += ".csv";
     }*/
 
     QFile file(fileName);
     if (!file.open(QFile::WriteOnly | QFile::Text)) {
-        QMessageBox::warning(this, tr("Application"),
-                             tr("Cannot write file %1:\n%2.")
-                             .arg(fileName)
-                             .arg(file.errorString()));
-        return false;
+	QMessageBox::warning(this, tr("Application"),
+			     tr("Cannot write file %1:\n%2.")
+			     .arg(fileName)
+			     .arg(file.errorString()));
+	return false;
     }
 
     file.write(systemsModel.tabSeparatedData());
@@ -287,26 +292,26 @@ bool MainWindow::exportCylinders()
 {
     QString fileName = QFileDialog::getSaveFileName(this,tr("Export cylinders for pymol"),"",tr("Python script (*.py);;Any file (*)"));
     if (fileName.isEmpty()){
-            return false;
+	    return false;
     }
     /*QFileInfo fileInfo( fileName );
     if (fileInfo.suffix().isEmpty())
     {
-        fileName += ".csv";
+	fileName += ".csv";
     }*/
 
     QFile file(fileName);
     if (!file.open(QFile::WriteOnly | QFile::Text)) {
-        QMessageBox::warning(this, tr("Application"),
-                             tr("Cannot write file %1:\n%2.")
-                             .arg(fileName)
-                             .arg(file.errorString()));
-        return false;
+	QMessageBox::warning(this, tr("Application"),
+			     tr("Cannot write file %1:\n%2.")
+			     .arg(fileName)
+			     .arg(file.errorString()));
+	return false;
     }
     file.write("from pymol.cgo import *\nfrom pymol import cmd\nobj = [\n");
     for(const QString& str:systemsModel.cylinders())
     {
-            file.write( (str+'\n').toUtf8());
+	    file.write( (str+'\n').toUtf8());
     }
     file.write("]\ncmd.load_cgo(obj,'cylinders')");
     statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
@@ -316,20 +321,20 @@ bool MainWindow::exportCylinders()
 bool MainWindow::exportStructures()
 {
     QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-                                                         "",
-                                                         QFileDialog::ShowDirsOnly
-                                                         | QFileDialog::DontResolveSymlinks);
+							 "",
+							 QFileDialog::ShowDirsOnly
+							 | QFileDialog::DontResolveSymlinks);
     if (dirName.isEmpty()){
-            return false;
+	    return false;
     }
 
 
 
     for(int r=0; r<systemsModel.rowCount(); r++)
     {
-        QString filename=dirName+"/"+systemsModel.data(systemsModel.index(r,0)).toString()+".pdb";
-        systemsModel.exportSystem(r,filename);
-        statusBar()->showMessage(tr("Exporing %1").arg(filename), 2000);
+	QString filename=dirName+"/"+systemsModel.data(systemsModel.index(r,0)).toString()+".pdb";
+	systemsModel.exportSystem(r,filename);
+	statusBar()->showMessage(tr("Exporing %1").arg(filename), 2000);
     }
     return true;
 }
@@ -356,23 +361,23 @@ void MainWindow::deleteSelectedDistances()
 {
     QModelIndexList list=ui->distancesTableView->selectionModel()->selectedRows();
     if(list.empty()){
-        return;
+	return;
     }
     std::sort(list.begin(), list.end());
     int prevRow=list.first().row(), startRow=prevRow;
     int removed=0;
     for(auto item=list.begin()+1; item!=list.end(); item++)
     {
-        if(prevRow==item->row()-1)
-        {
-            prevRow=item->row();
-        }
-        else
-        {
-            distancesModel.removeRows(startRow-removed,prevRow-startRow+1);
-            removed+=prevRow-startRow+1;
-            prevRow=startRow=item->row();
-        }
+	if(prevRow==item->row()-1)
+	{
+	    prevRow=item->row();
+	}
+	else
+	{
+	    distancesModel.removeRows(startRow-removed,prevRow-startRow+1);
+	    removed+=prevRow-startRow+1;
+	    prevRow=startRow=item->row();
+	}
     }
     distancesModel.removeRows(startRow-removed,prevRow-startRow+1);
 }
@@ -381,23 +386,23 @@ void MainWindow::deleteSelectedDomains()
 {
     QModelIndexList list=ui->domainsTableView->selectionModel()->selectedRows();
     if(list.empty()){
-        return;
+	return;
     }
     std::sort(list.begin(), list.end());
     int prevRow=list.first().row(), startRow=prevRow;
     int removed=0;
     for(auto item=list.begin()+1; item!=list.end(); item++)
     {
-        if(prevRow==item->row()-1)
-        {
-            prevRow=item->row();
-        }
-        else
-        {
-            domainsModel.removeRows(startRow-removed,prevRow-startRow+1);
-            removed+=prevRow-startRow+1;
-            prevRow=startRow=item->row();
-        }
+	if(prevRow==item->row()-1)
+	{
+	    prevRow=item->row();
+	}
+	else
+	{
+	    domainsModel.removeRows(startRow-removed,prevRow-startRow+1);
+	    removed+=prevRow-startRow+1;
+	    prevRow=startRow=item->row();
+	}
     }
     domainsModel.removeRows(startRow-removed,prevRow-startRow+1);
 }
@@ -406,23 +411,23 @@ void MainWindow::deleteSelectedPositions()
 {
     QModelIndexList list=ui->labellingPositionsTableView->selectionModel()->selectedRows();
     if(list.empty()){
-        return;
+	return;
     }
     std::sort(list.begin(), list.end());
     int prevRow=list.first().row(), startRow=prevRow;
     int removed=0;
     for(auto item=list.begin()+1; item!=list.end(); item++)
     {
-        if(prevRow==item->row()-1)
-        {
-            prevRow=item->row();
-        }
-        else
-        {
-            positionsModel.removeRows(startRow-removed,prevRow-startRow+1);
-            removed+=prevRow-startRow+1;
-            prevRow=startRow=item->row();
-        }
+	if(prevRow==item->row()-1)
+	{
+	    prevRow=item->row();
+	}
+	else
+	{
+	    positionsModel.removeRows(startRow-removed,prevRow-startRow+1);
+	    removed+=prevRow-startRow+1;
+	    prevRow=startRow=item->row();
+	}
     }
     positionsModel.removeRows(startRow-removed,prevRow-startRow+1);
 }
@@ -465,4 +470,41 @@ void MainWindow::copySelectedText(const QItemSelectionModel* selModel) const
 {
     QString selected_text=tabSeparatedData(selModel);
     QApplication::clipboard()->setText(selected_text);
+}
+
+void MainWindow::pasteText(QAbstractItemView *view) const
+{
+	QString text = qApp->clipboard()->text();
+	QStringList cells = text.split(QRegExp(QLatin1String("\\n|\\t")));
+	while(!cells.empty() && cells.back().size() == 0)
+	{
+		cells.pop_back(); // strip empty trailing tokens
+	}
+	int rows = text.count(QLatin1Char('\n'));
+	int cols = cells.size() / rows;
+
+	if(cells.size() % rows != 0)
+	{
+	  // error, uneven number of columns, probably bad data
+	  QMessageBox::critical(0, tr("Error"),
+	    tr("Invalid clipboard data: uneven number of columns. Unable to perform paste operation."));
+	  return;
+	}
+
+	QAbstractItemModel *model=view->model();
+	const QItemSelectionModel *selectionModel = view->selectionModel();
+	QModelIndexList indexes = selectionModel->selectedIndexes();
+	std::sort(indexes.begin(), indexes.end());
+	int rowStart=indexes.first().row();
+	int colStart=indexes.first().column();
+
+	int cell = 0;
+	for(int row=0; row < rows; ++row)
+	{
+	  for(int col=0; col < cols; ++col, ++cell)
+	  {
+	    model->setData(model->index(row+rowStart,col+colStart),cells[cell]);
+	  }
+	}
+
 }
