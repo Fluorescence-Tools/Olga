@@ -159,10 +159,10 @@ std::vector<Eigen::Vector4f> MolecularSystem::coordsVdW(const pteros::System &sy
 bool MolecularSystem::load() const
 {
 	QString suffix=_filename.section('.',-1).toLower();
-	if(suffix=="pml")
+	/*if(suffix=="pml")
 	{
 		return loadPml();
-	}
+	}*/
 	return loadSystem(_filename, system);
 
 }
@@ -178,10 +178,10 @@ bool MolecularSystem::loadSystem(const QString& _filename,pteros::System &system
 	system.load(_filename.toStdString());
 	return true;
 }
-
+/*
 bool MolecularSystem::loadPml() const
 {
-/*	std::map<QString,pteros::System> bodies;//name,molecule
+	std::map<QString,pteros::System> bodies;//name,molecule
 	QFile file(_filename);
 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 		return false;
@@ -300,6 +300,6 @@ bool MolecularSystem::loadPml() const
 	{
 		system.append( *(iterator->second.getMolecule(0)) );
 	}
-	return true;*/
+	return true;
 }
-
+*/

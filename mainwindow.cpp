@@ -179,7 +179,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::loadStructures()
 {
-    QStringList fileNames = QFileDialog::getOpenFileNames(this,tr("Load strcutures from files or folders"),"",tr("Molecular Structure Files (*.pdb *.pml *.mol2 *.mol *.hin *.xyz *.kcf *.sd *.ac)"));
+    QStringList fileNames = QFileDialog::getOpenFileNames(this,tr("Load strcutures from files or folders"),"",tr("Molecular Structure Files (*.pdb *.mol2 *.mol *.hin *.xyz *.kcf *.sd *.ac)"));
     foreach(const QString& fileName,fileNames)
     {
 	if (!fileName.isEmpty())

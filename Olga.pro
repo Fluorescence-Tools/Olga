@@ -14,7 +14,7 @@ TEMPLATE = app
 QMAKE_CXXFLAGS += -std=c++11 #-pthread -Wl,--no-as-needed
 QMAKE_LFLAGS += -std=c++11 #-pthread -Wl,--no-as-needed
 
-INCLUDEPATH += ../include /usr/include/eigen3
+INCLUDEPATH += /usr/include/eigen3
 
 unix:{
 INCLUDEPATH += /home/dimura/opt/Pteros/include
@@ -51,7 +51,8 @@ HEADERS += \
     AV/MolecularSystemDomain.h \
     AV/Position.h \
     AV/PositionSimulation.h \
-    AV/PositionSimulationResult.h
+    AV/PositionSimulationResult.h \
+    combination.hpp
 
 SOURCES += \
     PositionTableModel.cpp \

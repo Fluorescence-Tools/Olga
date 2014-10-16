@@ -235,7 +235,6 @@ QJsonObject Position::jsonObjects(const std::vector<Position> &arr)
 Eigen::Vector3f Position::atomXYZ(pteros::System &system) const
 {
 	std::string selectionExpression;
-	//TODO: Convert to VMD syntax
 	if(_chainIdentifier!=""){
 		selectionExpression+="chain "+_chainIdentifier+" and ";
 	}

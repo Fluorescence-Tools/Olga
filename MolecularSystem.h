@@ -40,7 +40,7 @@ public:
 protected:
 private:
 	bool load() const;
-	bool loadPml() const;
+	//bool loadPml() const;
 	static bool loadSystem(const QString &_filename, pteros::System &system);
 
 private:
