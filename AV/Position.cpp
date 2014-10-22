@@ -173,6 +173,7 @@ double Position::chi2(pteros::System &system, const std::vector<Position> &posit
 	TSimMap simulations;
 	for(auto& f : futures){
 		auto it=simulations.insert(std::make_pair(f.first,f.second.get())).first;
+
 		if(it->second.empty())
 		{
 			std::cerr<<"AV Simulation failed for "<<f.first<<std::endl;
@@ -266,7 +267,6 @@ Eigen::Vector3f Position::atomXYZ(pteros::System &system) const
 		const double nan=std::numeric_limits<float>::quiet_NaN();
 		return Eigen::Vector3f(nan,nan,nan);
 	}
-	std::cout<<"coords: "<<select.XYZ(0)*10.0f<<std::endl;
 	return select.XYZ(0)*10.0f;
 }
 
