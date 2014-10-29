@@ -212,6 +212,13 @@ void MainWindow::loadJson()
 	return;
     }
     QJsonDocument doc=QJsonDocument::fromJson(file.readAll());
+    if(doc.isNull())
+    {
+	    QMessageBox::information(this, tr("Unable to parse JSON file"),
+				     tr("Could not open the file. "
+					"There is a syntax error in the provided JSON file."));
+	    return;
+    }
     QJsonObject docObj=doc.object();
 
     QJsonObject positionsListObj=docObj.value("Positions").toObject();
