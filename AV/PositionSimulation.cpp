@@ -13,8 +13,10 @@ PositionSimulation* PositionSimulation::create(const std::string &simulationType
 {
     if(simulationType=="AV3")
     {
-        return new PositionSimulationAV3;
+	return new PositionSimulationAV3;
     }
+    std::cerr<<"PositionSimulation creation error!\n"<<std::endl;
+    std::cout<<"PositionSimulation creation error!\n"<<std::endl;
     return 0;
 }
 
@@ -75,7 +77,7 @@ double PositionSimulationAV3::getAllowedSphereRadius(int atom_i, const double *X
 {
     if(allowedSphereRadius>=0.0)
     {
-        return allowedSphereRadius;
+	return allowedSphereRadius;
     }
     //TODO: add automatic sphere radius determination
     return allowedSphereRadiusMin;
@@ -86,12 +88,12 @@ PositionSimulationResult PositionSimulation::calculate(const Eigen::Vector3f &at
     int atom_i=0;
     for(unsigned i=0; i<xyzW.size(); i++)
     {
-        v[3]=xyzW[i][3];
-        if( (v-xyzW.at(i)).squaredNorm()<0.01f )
-        {
-            atom_i=i;
-            break;
-        }
+	v[3]=xyzW[i][3];
+	if( (v-xyzW.at(i)).squaredNorm()<0.01f )
+	{
+	    atom_i=i;
+	    break;
+	}
     }
     return calculate(atom_i,xyzW);
 }
@@ -103,8 +105,8 @@ PositionSimulationResult PositionSimulationAV3::calculate(unsigned atom_i, const
     const int linknodes=3;
 
     return PositionSimulationResult(
-                calculate3R((float)linkerLength, (float)linkerWidth,
-                            (float)radius[0], (float)radius[1], (float)radius[2],
-            atom_i, (float)gridResolution, vdWRMax, (float)allowedSphereRadius, linknodes, xyzW));
+		calculate3R((float)linkerLength, (float)linkerWidth,
+			    (float)radius[0], (float)radius[1], (float)radius[2],
+	    atom_i, (float)gridResolution, vdWRMax, (float)allowedSphereRadius, linknodes, xyzW));
 }
 

@@ -18,9 +18,16 @@ class Position
 {
 public:
 	explicit Position();
-	~Position();
-	Position(const QJsonObject& positionJson, const std::string& name);
+	virtual ~Position();
+
 	Position(const Position& other);
+	Position& operator=(const Position& other);
+	Position(Position &&o);
+	Position& operator=(Position&& o);
+
+
+	Position(const QJsonObject& positionJson, const std::string& name);
+
 	virtual QJsonObject jsonObject() const;
 	bool load(const QJsonObject& positionJson, const std::string& name);
 	const std::string& name() const;

@@ -31,6 +31,43 @@ Position::Position(const Position &other):_name(other.name()),_chainIdentifier(o
 	}
 }
 
+Position& Position::operator=(const Position &other)
+{
+	_name=other.name();
+	_chainIdentifier=other.chainIdentifier();
+	_residueSeqNumber=other.residueSeqNumber();
+	_residueName=other.residueName();
+	_atomName=other.atomName();
+	if(other._simulation)
+	{
+		_simulation=other._simulation->Clone();
+	}
+	return *this;
+}
+
+Position::Position(Position&& o):_name(std::move(o._name)),
+	_chainIdentifier(std::move(o._chainIdentifier)),
+	_residueSeqNumber(o._residueSeqNumber),
+	_residueName(std::move(o._residueName)),
+	_atomName(std::move(o._atomName)),
+	_simulationType(std::move(o._simulationType))
+{
+	_simulation=o._simulation;
+	o._simulation=0;
+}
+
+Position& Position::operator=(Position&& o)
+{
+	_name=std::move(o._name);
+	_chainIdentifier=std::move(o._chainIdentifier);
+	_residueSeqNumber=o._residueSeqNumber;
+	_residueName=std::move(o._residueName);
+	_atomName=std::move(o._atomName);
+	_simulationType=std::move(o._simulationType);
+	_simulation=o._simulation;
+	o._simulation=0;
+}
+
 Position::Position(const QJsonObject &positionJson, const std::string& name)
 {
 	_simulation=0;
@@ -270,7 +307,8 @@ Eigen::Vector3f Position::atomXYZ(pteros::System &system) const
 	return select.XYZ(0)*10.0f;
 }
 
-PositionSimulationResult Position::calculate(const Eigen::Vector3f& attachmentAtomPos, const std::vector<Eigen::Vector4f>& store) const
+PositionSimulationResult Position::calculate(const Eigen::Vector3f& attachmentAtomPos,
+					     const std::vector<Eigen::Vector4f>& store) const
 {
 	return _simulation->calculate(attachmentAtomPos,store);
 }
