@@ -16,7 +16,7 @@
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
     ui(new Ui::MainWindow),
-    systemsModel(&domainsModel,&positionsModel,&distancesModel)
+    trajectoriesModel(&domainsModel,&positionsModel,&distancesModel)
 {
     ui->setupUi(this);
     tabifyDockWidget(ui->domainsDockWidget,ui->labellingPositionsDockWidget);
@@ -34,15 +34,15 @@ MainWindow::MainWindow(QWidget *parent) :
     statusBar()->showMessage(tr("Ready"));
     readSettings();
 
-    ui->mainTableView->setModel(&systemsModel);
-    ui->mainTableView->resizeColumnsToContents();
+    ui->mainTreeView->setModel(&trajectoriesModel);
+    //ui->mainTreeView->resizeColumnsToContents();
 
     ui->domainsTableView->setModel(&domainsModel);
 
     setupMenus();
 
-    new Q_DebugStream(std::cerr, ui->logTextEdit); //Redirect Console output to QTextEdit
-    Q_DebugStream::registerQDebugMessageHandler();
+    //new Q_DebugStream(std::cerr, ui->logTextEdit); //Redirect Console output to QTextEdit
+    //Q_DebugStream::registerQDebugMessageHandler();
 }
 
 MainWindow::~MainWindow()
@@ -69,12 +69,12 @@ void MainWindow::writeSettings() const
 
 void MainWindow::setupMenus()
 {
-    ui->mainTableView->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->mainTreeView->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->distancesTableView->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->domainsTableView->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->labellingPositionsTableView->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    connect(ui->mainTableView, SIGNAL(customContextMenuRequested(const QPoint&)),
+    connect(ui->mainTreeView, SIGNAL(customContextMenuRequested(const QPoint&)),
 	this, SLOT(ShowSystemsContextMenu(const QPoint&)));
     connect(ui->domainsTableView, SIGNAL(customContextMenuRequested(const QPoint&)),
 	this, SLOT(ShowDomainsContextMenu(const QPoint&)));
@@ -90,7 +90,7 @@ void MainWindow::setupMenus()
 
     QAction* action=systemsMenu.addAction("&Copy");
     connect(action, &QAction::triggered, [=]() {
-	    copySelectedText(ui->mainTableView->selectionModel());
+	    copySelectedText(ui->mainTreeView->selectionModel());
 	}  );
     action=distancesMenu.addAction("&Copy");
     connect(action, &QAction::triggered, [=]() {
@@ -108,12 +108,12 @@ void MainWindow::setupMenus()
     ui->distancesTableView->installEventFilter(this);
     ui->domainsTableView->installEventFilter(this);
     ui->labellingPositionsTableView->installEventFilter(this);
-    ui->mainTableView->installEventFilter(this);
+    ui->mainTreeView->installEventFilter(this);
 }
 
 bool MainWindow::eventFilter(QObject *object, QEvent *event)
 {
-	if( (object == ui->mainTableView || object == ui->distancesTableView ||
+	if( (object == ui->mainTreeView || object == ui->distancesTableView ||
 	     object == ui->labellingPositionsTableView || object == ui->domainsTableView) &&
 	    event->type() == QEvent::KeyPress) {
 		QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
@@ -185,10 +185,10 @@ void MainWindow::loadStructures()
 	if (!fileName.isEmpty())
 	{
 	    statusBar()->showMessage(tr("Loading %1...").arg(fileName),2000);
-	    systemsModel.loadSystem(fileName);
+	    trajectoriesModel.loadSystem(fileName);
 	}
     }
-    ui->mainTableView->resizeColumnsToContents();
+    //ui->mainTreeView->resizeColumnsToContents();
 }
 
 void MainWindow::metropolisSampling()
@@ -233,7 +233,7 @@ void MainWindow::loadJson()
     domainsModel.load(domainsArr);
     ui->domainsTableView->resizeColumnsToContents();
 
-    ui->mainTableView->resizeColumnsToContents();
+    //ui->mainTreeView->resizeColumnsToContents();
 }
 
 bool MainWindow::saveJson()
@@ -290,7 +290,7 @@ bool MainWindow::exportData()
 	return false;
     }
 
-    file.write(systemsModel.tabSeparatedData());
+    file.write(trajectoriesModel.tabSeparatedData());
     statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
     return true;
 }
@@ -316,7 +316,7 @@ bool MainWindow::exportCylinders()
 	return false;
     }
     file.write("from pymol.cgo import *\nfrom pymol import cmd\nobj = [\n");
-    for(const QString& str:systemsModel.cylinders())
+    for(const QString& str:trajectoriesModel.cylinders())
     {
 	    file.write( (str+'\n').toUtf8());
     }
@@ -337,10 +337,10 @@ bool MainWindow::exportStructures()
 
 
 
-    for(int r=0; r<systemsModel.rowCount(); r++)
+    for(int r=0; r<trajectoriesModel.rowCount(); r++)
     {
-	QString filename=dirName+"/"+systemsModel.data(systemsModel.index(r,0)).toString()+".pdb";
-	systemsModel.exportSystem(r,filename);
+	QString filename=dirName+"/"+trajectoriesModel.data(trajectoriesModel.index(r,0)).toString()+".pdb";
+	trajectoriesModel.exportSystem(r,filename);
 	statusBar()->showMessage(tr("Exporing %1").arg(filename), 2000);
     }
     return true;
@@ -441,7 +441,7 @@ void MainWindow::deleteSelectedPositions()
 
 void MainWindow::ShowSystemsContextMenu(const QPoint &pos)
 {
-    QPoint globalPos = ui->mainTableView->mapToGlobal(pos);
+    QPoint globalPos = ui->mainTreeView->mapToGlobal(pos);
     systemsMenu.exec(globalPos);
 }
 

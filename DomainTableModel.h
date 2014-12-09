@@ -1,9 +1,12 @@
 #ifndef DOMAINTABLEMODEL_H
 #define DOMAINTABLEMODEL_H
 
+#include <memory>
+
 #include <QAbstractTableModel>
 #include <QVector>
 #include <QJsonArray>
+
 #include "AV/MolecularSystemDomain.h"
 
 class DomainTableModel : public QAbstractTableModel
@@ -23,14 +26,14 @@ public:
 
     bool load(const QJsonArray &domainsArr);
     QJsonArray jsonArray() const;
-    const MolecularSystemDomain& domain(int i) const;
+    const std::shared_ptr<MolecularSystemDomain> domain(int i) const;
     QVector<QString> names() const;
 signals:
 
 public slots:
 
 private:
-    QVector<MolecularSystemDomain> _domains;
+    QVector<std::shared_ptr<MolecularSystemDomain>> _domains;
 };
 
 #endif // DOMAINTABLEMODEL_H

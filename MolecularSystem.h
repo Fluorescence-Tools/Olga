@@ -46,6 +46,7 @@ private:
 private:
 	QString _name;
 	QString _filename;
+
 	mutable pteros::System system;
 	//    mutable Eigen::Matrix3d R; //rotation matrix cached value
 	//    mutable Eigen::Vector3d translation; //translation vector cached value

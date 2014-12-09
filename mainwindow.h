@@ -3,7 +3,9 @@
 
 #include <QMainWindow>
 #include <QMenu>
-#include "SystemsTableModel.h"
+#include <QItemSelectionModel>
+//#include "SystemsTableModel.h"
+#include "TrajectoriesTreeModel.h"
 #include "DomainTableModel.h"
 #include "PositionTableModel.h"
 #include "DistanceTableModel.h"
@@ -68,7 +70,8 @@ private:
     DomainTableModel domainsModel;
     PositionTableModel positionsModel;
     DistanceTableModel distancesModel;
-    SystemsTableModel systemsModel;
+    //SystemsTableModel systemsModel;
+    TrajectoriesTreeModel trajectoriesModel;
 
     DistanceDelegate distanceDelegate;
 

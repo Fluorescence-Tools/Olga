@@ -30,7 +30,7 @@ bool DomainTableModel::load(const QJsonArray &domainsArr)
 	//TODO: inefficient, optimize!
 	beginInsertRows(QModelIndex(),_domains.size(),_domains.size());
 	_names.push_back(name);
-	_domains.push_back(d);
+	_domains.push_back(std::make_shared<MolecularSystemDomain>(std::move(d)));
 	endInsertRows();
     }
 
@@ -40,14 +40,14 @@ bool DomainTableModel::load(const QJsonArray &domainsArr)
 QJsonArray DomainTableModel::jsonArray() const
 {
     QJsonArray domains;
-    foreach(const MolecularSystemDomain& domain,_domains)
+    for(const auto& domain:_domains)
     {
-	domains.append(domain.jsonObj());
+	domains.append(domain->jsonObj());
     }
     return domains;
 }
 
-const MolecularSystemDomain& DomainTableModel::domain(int i) const
+const std::shared_ptr<MolecularSystemDomain> DomainTableModel::domain(int i) const
 {
     return _domains.at(i);
 }
@@ -55,8 +55,8 @@ const MolecularSystemDomain& DomainTableModel::domain(int i) const
 QVector<QString> DomainTableModel::names() const
 {
     QVector<QString> names;
-    foreach(const MolecularSystemDomain& domain, _domains){
-	names.append(domain.name);
+    for(const auto& domain: _domains){
+	names.append(domain->name);
     }
     return names;
 }
@@ -77,11 +77,11 @@ QVariant DomainTableModel::data(const QModelIndex &index, int role) const
     {
 	if (index.column()==0)
 	{
-	    return _domains.at(index.row()).name;
+	    return _domains.at(index.row())->name;
 	}
 	else if(index.column()==1)
 	{
-	    return (unsigned)_domains.at(index.row()).numPoints();
+	    return (unsigned)_domains.at(index.row())->numPoints();
 	}
 
 	return QString("Row%1, Column%2")
@@ -119,7 +119,7 @@ bool DomainTableModel::setData(const QModelIndex &index, const QVariant &value, 
 	switch(index.column())
 	{
 	case 0:
-	    _domains[index.row()].name=value.toString();
+	    _domains[index.row()]->name=value.toString();
 	    break;
 	}
 	if(index.column()<1)
@@ -146,7 +146,8 @@ Qt::ItemFlags DomainTableModel::flags(const QModelIndex &index) const
 bool DomainTableModel::insertRows(int position, int rows, const QModelIndex &index)
 {
     beginInsertRows(QModelIndex(), position, position+rows-1);
-    _domains.insert(_domains.begin()+position,rows,MolecularSystemDomain());
+    _domains.insert(_domains.begin()+position,rows,
+		    std::make_shared<MolecularSystemDomain>());
     endInsertRows();
     return true;
 }

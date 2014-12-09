@@ -1,0 +1,2 @@
+#include "CalcResult.h"
+

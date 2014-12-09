@@ -11,8 +11,8 @@ TARGET = Olga
 
 TEMPLATE = app
 
-QMAKE_CXXFLAGS += -std=c++11 #-pthread -Wl,--no-as-needed
-QMAKE_LFLAGS += -std=c++11 #-pthread -Wl,--no-as-needed
+QMAKE_CXXFLAGS += -std=c++1y #-pthread -Wl,--no-as-needed
+QMAKE_LFLAGS += -std=c++1y #-pthread -Wl,--no-as-needed
 
 INCLUDEPATH += /usr/include/eigen3
 
@@ -30,7 +30,7 @@ LIBS += -L"/usr/x86_64-w64-mingw32/plugins/imageformats"
 LIBS += -L"/usr/x86_64-w64-mingw32/plugins/platforms"
 }
 
-LIBS += -lpteros -lpteros_analysis -ltng_io
+LIBS += -lpteros -lpteros_analysis -ltng_io -lboost_system -lboost_thread
 
 RESOURCES += \
     icons.qrc
@@ -52,7 +52,16 @@ HEADERS += \
     AV/Position.h \
     AV/PositionSimulation.h \
     AV/PositionSimulationResult.h \
-    combination.hpp
+    combination.hpp \
+    AbstractCalcResult.h \
+    CalcResult.h \
+    AbstractCalculator.h \
+    FrameDescriptor.h \
+    MolecularTrajectory.h \
+    TrajectoriesTreeModel.h \
+    TrajectoriesTreeItem.h \
+    CalculatorTrasformationMatrix.h \
+    ThreadPool.h
 
 SOURCES += \
     PositionTableModel.cpp \
@@ -68,5 +77,14 @@ SOURCES += \
     AV/MolecularSystemDomain.cpp \
     AV/Position.cpp \
     AV/PositionSimulation.cpp \
-    AV/PositionSimulationResult.cpp
+    AV/PositionSimulationResult.cpp \
+    AbstractCalcResult.cpp \
+    CalcResult.cpp \
+    AbstractCalculator.cpp \
+    FrameDescriptor.cpp \
+    MolecularTrajectory.cpp \
+    TrajectoriesTreeModel.cpp \
+    TrajectoriesTreeItem.cpp \
+    CalculatorTrasformationMatrix.cpp \
+    ThreadPool.cpp
 

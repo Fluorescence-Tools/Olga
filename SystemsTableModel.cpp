@@ -73,7 +73,7 @@ QVariant SystemsTableModel::headerData(int section, Qt::Orientation orientation,
 	    default:
 		if(section-2<(int)numEulerAngles())
 		{
-		    QString domainName=_domainsModel->domain((section-2)/3+1).name+":";
+		    QString domainName=_domainsModel->domain((section-2)/3+1)->name+":";
 		    switch ((section-2)%3)
 		    {
 		    case 0:
@@ -129,10 +129,10 @@ QStringList SystemsTableModel::cylinders() const
 	{
 	    auto& domain=_domainsModel->domain(iDomain);
 	    QString str="CYLINDER, ";
-	    Eigen::Vector3d p1local(.0, .0, sys.minZ(domain));
-	    Eigen::Vector3d p2local(.0, .0, sys.maxZ(domain));
-	    Eigen::Vector3d origin=sys.pointPosition(domain,p1local);
-	    Eigen::Vector3d p001=sys.pointPosition(domain,p2local);
+	    Eigen::Vector3d p1local(.0, .0, sys.minZ(*domain));
+	    Eigen::Vector3d p2local(.0, .0, sys.maxZ(*domain));
+	    Eigen::Vector3d origin=sys.pointPosition(*domain,p1local);
+	    Eigen::Vector3d p001=sys.pointPosition(*domain,p2local);
 	    str+=QString("%1, %2, %3, ").arg(origin[0]).arg(origin[1]).arg(origin[2]);
 	    str+=QString("%1, %2, %3, ").arg(p001[0]).arg(p001[1]).arg(p001[2]);
 	    str+="0.5, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0,\n";
@@ -187,7 +187,9 @@ void SystemsTableModel::updateCacheRow(int row)
     int indexMutualAngle=numEulerAngles()+nDomains;
     for(int iDomain=1; iDomain<nDomains; iDomain++)
     {
-	Eigen::Vector3d angles=systems.at(row).eulerAngles(_domainsModel->domain(iDomain),_domainsModel->domain(0));
+	Eigen::Vector3d angles=systems.at(row).eulerAngles(
+				       *(_domainsModel->domain(iDomain)),
+				       *(_domainsModel->domain(0)));
 	for(int iAngle=0; iAngle<3; iAngle++)
 	{
 	    cache[1+3*(iDomain-1)+iAngle][row]=angles(iAngle);
@@ -196,7 +198,9 @@ void SystemsTableModel::updateCacheRow(int row)
 
 	for(int iDomain2=iDomain+1; iDomain2<nDomains; iDomain2++)
 	{
-	    angles=systems.at(row).eulerAngles(_domainsModel->domain(iDomain2),_domainsModel->domain(iDomain));
+	    angles=systems.at(row).eulerAngles(
+			   *(_domainsModel->domain(iDomain2)),
+			   *(_domainsModel->domain(iDomain)));
 	    cache[indexMutualAngle++][row]=angles(1);//mutual angle
 	}
     }
