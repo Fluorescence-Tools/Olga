@@ -186,6 +186,7 @@ void MainWindow::loadStructures()
 	{
 	    statusBar()->showMessage(tr("Loading %1...").arg(fileName),2000);
 	    systemsModel.loadSystem(fileName);
+	    QCoreApplication::processEvents();
 	}
     }
     ui->mainTableView->resizeColumnsToContents();
