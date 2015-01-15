@@ -16,7 +16,6 @@ PositionSimulation* PositionSimulation::create(const std::string &simulationType
 	return new PositionSimulationAV3;
     }
     std::cerr<<"PositionSimulation creation error!\n"<<std::endl;
-    std::cout<<"PositionSimulation creation error!\n"<<std::endl;
     return 0;
 }
 

@@ -12,8 +12,9 @@ class MolecularTrajectory
 {
 public:
 	MolecularTrajectory();
-	int frameCount(int trajIndex) const
+	int frameCount(unsigned trajIndex) const
 	{
+		assert(trajIndex<_trajectories.size());
 		return _trajectories[trajIndex].second.size();
 	}
 	int trajCount() const
@@ -24,8 +25,9 @@ public:
 	{
 		return _topFileName;
 	}
-	const std::string& trajectoryFileName(int traj) const
+	const std::string& trajectoryFileName(unsigned traj) const
 	{
+		assert(traj<_trajectories.size());
 		return _trajectories[traj].first;
 	}
 	int frameNum(int trajIndex,int frameIndex) const
@@ -45,7 +47,6 @@ public:
 		_trajectories.push_back(frame);
 		return true;
 	}
-
 private:
 	std::string _topFileName;
 	using FrameName_Numbers=std::pair<std::string,boost::icl::interval_set<int>>;//trajectoryFileName,frameNumbers

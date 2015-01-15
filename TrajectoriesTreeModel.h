@@ -1,5 +1,6 @@
 #ifndef TRAJECTORIESTREEMODEL_H
 #define TRAJECTORIESTREEMODEL_H
+#include "ThreadPool.h"
 
 #include <vector>
 #include <memory>
@@ -17,7 +18,7 @@
 #include "DomainTableModel.h"
 #include "DistanceTableModel.h"
 #include "PositionTableModel.h"
-#include "ThreadPool.h"
+
 
 class TrajectoriesTreeModel : public QAbstractItemModel
 {
@@ -54,7 +55,13 @@ public:
 
 
 signals:
-	void calculationFinished(const QModelIndex index, std::shared_ptr<AbstractCalcResult> result);
+	void calculationFinished(const FrameDescriptor desc,
+				 const std::shared_ptr<AbstractCalculator> calc,
+				 std::shared_ptr<AbstractCalcResult> result,
+				 const QModelIndex index);
+	void calculationFinished(const FrameDescriptor desc,
+				 const std::shared_ptr<AbstractCalculator> calc,
+				 std::shared_ptr<AbstractCalcResult> result);
 public slots:
 private slots:
 	void domainsInserted(int from, int to)
@@ -66,27 +73,45 @@ private slots:
 			addCalculator(_domainsModel->domain(i));
 		}
 	}
-	void updateCache(const QModelIndex index, std::shared_ptr<AbstractCalcResult> result);
+	bool updateCache(const FrameDescriptor desc,
+			 const std::shared_ptr<AbstractCalculator> calc,
+			 std::shared_ptr<AbstractCalcResult> result);
+	bool updateCache(const FrameDescriptor desc,
+			 const std::shared_ptr<AbstractCalculator> calc,
+			 std::shared_ptr<AbstractCalcResult> result,
+			 const QModelIndex index);
 
 private:
 	const TrajectoriesTreeItem* childItem(const TrajectoriesTreeItem* parent,
 					      unsigned row) const;
+
 	QString frameName(const TrajectoriesTreeItem *parent, int row) const;
 	QString calculatorName(int calcNum) const;
 	FrameDescriptor frameDescriptor(const TrajectoriesTreeItem *parent, int row) const;
 	void addCalculator(const std::weak_ptr<MolecularSystemDomain> domain);
-	void recalculateColumn(int column) const;
-	void appendTask(const QModelIndex index) const;
+	//void recalculateColumn(int column) const;
+	void recalculate(const std::shared_ptr<AbstractCalculator> calc) const;
+	void recalculateRow(const QModelIndex &index) const;
+	std::shared_ptr<AbstractCalcResult>
+	calculate(const FrameDescriptor desc,
+		  const std::shared_ptr<AbstractCalculator> calc) const;
+	void appendTask(const FrameDescriptor desc,
+			const std::shared_ptr<AbstractCalculator> calc,
+			const QModelIndex index) const;
+	void appendTask(const FrameDescriptor desc,
+			const std::shared_ptr<AbstractCalculator> calc) const;
+	//void appendTask(const QModelIndex index) const;
 	pteros::System system(const FrameDescriptor &desc) const;
+	using CalcColumn=std::pair<std::shared_ptr<AbstractCalculator>,int>;
+	using ResultCacheCol=std::unordered_map<std::shared_ptr<AbstractCalculator>,
+	std::shared_ptr<AbstractCalcResult>>;
+	using ResultCache=std::unordered_map<FrameDescriptor,ResultCacheCol>;
+	ResultCacheCol::iterator cachedEntry(const FrameDescriptor& desc, const std::shared_ptr<AbstractCalculator> calc) const;
 private:
 	QVector<MolecularTrajectory> _molTrajs;
 	mutable std::unordered_set<TrajectoriesTreeItem> items;
-	std::unordered_set<std::shared_ptr<AbstractCalculator>> _calculators;
-	std::vector<std::shared_ptr<AbstractCalculator>> _visibleCalculators;
-	using ResultCacheCol=std::unordered_map<std::shared_ptr<AbstractCalculator>,
-					std::shared_ptr<AbstractCalcResult>>;
-	using ResultCache=std::unordered_map<FrameDescriptor,ResultCacheCol>;
-
+	std::unordered_set<std::shared_ptr<AbstractCalculator>> _calculators;//calculator,column
+	std::vector<CalcColumn> _visibleCalculators;
 	mutable ResultCache cache;//[FrameDescriptor][AbstractCalculator]
 
 	const DomainTableModel* _domainsModel;

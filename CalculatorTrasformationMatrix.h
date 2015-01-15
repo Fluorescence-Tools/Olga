@@ -9,10 +9,10 @@ class CalculatorTrasformationMatrix : public AbstractCalculator
 private:
 	const std::weak_ptr<MolecularSystemDomain> _domain;
 public:
-	CalculatorTrasformationMatrix(const std::weak_ptr<MolecularSystemDomain> domain);
+	CalculatorTrasformationMatrix(const ResultCache& results, const std::weak_ptr<MolecularSystemDomain> domain);
 	virtual std::shared_ptr<AbstractCalcResult>
-		calculate(const pteros::System& system) const;
-	virtual std::string name() const
+		calculate(const FrameDescriptor& desc) const;
+	virtual std::string name(int i=0) const
 	{
 		if(auto domain=_domain.lock())
 		{

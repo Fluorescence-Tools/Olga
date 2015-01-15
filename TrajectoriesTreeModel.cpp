@@ -4,17 +4,28 @@
 
 #include "TrajectoriesTreeModel.h"
 #include "CalculatorTrasformationMatrix.h"
+#include "CalculatorEulerAngle.h"
+#include <QTimer>
 
-TrajectoriesTreeModel::TrajectoriesTreeModel(const DomainTableModel *domainsModel, const PositionTableModel *positionsModel, DistanceTableModel *distancesModel, QObject *parent) :
-	QAbstractItemModel(parent),_domainsModel(domainsModel),threadPool(std::thread::hardware_concurrency())
+TrajectoriesTreeModel::
+TrajectoriesTreeModel(const DomainTableModel *domainsModel,
+		      const PositionTableModel *positionsModel,
+		      DistanceTableModel *distancesModel, QObject *parent) :
+	QAbstractItemModel(parent),_domainsModel(domainsModel),
+	threadPool(std::thread::hardware_concurrency())
 {
 	qRegisterMetaType<std::shared_ptr<AbstractCalcResult>>("shared_ptr<AbstractCalcResult>");
+	qRegisterMetaType<std::shared_ptr<AbstractCalculator>>("shared_ptr<AbstractCalculator>");
+	qRegisterMetaType<FrameDescriptor>("FrameDescriptor");
 	connect(_domainsModel,&DomainTableModel::rowsInserted,
 		[&](const QModelIndex &,int from,int to){
 		domainsInserted(from, to);
 	});
-	connect(this,SIGNAL(calculationFinished(const QModelIndex, std::shared_ptr<AbstractCalcResult>)),
-		this,SLOT(updateCache(const QModelIndex, std::shared_ptr<AbstractCalcResult>)));
+
+	connect(this,SIGNAL(calculationFinished(FrameDescriptor,std::shared_ptr<AbstractCalculator>,std::shared_ptr<AbstractCalcResult>)),
+		this, SLOT(updateCache(FrameDescriptor,std::shared_ptr<AbstractCalculator>,std::shared_ptr<AbstractCalcResult>)));
+	connect(this,SIGNAL(calculationFinished(FrameDescriptor,std::shared_ptr<AbstractCalculator>,std::shared_ptr<AbstractCalcResult>,QModelIndex)),
+		this, SLOT(updateCache(FrameDescriptor,std::shared_ptr<AbstractCalculator>,std::shared_ptr<AbstractCalcResult>,QModelIndex)));
 }
 
 QVariant TrajectoriesTreeModel::data(const QModelIndex &index, int role) const
@@ -32,16 +43,19 @@ QVariant TrajectoriesTreeModel::data(const QModelIndex &index, int role) const
 		return frameName(parentItem,index.row());
 	}
 	else {
-		auto& calc=_visibleCalculators[index.column()];
+		if(parentItem->nesting()<2) {
+			return "";
+		}
+		auto calccol=_visibleCalculators[index.column()-1];
 		auto cacherow=cache.find(frameDescriptor(parentItem,index.row()));
 		if(cacherow==cache.end()) {
 			return QString("NA");
 		}
-		auto iresult=cacherow->second.find(calc);
+		auto iresult=cacherow->second.find(calccol.first);
 		if(iresult==cacherow->second.end()){
 			return QString("NA");
 		}
-		return QString::fromStdString(iresult->second->toString());
+		return QString::fromStdString(iresult->second->toString(calccol.second));
 	}
 
 	return QVariant();
@@ -118,12 +132,14 @@ int TrajectoriesTreeModel::rowCount(const QModelIndex &parent) const
 	TrajectoriesTreeItem *parentParentItem;
 	parentParentItem = static_cast<TrajectoriesTreeItem*>(parent.internalPointer());
 
-	if(parentParentItem==nullptr)
+	if(!parent.isValid())
 	{
 		return _molTrajs.size();
 	}
-
-	unsigned parentParentNesting=parentParentItem->nesting();
+	unsigned parentParentNesting=0;
+	if(parentParentItem!=nullptr) {
+		parentParentNesting=parentParentItem->nesting();
+	}
 	if(parentParentNesting==0)
 	{
 		unsigned moltrajIndex=parent.row();
@@ -153,17 +169,41 @@ bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
 		beginInsertRows(QModelIndex(),_molTrajs.size(),_molTrajs.size());
 		_molTrajs.push_back(tmpTrj);
 		endInsertRows();
+		recalculateRow(index(_molTrajs.size()-1,0).child(0,0).child(0,0));
 		return true;
 	}
 	return false;
 }
 
-void TrajectoriesTreeModel::updateCache(const QModelIndex index, std::shared_ptr<AbstractCalcResult> result)
+bool TrajectoriesTreeModel::
+updateCache(const FrameDescriptor desc, const std::shared_ptr<AbstractCalculator> calc,
+	    std::shared_ptr<AbstractCalcResult> result)
 {
-	const TrajectoriesTreeItem *parentItem =
-			static_cast<TrajectoriesTreeItem*>(index.internalPointer());
-	auto& calc=_visibleCalculators[index.column()];
-	cache[frameDescriptor(parentItem,index.row())][calc]=std::move(result);
+
+	if(result) {
+		cache[desc][calc]=std::move(result);
+		return true;
+	}
+	else {//resubmit task
+		QTimer::singleShot(100,this,[this,desc,calc](){appendTask(desc,calc);});
+	}
+	return false;
+}
+
+bool TrajectoriesTreeModel::updateCache(const FrameDescriptor desc,
+					const std::shared_ptr<AbstractCalculator> calc,
+					std::shared_ptr<AbstractCalcResult> result,
+					const QModelIndex index)
+{
+	if(result) {
+		cache[desc][calc]=std::move(result);
+		if(index.isValid()) {
+			emit dataChanged(index,index);
+		}
+	}
+	else {//resubmit task
+		QTimer::singleShot(100,this,[=](){appendTask(desc,calc,index);});
+	}
 }
 
 const TrajectoriesTreeItem* TrajectoriesTreeModel::childItem(const TrajectoriesTreeItem *parent, unsigned childRow) const
@@ -202,13 +242,13 @@ QString TrajectoriesTreeModel::frameName(const TrajectoriesTreeItem *parent, int
 
 QString TrajectoriesTreeModel::calculatorName(int calcNum) const
 {
-	return QString::fromStdString(_visibleCalculators.at(calcNum)->name());
+	return QString::fromStdString(_visibleCalculators.at(calcNum).first->name());
 }
 
 FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeItem *parent, int row) const
 {
 	std::string top,traj;
-	unsigned frame;
+	unsigned frame=-100;
 	switch (parent->nesting()){
 	case 0:
 		top=_molTrajs[row].topologyFileName();
@@ -235,36 +275,112 @@ FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeIte
 
 void TrajectoriesTreeModel::addCalculator(const std::weak_ptr<MolecularSystemDomain> domain)
 {
-	auto calculator=std::make_shared<CalculatorTrasformationMatrix>(domain);
-	_calculators.insert(calculator);
-	_visibleCalculators.push_back(calculator);
-	recalculateColumn(_visibleCalculators.size());
-}
+	auto calculator=std::make_shared<CalculatorTrasformationMatrix>(cache,domain);
 
-void TrajectoriesTreeModel::recalculateColumn(int column) const
+	std::shared_ptr<CalculatorTrasformationMatrix> firstTmCalc;
+	for(const auto& calc:_calculators)
+	{
+		firstTmCalc=std::dynamic_pointer_cast<CalculatorTrasformationMatrix>(calc);
+		if(firstTmCalc)
+		{
+			break;
+		}
+	}
+
+	_calculators.insert(calculator);
+	recalculate(calculator);
+
+	if(firstTmCalc) {
+		auto  angleCalc=std::make_shared<CalculatorEulerAngle>(cache,firstTmCalc,calculator);
+		_calculators.insert(angleCalc);
+		beginInsertColumns(QModelIndex(),columnCount(),columnCount()+2);
+		_visibleCalculators.push_back(std::make_pair(angleCalc,0));
+		_visibleCalculators.push_back(std::make_pair(angleCalc,1));
+		_visibleCalculators.push_back(std::make_pair(angleCalc,2));
+		endInsertColumns();
+		recalculate(angleCalc);
+	}
+
+}
+void TrajectoriesTreeModel::recalculate(const std::shared_ptr<AbstractCalculator> calc) const
 {
-	QModelIndexList Items = this->match(index(0, column),Qt::DisplayRole,"",
+	//TODO: Probably, going through _molTrajs is more efficient
+	QModelIndexList Items = this->match(index(0, 0),Qt::DisplayRole,"",
 					    -1, Qt::MatchRecursive | Qt::MatchStartsWith | Qt::MatchWrap);
 	for(const auto& item:Items)
 	{
-		appendTask(item);
+		auto p=static_cast<TrajectoriesTreeItem*>(item.internalPointer());
+		if(p->nesting()==2) {
+			FrameDescriptor desc=frameDescriptor(p,item.row());
+			appendTask(desc,calc);
+		}
 	}
 }
 
-void TrajectoriesTreeModel::appendTask(const QModelIndex index) const
+void TrajectoriesTreeModel::recalculateRow(const QModelIndex &cell) const
 {
-	FrameDescriptor desc;
-	auto sys=system(desc);
-	threadPool.enqueue([sys,index,this]{
-		std::shared_ptr<AbstractCalculator> calc=_visibleCalculators[index.column()-1];
-		std::shared_ptr<AbstractCalcResult> result=calc->calculate(sys);
-		emit calculationFinished(index, result);
+
+	FrameDescriptor desc=frameDescriptor(static_cast<TrajectoriesTreeItem*>(cell.internalPointer()),cell.row());
+	for(const auto& calc:_calculators)
+	{
+		appendTask(desc,calc);
+	}
+	for(int col=1; col<columnCount(); col++)
+	{
+		//TODO: add index update;
+		appendTask(desc,_visibleCalculators[col-1].first,index(cell.row(),col,cell.parent()));
+	}
+}
+
+std::shared_ptr<AbstractCalcResult>
+TrajectoriesTreeModel::calculate(const FrameDescriptor desc,
+				 const std::shared_ptr<AbstractCalculator> calc) const
+{
+	auto it=cachedEntry(desc,calc);
+	if(it==cache.end()->second.end()) {
+		return calc->calculate(desc);
+	}
+	return it->second;
+}
+void TrajectoriesTreeModel::appendTask(const FrameDescriptor desc,
+				       const std::shared_ptr<AbstractCalculator> calc,
+				       const QModelIndex index) const
+{
+	threadPool.enqueue([desc,calc,index,this]{
+		emit calculationFinished(desc,calc,calculate(desc,calc),index);
+	});
+}
+/*void TrajectoriesTreeModel::appendTask(const QModelIndex index) const
+{
+	FrameDescriptor desc=frameDescriptor(static_cast<TrajectoriesTreeItem*>(index.internalPointer()),index.row());
+	std::shared_ptr<AbstractCalculator> calc=_visibleCalculators[index.column()-1].first;
+	appendTask(desc,calc,index);
+}*/
+void TrajectoriesTreeModel::appendTask(const FrameDescriptor desc,
+				       const std::shared_ptr<AbstractCalculator> calc) const
+{
+	threadPool.enqueue([desc,calc,this]{
+		emit calculationFinished(desc,calc,calculate(desc,calc));
 	});
 }
 
 pteros::System TrajectoriesTreeModel::system(const FrameDescriptor &desc) const
 {
 	pteros::System sys;
-	//TODO:implement
+	sys.load(desc.topologyFileName());
 	return sys;
+}
+
+TrajectoriesTreeModel::ResultCacheCol::iterator
+TrajectoriesTreeModel::cachedEntry(const FrameDescriptor &desc, const std::shared_ptr<AbstractCalculator> calc) const
+{
+	auto cacherow=cache.find(desc);
+	if(cacherow==cache.end()) {
+		return cache.end()->second.end();
+	}
+	auto iresult=cacherow->second.find(calc);
+	if(iresult==cacherow->second.end()) {
+		return cache.end()->second.end();
+	}
+	return iresult;
 }

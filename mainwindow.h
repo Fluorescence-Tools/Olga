@@ -51,6 +51,8 @@ private slots:
     void copySelectedText(const QItemSelectionModel* selModel) const;
     void pasteText(QAbstractItemView *view) const;
 
+    void expand(const QModelIndex &parentIndex, int first, int last);
+
 private:
     void readSettings();
     void writeSettings() const;

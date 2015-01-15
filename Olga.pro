@@ -61,7 +61,8 @@ HEADERS += \
     TrajectoriesTreeModel.h \
     TrajectoriesTreeItem.h \
     CalculatorTrasformationMatrix.h \
-    ThreadPool.h
+    ThreadPool.h \
+    CalculatorEulerAngle.h
 
 SOURCES += \
     PositionTableModel.cpp \
@@ -86,5 +87,6 @@ SOURCES += \
     TrajectoriesTreeModel.cpp \
     TrajectoriesTreeItem.cpp \
     CalculatorTrasformationMatrix.cpp \
-    ThreadPool.cpp
+    ThreadPool.cpp \
+    CalculatorEulerAngle.cpp
 

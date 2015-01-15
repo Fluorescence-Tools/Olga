@@ -8,13 +8,14 @@
 
 
 CalculatorTrasformationMatrix::
-CalculatorTrasformationMatrix(const std::weak_ptr<MolecularSystemDomain> domain) :
-	_domain(domain)
+CalculatorTrasformationMatrix(const ResultCache& results, const std::weak_ptr<MolecularSystemDomain> domain) :
+	AbstractCalculator(results),_domain(domain)
 {
 }
 
-std::shared_ptr<AbstractCalcResult> CalculatorTrasformationMatrix::calculate(const pteros::System &system) const
+std::shared_ptr<AbstractCalcResult> CalculatorTrasformationMatrix::calculate(const FrameDescriptor &desc) const
 {
+	auto system=getSystem(desc);
 	Eigen::Matrix4d matrix;
 	auto domain = _domain.lock();
 	if( !domain )
