@@ -12,6 +12,7 @@
 
 #include "MolecularTrajectory.h"
 #include "AbstractCalculator.h"
+#include "CalculatorPositionSimulation.h"
 #include "TrajectoriesTreeItem.h"
 #include "FrameDescriptor.h"
 #include "AV/MolecularSystemDomain.h"
@@ -73,6 +74,24 @@ private slots:
 			addCalculator(_domainsModel->domain(i));
 		}
 	}
+	void positionsInserted(int from, int to)
+	{
+		std::cerr<<"positions inserted:"<<std::to_string(from)<<"-"<<
+			   std::to_string(to)<<std::endl;
+		for(int i=from; i<=to; i++)
+		{
+			addCalculator(_positionsModel->position(i));
+		}
+	}
+	void distancesInserted(int from, int to)
+	{
+		std::cerr<<"distances inserted:"<<std::to_string(from)<<"-"<<
+			   std::to_string(to)<<std::endl;
+		for(int i=from; i<=to; i++)
+		{
+			addCalculator(_distancesModel->distance(i));
+		}
+	}
 	bool updateCache(const FrameDescriptor desc,
 			 const std::shared_ptr<AbstractCalculator> calc,
 			 std::shared_ptr<AbstractCalcResult> result);
@@ -88,7 +107,9 @@ private:
 	QString frameName(const TrajectoriesTreeItem *parent, int row) const;
 	QString calculatorName(int calcNum) const;
 	FrameDescriptor frameDescriptor(const TrajectoriesTreeItem *parent, int row) const;
-	void addCalculator(const std::weak_ptr<MolecularSystemDomain> domain);
+	void addCalculator(const std::shared_ptr<MolecularSystemDomain> domain);
+	void addCalculator(const std::shared_ptr<Position> position);
+	void addCalculator(const std::shared_ptr<Distance> distance);
 	//void recalculateColumn(int column) const;
 	void recalculate(const std::shared_ptr<AbstractCalculator> calc) const;
 	void recalculateRow(const QModelIndex &index) const;
@@ -113,6 +134,8 @@ private:
 	std::unordered_set<std::shared_ptr<AbstractCalculator>> _calculators;//calculator,column
 	std::vector<CalcColumn> _visibleCalculators;
 	mutable ResultCache cache;//[FrameDescriptor][AbstractCalculator]
+
+	std::unordered_map<std::string,std::weak_ptr<CalculatorPositionSimulation>> _avCalculators;//lp_name
 
 	const DomainTableModel* _domainsModel;
 	const PositionTableModel* _positionsModel;

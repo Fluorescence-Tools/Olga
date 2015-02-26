@@ -73,6 +73,43 @@ Position::Position(const QJsonObject &positionJson, const std::string& name)
 	_simulation=0;
 	load(positionJson, name);
 }
+float pterosVDW(const pteros::System &system, int i)
+{
+	//TODO: This is a hack. One shoul define a corresponding function in pteros::System
+	switch(system.Atom_data(i).name[0]){
+	case 'H': return  0.1;
+	case 'C': return  0.17;
+	case 'N': return  0.1625;
+	case 'O': return  0.149; //mean value used
+	case 'S': return  0.1782;
+	case 'P': return  0.1871;
+	default:  return  0.17;
+	}
+}
+
+std::vector<Eigen::Vector4f> coordsVdW(const pteros::System &system)
+{
+	//iterate over atoms and fill x,y,z,vdw
+	int nAtoms=system.num_atoms();
+	std::vector<Eigen::Vector4f> xyzw;
+	xyzw.reserve(nAtoms);
+
+	//Fill coordinates
+	const pteros::Frame &frame=system.Frame_data(0);
+	for (int i=0; i<nAtoms; i++)
+	{
+		xyzw.emplace_back(frame.coord.at(i)[0]*10.0f,frame.coord.at(i)[1]*10.0f,
+				frame.coord.at(i)[2]*10.0f,pterosVDW(system,i)*10.0f);
+	}
+	return xyzw;
+}
+
+PositionSimulationResult Position::calculate(pteros::System &system) const
+{
+	std::vector<Eigen::Vector4f> xyzW=coordsVdW(system);
+	Eigen::Vector3f refPos=atomXYZ(system);
+	return calculate(refPos,xyzW);
+}
 
 QJsonObject Position::jsonObject() const
 {
@@ -155,8 +192,8 @@ void Position::setSimulationType(const std::string &simulationType)
 {
 	_simulationType = simulationType;
 }
-
-double Position::chi2(pteros::System &system, const std::vector<Position> &positions,
+/*
+double Position::obsolete_chi2(pteros::System &system, const std::vector<Position> &positions,
 		      const std::vector<Distance> &distances)
 {
 
@@ -201,7 +238,7 @@ double Position::chi2(pteros::System &system, const std::vector<Position> &posit
 			if(!res.empty()){
 			    simulations[names[iName]]=std::move(res);
 			}
-		    }));*/
+		    }));*//*
 				}
 			}
 		}
@@ -231,7 +268,7 @@ double Position::chi2(pteros::System &system, const std::vector<Position> &posit
 	}
 	return chi2;
 }
-
+*/
 std::vector<Position> Position::fromLegacy(const std::string &labelingFileName, const std::string &pdbFileName)
 {
 	std::vector<Position> positions;
@@ -260,12 +297,12 @@ std::vector<Position> Position::fromLegacy(const std::string &labelingFileName, 
 	return positions;
 }
 
-QJsonObject Position::jsonObjects(const std::vector<Position> &arr)
+QJsonObject Position::jsonObjects(const std::vector<std::shared_ptr<Position>> &arr)
 {
 	QJsonObject positions;
-	for(const Position& position:arr)
+	for(const auto& position:arr)
 	{
-		positions.insert(QString::fromStdString(position.name()),position.jsonObject());
+		positions.insert(QString::fromStdString(position->name()),position->jsonObject());
 	}
 	return positions;
 }

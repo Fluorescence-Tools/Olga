@@ -40,7 +40,6 @@ FORMS += \
 
 HEADERS += \
     PositionTableModel.h \
-    SystemsTableModel.h \
     DistanceTableModel.h \
     DomainTableModel.h \
     mainwindow.h \
@@ -62,11 +61,12 @@ HEADERS += \
     TrajectoriesTreeItem.h \
     CalculatorTrasformationMatrix.h \
     ThreadPool.h \
-    CalculatorEulerAngle.h
+    CalculatorEulerAngle.h \
+    CalculatorPositionSimulation.h \
+    CalculatorDistance.h
 
 SOURCES += \
     PositionTableModel.cpp \
-    SystemsTableModel.cpp \
     DistanceTableModel.cpp \
     DomainTableModel.cpp \
     main.cpp \
@@ -88,5 +88,7 @@ SOURCES += \
     TrajectoriesTreeItem.cpp \
     CalculatorTrasformationMatrix.cpp \
     ThreadPool.cpp \
-    CalculatorEulerAngle.cpp
+    CalculatorEulerAngle.cpp \
+    CalculatorPositionSimulation.cpp \
+    CalculatorDistance.cpp
 

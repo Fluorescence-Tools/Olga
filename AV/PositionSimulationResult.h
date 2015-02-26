@@ -16,7 +16,6 @@ public:
 
 	PositionSimulationResult()
 	{
-		_meanPosition.fill(std::numeric_limits<double>::quiet_NaN());
 	}
 	PositionSimulationResult(std::vector<Eigen::Vector3f>&& points)
 	{
@@ -51,7 +50,17 @@ protected:
 	static bool allNeighboursFilled(const densityArray_t& arr, int i, int j, int k);
 	std::vector<Eigen::Vector3f> shell(double res=0.5) const;
 	std::vector<Eigen::Vector3f> _points;
-	mutable Eigen::Vector3f _meanPosition;
+	static constexpr double nan=std::numeric_limits<double>::quiet_NaN();
+	mutable Eigen::Vector3f _meanPosition={nan,nan,nan};
 };
+namespace std {
+inline std::string to_string(const PositionSimulationResult& res)
+{
+	Eigen::Vector3f mp=res.meanPosition();
+	std::stringstream ss;
+	ss<<mp.transpose();
+	return ss.str();
+}
 
+}
 #endif // POSITIONSIMULATIONRESULT_H

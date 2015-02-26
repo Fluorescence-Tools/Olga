@@ -24,15 +24,15 @@ public:
 
     bool load(const QJsonObject &positionsListObject);
     QJsonObject jsonArray() const;
-    const Position& position(int i) const;
-    const std::vector<Position> &positions() const;
+    const std::shared_ptr<Position> position(int i) const;
+    const std::vector<std::shared_ptr<Position> > &positions() const;
 
 signals:
 
 public slots:
 
 private:
-    std::vector<Position> _positions;
+    std::vector<std::shared_ptr<Position>> _positions;
 };
 
 #endif // POSITIONTABLEMODEL_H

@@ -12,7 +12,7 @@ std::shared_ptr<AbstractCalcResult> CalculatorEulerAngle::calculate(const FrameD
 		pBody=dynamic_cast<CalcResult<Eigen::Matrix4d>*>(bodyMatrix.get());
 		if(!pRef || !pBody) {//wrong result type
 			std::cerr<<"wrong result type, this should never happen."
-				   "Unexpected behaviour."<<std::endl;
+				   "Unexpected behaviour in CalculatorEulerAngle::calculate."<<std::endl;
 			return std::shared_ptr<AbstractCalcResult>();
 		}
 		const Eigen::Matrix3d& Rrd=pRef->get().block<3,3>(0,0);

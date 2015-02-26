@@ -23,15 +23,19 @@ public:
 
     bool load(const QJsonObject &distancesListObject);
     QJsonObject jsonArray() const;
-    const std::vector<Distance>& distances() const
+    /*const std::vector<Distance>& distances() const
     {
 	return _distances;
+    }*/
+    const std::shared_ptr<Distance> distance(int i) const
+    {
+	    return _distances.at(i);
     }
 signals:
 
 public slots:
 private:
-    std::vector<Distance> _distances;
+    std::vector<std::shared_ptr<Distance>> _distances;
 };
 
 #endif // DISTANCETABLEMODEL_H

@@ -16,8 +16,8 @@ public:
 	{
 		if(auto domain=_domain.lock())
 		{
-			return std::string("TrasformationMatrix (")+
-					domain->name.toStdString()+")";
+			return std::string("")+
+					domain->name.toStdString()+"";
 		}
 		return "unknown(expired)";
 	}

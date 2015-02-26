@@ -25,8 +25,9 @@ public:
 	Position(Position &&o);
 	Position& operator=(Position&& o);
 
-
 	Position(const QJsonObject& positionJson, const std::string& name);
+
+	PositionSimulationResult calculate(pteros::System &system) const;
 
 	virtual QJsonObject jsonObject() const;
 	bool load(const QJsonObject& positionJson, const std::string& name);
@@ -50,12 +51,12 @@ public:
 //	static double chi2(BALL::System &system,
 //			   const std::vector<Position> &positions,
 //			   const std::vector<Distance> &distances);
-	static double chi2(pteros::System &system,
+	static double obsolete_chi2(pteros::System &system,
 				   const std::vector<Position> &positions,
 				   const std::vector<Distance> &distances);
 	static std::vector<Position> fromLegacy(const std::string& labelingFileName,
 						const std::string& pdbFileName);
-	static QJsonObject jsonObjects(const std::vector<Position> &arr);
+	static QJsonObject jsonObjects(const std::vector<std::shared_ptr<Position> > &arr);
 private:
 	//Eigen::Vector3f atomXYZ(BALL::System &system) const;
 	Eigen::Vector3f atomXYZ(pteros::System &system) const;

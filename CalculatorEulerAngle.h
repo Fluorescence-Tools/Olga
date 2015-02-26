@@ -17,12 +17,12 @@ public:
 	}
 	virtual std::shared_ptr<AbstractCalcResult>
 		calculate(const FrameDescriptor& desc) const;
-	virtual std::string name(int i=0) const
+	virtual std::string name(int i) const
 	{
 		auto ref=_refCalc.lock();
 		auto body=_bodyCalc.lock();
 		if(ref && body) {
-			return std::string("EulerAngle (")+ref->name()+", "+
+			return "e"+std::to_string(i)+std::string(" (")+ref->name()+", "+
 					body->name()+")";
 		}
 		return "unknown(expired)";

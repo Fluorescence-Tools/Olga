@@ -115,12 +115,12 @@ std::vector<Distance> Distance::fromLegacy(const std::string &distanceFileName)
     return distances;
 }
 
-QJsonObject Distance::jsonObjects(const std::vector<Distance> &arr)
+QJsonObject Distance::jsonObjects(const std::vector<std::shared_ptr<Distance>> &arr)
 {
     QJsonObject distances;
-    for(const Distance& distance:arr)
+    for(const auto& distance:arr)
     {
-	distances.insert(QString::fromStdString(distance.name()),distance.jsonObject());
+	distances.insert(QString::fromStdString(distance->name()),distance->jsonObject());
     }
     return distances;
 }

@@ -114,19 +114,19 @@ bool MolecularSystem::save(const QString &_filename) const
 	sel.write(_filename.toLocal8Bit().data());
 	return true;
 }
-
+/*
 double MolecularSystem::chi2(const std::vector<Position> &positions, const std::vector<Distance> &distances) const
 {
-	double d=Position::chi2(system,positions,distances);
+	double d=Position::obsolete_chi2(system,positions,distances);
 	if (std::isnan(d))
 	{
 		std::cerr<<"Some distances could not be calculated for structure "<<
 			   this->name()<<std::endl;
 	}
 	return d;
-}
+}*/
 
-float pterosVDW(const pteros::System &system, int i)
+float ms_pterosVDW(const pteros::System &system, int i)
 {
 	//TODO: This is a hack. One shoul define a corresponding function in pteros::System
 	switch(system.Atom_data(i).name[0]){
@@ -152,7 +152,7 @@ std::vector<Eigen::Vector4f> MolecularSystem::coordsVdW(const pteros::System &sy
 	for (int i=0; i<nAtoms; i++)
 	{
 		xyzw.emplace_back(frame.coord.at(i)[0]*10.0f,frame.coord.at(i)[1]*10.0f,
-				frame.coord.at(i)[2]*10.0f,pterosVDW(system,i)*10.0f);
+				frame.coord.at(i)[2]*10.0f,ms_pterosVDW(system,i)*10.0f);
 	}
 	return xyzw;
 }

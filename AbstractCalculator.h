@@ -56,7 +56,7 @@ public:
 	{
 		return _id;
 	}
-	virtual std::string name(int i=0) const=0;
+	virtual std::string name(int i) const=0;
 };
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractCalculator>)
 bool inline operator==(const AbstractCalculator& lhs, const AbstractCalculator& rhs) {

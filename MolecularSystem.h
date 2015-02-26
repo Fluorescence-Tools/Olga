@@ -32,8 +32,8 @@ public:
 	double maxZ(const MolecularSystemDomain& _domain) const;
 	double minZ(const MolecularSystemDomain& _domain) const;
 	bool save(const QString& _filename) const;
-	double chi2(const std::vector<Position>& positions,
-		    const std::vector<Distance>& distances) const;
+	/*double chi2(const std::vector<Position>& positions,
+		    const std::vector<Distance>& distances) const;*/
 
 	static std::vector<Eigen::Vector4f> coordsVdW(const pteros::System &system);
 

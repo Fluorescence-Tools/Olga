@@ -24,17 +24,17 @@ QVariant PositionTableModel::data(const QModelIndex &index, int role) const
 	switch(index.column())
 	{
 	case 0:
-	    return QString::fromStdString(_positions.at(index.row()).name());
+	    return QString::fromStdString(_positions.at(index.row())->name());
 	case 1:
-	    return QString::fromStdString(_positions.at(index.row()).chainIdentifier());
+	    return QString::fromStdString(_positions.at(index.row())->chainIdentifier());
 	case 2:
-	    return _positions.at(index.row()).residueSeqNumber();
+	    return _positions.at(index.row())->residueSeqNumber();
 	case 3:
-	    return QString::fromStdString(_positions.at(index.row()).residueName());
+	    return QString::fromStdString(_positions.at(index.row())->residueName());
 	case 4:
-	    return QString::fromStdString(_positions.at(index.row()).atomName());
+	    return QString::fromStdString(_positions.at(index.row())->atomName());
 	case 5:
-	    return QString::fromStdString(_positions.at(index.row()).simulationType());
+	    return QString::fromStdString(_positions.at(index.row())->simulationType());
 	}
 
 	return QString("Row%1, Column%2")
@@ -80,22 +80,22 @@ bool PositionTableModel::setData(const QModelIndex &index, const QVariant &value
 	switch(index.column())
 	{
 	case 0:
-	    _positions[index.row()].setName(value.toString().toStdString());
+	    _positions[index.row()]->setName(value.toString().toStdString());
 	    break;
 	case 1:
-	    _positions[index.row()].setChainIdentifier(value.toString().toStdString());
+	    _positions[index.row()]->setChainIdentifier(value.toString().toStdString());
 	    break;
 	case 2:
-	    _positions[index.row()].setResidueSeqNumber(value.toInt());
+	    _positions[index.row()]->setResidueSeqNumber(value.toInt());
 	    break;
 	case 3:
-	    _positions[index.row()].setResidueName(value.toString().toStdString());
+	    _positions[index.row()]->setResidueName(value.toString().toStdString());
 	    break;
 	case 4:
-	    _positions[index.row()].setAtomName(value.toString().toStdString());
+	    _positions[index.row()]->setAtomName(value.toString().toStdString());
 	    break;
 	case 5:
-	    _positions[index.row()].setSimulationType(value.toString().toStdString());
+	    _positions[index.row()]->setSimulationType(value.toString().toStdString());
 	    break;
 	}
 	if(index.column()<6)
@@ -117,7 +117,8 @@ Qt::ItemFlags PositionTableModel::flags(const QModelIndex &index) const
 bool PositionTableModel::insertRows(int position, int rows, const QModelIndex &index)
 {
     beginInsertRows(QModelIndex(), position, position+rows-1);
-    _positions.insert(_positions.begin()+position,rows,Position());
+    _positions.insert(_positions.begin()+position,rows,
+		      std::make_shared<Position>());
     endInsertRows();
     return true;
 }
@@ -129,12 +130,11 @@ bool PositionTableModel::removeRows(int position, int rows, const QModelIndex &i
     endRemoveRows();
     return true;
 }
-
-const Position &PositionTableModel::position(int i) const
+const std::shared_ptr<Position> PositionTableModel::position(int i) const
 {
     return _positions.at(i);
 }
-const std::vector<Position>& PositionTableModel::positions() const
+const std::vector<std::shared_ptr<Position>>& PositionTableModel::positions() const
 {
     return _positions;
 }
@@ -151,16 +151,16 @@ bool PositionTableModel::load(const QJsonObject &positionsListObject)
     {
 	QJsonObject position=it.value().toObject();
 	Position pos(position,it.key().toStdString());
-	_positions.push_back(pos);
+	_positions.push_back(std::make_shared<Position>(std::move(pos)));
     }
     QCollator collator;
     collator.setNumericMode(true);
     //TODO: this is a poor man's solution, it is better to make the program
     //rememeber the ordering from the settings file, bu QJson does not support it atm.
     std::sort(_positions.begin(), _positions.end(),
-	[&collator](const Position & a, const Position & b) -> bool
+	[&collator](const std::shared_ptr<Position> & a, const std::shared_ptr<Position> & b) -> bool
     {
-	return -1==collator.compare(QString::fromStdString(a.name()),QString::fromStdString(b.name()));
+	return -1==collator.compare(QString::fromStdString(a->name()),QString::fromStdString(b->name()));
     });
     endInsertRows();
     return true;
