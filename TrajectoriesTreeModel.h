@@ -19,6 +19,8 @@
 #include "DomainTableModel.h"
 #include "DistanceTableModel.h"
 #include "PositionTableModel.h"
+#include "CalculatorDistance.h"
+#include "CalculatorChi2.h"
 
 
 class TrajectoriesTreeModel : public QAbstractItemModel
@@ -142,6 +144,9 @@ private:
 	const DistanceTableModel* _distancesModel;
 
 	mutable ThreadPool threadPool;
+
+	std::vector<std::weak_ptr<CalculatorDistance>> _distanceCalculators;
+	std::shared_ptr<CalculatorChi2> _chi2Calc;
 };
 
 #endif // TRAJECTORIESTREEMODEL_H

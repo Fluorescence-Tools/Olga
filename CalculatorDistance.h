@@ -7,6 +7,7 @@
 
 class CalculatorDistance : public AbstractCalculator
 {
+	friend class CalculatorChi2;
 private:
 	const std::weak_ptr<CalculatorPositionSimulation> _av1, _av2;
 	const std::weak_ptr<Distance> _dist;

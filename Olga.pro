@@ -63,7 +63,8 @@ HEADERS += \
     ThreadPool.h \
     CalculatorEulerAngle.h \
     CalculatorPositionSimulation.h \
-    CalculatorDistance.h
+    CalculatorDistance.h \
+    CalculatorChi2.h
 
 SOURCES += \
     PositionTableModel.cpp \
@@ -90,5 +91,6 @@ SOURCES += \
     ThreadPool.cpp \
     CalculatorEulerAngle.cpp \
     CalculatorPositionSimulation.cpp \
-    CalculatorDistance.cpp
+    CalculatorDistance.cpp \
+    CalculatorChi2.cpp
 

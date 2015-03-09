@@ -40,6 +40,10 @@ TrajectoriesTreeModel(const DomainTableModel *domainsModel,
 		SIGNAL(calculationFinished(FrameDescriptor,std::shared_ptr<AbstractCalculator>,std::shared_ptr<AbstractCalcResult>,QModelIndex)),
 		this,
 		SLOT(updateCache(FrameDescriptor,std::shared_ptr<AbstractCalculator>,std::shared_ptr<AbstractCalcResult>,QModelIndex)));
+
+	_chi2Calc=std::make_shared<CalculatorChi2>(cache,_distanceCalculators);
+	_calculators.insert(_chi2Calc);
+	_visibleCalculators.push_back(std::make_pair(_chi2Calc,0));
 }
 
 QVariant TrajectoriesTreeModel::data(const QModelIndex &index, int role) const
@@ -324,7 +328,7 @@ void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<Position> positi
 	auto calculator=std::make_shared<CalculatorPositionSimulation>(cache,position);
 	_avCalculators[position->name()]=calculator;
 	_calculators.insert(calculator);
-	_visibleCalculators.push_back(std::make_pair(calculator,0));
+	//_visibleCalculators.push_back(std::make_pair(calculator,0));
 	recalculate(calculator);
 }
 
@@ -336,6 +340,11 @@ void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<Distance> distan
 	_calculators.insert(calculator);
 	_visibleCalculators.push_back(std::make_pair(calculator,0));
 	recalculate(calculator);
+	_distanceCalculators.push_back(calculator);
+	_chi2Calc=std::make_shared<CalculatorChi2>(cache,_distanceCalculators);
+	_calculators.insert(_chi2Calc);
+	_visibleCalculators[0]=std::make_pair(_chi2Calc,0);
+	recalculate(_chi2Calc);
 }
 void TrajectoriesTreeModel::recalculate(const std::shared_ptr<AbstractCalculator> calc) const
 {
@@ -381,7 +390,7 @@ void TrajectoriesTreeModel::appendTask(const FrameDescriptor desc,
 				       const std::shared_ptr<AbstractCalculator> calc,
 				       const QModelIndex index) const
 {
-	threadPool.enqueue([desc,calc,index,this]{
+	threadPool.enqueue([desc,calc,index,this] {
 		emit calculationFinished(desc,calc,calculate(desc,calc),index);
 	});
 }
