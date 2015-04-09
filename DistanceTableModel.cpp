@@ -127,7 +127,7 @@ Qt::ItemFlags DistanceTableModel::flags(const QModelIndex &index) const
     return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 }
 
-bool DistanceTableModel::insertRows(int position, int rows, const QModelIndex &index)
+bool DistanceTableModel::insertRows(int position, int rows, const QModelIndex &/*index*/)
 {
     beginInsertRows(QModelIndex(), position, position+rows-1);
     _distances.insert(_distances.begin()+position,rows,std::make_shared<Distance>());
@@ -135,7 +135,7 @@ bool DistanceTableModel::insertRows(int position, int rows, const QModelIndex &i
     return true;
 }
 
-bool DistanceTableModel::removeRows(int position, int rows, const QModelIndex &index)
+bool DistanceTableModel::removeRows(int position, int rows, const QModelIndex &/*index*/)
 {
     beginRemoveRows(QModelIndex(), position, position+rows-1);
     _distances.erase(_distances.begin()+position,_distances.begin()+rows+position);

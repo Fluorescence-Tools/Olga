@@ -91,7 +91,7 @@ QVariant TrajectoriesTreeModel::headerData(int section, Qt::Orientation orientat
 {
 	if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
-		if(section>0 && section<_visibleCalculators.size()+1)
+		if(section>0 && section<int(_visibleCalculators.size()+1))
 		{
 			return calculatorName(section-1);
 		}
@@ -174,7 +174,7 @@ int TrajectoriesTreeModel::rowCount(const QModelIndex &parent) const
 	return 0;
 }
 
-int TrajectoriesTreeModel::columnCount(const QModelIndex &parent) const
+int TrajectoriesTreeModel::columnCount(const QModelIndex &/*parent*/) const
 {
 	return _visibleCalculators.size()+1;
 }
@@ -222,18 +222,20 @@ bool TrajectoriesTreeModel::updateCache(const FrameDescriptor desc,
 	}
 	else {//resubmit task
 		QTimer::singleShot(100,this,[=](){appendTask(desc,calc,index);});
+		return false;
 	}
+	return true;
 }
 
 const TrajectoriesTreeItem* TrajectoriesTreeModel::childItem(const TrajectoriesTreeItem *parent, unsigned childRow) const
 {
 	//assert(parent->nesting()<2);
 	if(parent!=nullptr && parent->nesting()==1){
-		TrajectoriesTreeItem itm {parent->moltrajIndex,childRow};
+		TrajectoriesTreeItem itm {parent->moltrajIndex,int(childRow)};
 		return &(*(items.emplace(std::move(itm)).first));
 	}
 	else {//if(parentNesting==0) || parent!=nullptr
-		TrajectoriesTreeItem itm {childRow,-1};
+		TrajectoriesTreeItem itm {int(childRow),-1};
 		return &(*(items.emplace(std::move(itm)).first));
 	}
 }

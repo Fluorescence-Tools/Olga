@@ -72,12 +72,18 @@ QJsonObject PositionSimulationAV3::jsonObject()
     return position;
 }
 
-double PositionSimulationAV3::getAllowedSphereRadius(int atom_i, const double *XLocal, const double *YLocal, const double *ZLocal, const double *vdWR, int NAtoms, double linkersphere, int linknodes, unsigned char *density) const
+double PositionSimulationAV3::
+getAllowedSphereRadius(int atom_i, const double *XLocal, const double *YLocal,
+		       const double *ZLocal, const double *vdWR, int NAtoms,
+		       double linkersphere, int linknodes,
+		       unsigned char *density) const
 {
     if(allowedSphereRadius>=0.0)
     {
 	return allowedSphereRadius;
     }
+    (void)atom_i; (void)XLocal; (void)YLocal; (void)ZLocal; (void)vdWR;
+    (void)NAtoms; (void)linkersphere; (void)linknodes; (void)density;
     //TODO: add automatic sphere radius determination
     return allowedSphereRadiusMin;
 }

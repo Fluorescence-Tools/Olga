@@ -14,6 +14,7 @@ public:
 		calculate(const FrameDescriptor& desc) const;
 	virtual std::string name(int i=0) const
 	{
+		(void)i;
 		if(auto domain=_domain.lock())
 		{
 			return std::string("")+

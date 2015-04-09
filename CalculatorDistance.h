@@ -18,7 +18,7 @@ public:
 			   const std::weak_ptr<Distance>& dist);
 	virtual std::shared_ptr<AbstractCalcResult>
 		calculate(const FrameDescriptor& desc) const;
-	virtual std::string name(int i) const
+	virtual std::string name(int) const
 	{
 		auto av1=_av1.lock();
 		auto av2=_av2.lock();

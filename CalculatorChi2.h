@@ -13,7 +13,7 @@ public:
 		       const std::vector<std::weak_ptr<CalculatorDistance>> distCalcs);
 	virtual std::shared_ptr<AbstractCalcResult>
 		calculate(const FrameDescriptor& desc) const;
-	virtual std::string name(int i) const
+	virtual std::string name(int) const
 	{
 		return "chi^2";
 	}

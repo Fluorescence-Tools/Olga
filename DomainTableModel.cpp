@@ -143,7 +143,7 @@ Qt::ItemFlags DomainTableModel::flags(const QModelIndex &index) const
     return QAbstractItemModel::flags(index);
 }
 
-bool DomainTableModel::insertRows(int position, int rows, const QModelIndex &index)
+bool DomainTableModel::insertRows(int position, int rows, const QModelIndex &/*index*/)
 {
     beginInsertRows(QModelIndex(), position, position+rows-1);
     _domains.insert(_domains.begin()+position,rows,
@@ -152,7 +152,7 @@ bool DomainTableModel::insertRows(int position, int rows, const QModelIndex &ind
     return true;
 }
 
-bool DomainTableModel::removeRows(int position, int rows, const QModelIndex &index)
+bool DomainTableModel::removeRows(int position, int rows, const QModelIndex &/*index*/)
 {
     beginRemoveRows(QModelIndex(), position, position+rows-1);
     _domains.erase(_domains.begin()+position,_domains.begin()+rows+position);

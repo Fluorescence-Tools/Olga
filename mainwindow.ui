@@ -124,6 +124,7 @@
    <addaction name="actionExportData"/>
    <addaction name="separator"/>
    <addaction name="actionExportCylinders"/>
+   <addaction name="actionAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="labellingPositionsDockWidget">
@@ -463,6 +464,15 @@
     <string>Export cylinders domain representation for pymol</string>
    </property>
   </action>
+  <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/help-about.svgz</normaloff>:/icons/help-about.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
@@ -629,6 +639,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionAbout</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>showAbout()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>372</x>
+     <y>290</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>loadJson()</slot>
@@ -641,5 +667,6 @@
   <slot>insertDomains()</slot>
   <slot>insertPositions()</slot>
   <slot>exportCylinders()</slot>
+  <slot>showAbout()</slot>
  </slots>
 </ui>

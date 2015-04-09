@@ -26,7 +26,7 @@ public:
 	{
 		_value=val;
 	}
-	std::string toString(int i=0) const
+	std::string toString(int /*i=0*/) const
 	{
 		return std::to_string(_value);
 	}

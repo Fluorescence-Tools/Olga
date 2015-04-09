@@ -32,6 +32,7 @@ public:
 	}
 	int frameNum(int trajIndex,int frameIndex) const
 	{
+		(void)trajIndex; (void)frameIndex;
 		//TODO: implement correct frame number determination
 		return 0;
 	}

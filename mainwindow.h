@@ -25,57 +25,58 @@ public:
 	~MainWindow();
 
 protected:
-    void closeEvent(QCloseEvent *event);
+	void closeEvent(QCloseEvent *event);
 
 private slots:
-    void loadStructures();
-    void metropolisSampling();
-    void loadJson();
-    bool saveJson();
-    bool exportData();
-    bool exportCylinders();
-    bool exportStructures();
-    bool insertDistances(int position=-1, unsigned num=1);
-    bool insertDomains(int position=-1, unsigned num=1);
-    bool insertPositions(int position=-1, unsigned num=1);
+	void loadStructures();
+	void metropolisSampling();
+	void loadJson();
+	bool saveJson();
+	bool exportData();
+	bool exportCylinders();
+	bool exportStructures();
+	bool insertDistances(int position=-1, unsigned num=1);
+	bool insertDomains(int position=-1, unsigned num=1);
+	bool insertPositions(int position=-1, unsigned num=1);
 
-    void deleteSelectedDistances();
-    void deleteSelectedDomains();
-    void deleteSelectedPositions();
+	void deleteSelectedDistances();
+	void deleteSelectedDomains();
+	void deleteSelectedPositions();
 
-    void ShowSystemsContextMenu(const QPoint& pos);
-    void ShowDistancesContextMenu(const QPoint& pos);
-    void ShowDomainsContextMenu(const QPoint& pos);
-    void ShowPositionsContextMenu(const QPoint& pos);
+	void ShowSystemsContextMenu(const QPoint& pos);
+	void ShowDistancesContextMenu(const QPoint& pos);
+	void ShowDomainsContextMenu(const QPoint& pos);
+	void ShowPositionsContextMenu(const QPoint& pos);
 
-    void copySelectedText(const QItemSelectionModel* selModel) const;
-    void pasteText(QAbstractItemView *view) const;
+	void copySelectedText(const QItemSelectionModel* selModel) const;
+	void pasteText(QAbstractItemView *view) const;
 
-    void expand(const QModelIndex &parentIndex, int first, int last);
+	void expand(const QModelIndex &parentIndex, int first, int last);
+	void showAbout();
 
 private:
-    void readSettings();
-    void writeSettings() const;
-    void setupMenus();
-    bool eventFilter(QObject* object, QEvent* event);
+	void readSettings();
+	void writeSettings() const;
+	void setupMenus();
+	bool eventFilter(QObject* object, QEvent* event);
 
-    QString tabSeparatedData(const QItemSelectionModel *selectionModel) const;
+	QString tabSeparatedData(const QItemSelectionModel *selectionModel) const;
 
 private:
 	Ui::MainWindow *ui;
 
-    QMenu systemsMenu;
-    QMenu distancesMenu;
-    QMenu domainsMenu;
-    QMenu positionsMenu;
+	QMenu systemsMenu;
+	QMenu distancesMenu;
+	QMenu domainsMenu;
+	QMenu positionsMenu;
 
-    DomainTableModel domainsModel;
-    PositionTableModel positionsModel;
-    DistanceTableModel distancesModel;
-    //SystemsTableModel systemsModel;
-    TrajectoriesTreeModel trajectoriesModel;
+	DomainTableModel domainsModel;
+	PositionTableModel positionsModel;
+	DistanceTableModel distancesModel;
+	//SystemsTableModel systemsModel;
+	TrajectoriesTreeModel trajectoriesModel;
 
-    DistanceDelegate distanceDelegate;
+	DistanceDelegate distanceDelegate;
 
 };
 

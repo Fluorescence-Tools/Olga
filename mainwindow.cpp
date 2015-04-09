@@ -565,3 +565,8 @@ void MainWindow::expand(const QModelIndex &parentIndex, int first, int last)
 		}
 	}
 }
+void MainWindow::showAbout()
+{
+    QMessageBox::about(this,"SRHDDumpReader",QString("Olga v. %1\nMykola Dimura, dimura@hhu.de\n")
+		       .arg(QApplication::applicationVersion()));
+}

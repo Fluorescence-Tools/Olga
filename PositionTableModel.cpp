@@ -114,7 +114,7 @@ Qt::ItemFlags PositionTableModel::flags(const QModelIndex &index) const
     return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 }
 
-bool PositionTableModel::insertRows(int position, int rows, const QModelIndex &index)
+bool PositionTableModel::insertRows(int position, int rows, const QModelIndex& /*index*/)
 {
     beginInsertRows(QModelIndex(), position, position+rows-1);
     _positions.insert(_positions.begin()+position,rows,
@@ -123,7 +123,7 @@ bool PositionTableModel::insertRows(int position, int rows, const QModelIndex &i
     return true;
 }
 
-bool PositionTableModel::removeRows(int position, int rows, const QModelIndex &index)
+bool PositionTableModel::removeRows(int position, int rows, const QModelIndex &/*index*/)
 {
     beginRemoveRows(QModelIndex(), position, position+rows-1);
     _positions.erase(_positions.begin()+position,_positions.begin()+rows+position);

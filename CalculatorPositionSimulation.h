@@ -12,7 +12,7 @@ public:
 	CalculatorPositionSimulation(const ResultCache& results, const std::weak_ptr<Position> position);
 	virtual std::shared_ptr<AbstractCalcResult>
 		calculate(const FrameDescriptor& desc) const;
-	virtual std::string name(int i) const
+	virtual std::string name(int ) const
 	{
 		if(auto position=_position.lock())
 		{

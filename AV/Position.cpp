@@ -1,6 +1,5 @@
 #include "Position.h"
 #include "Distance.h"
-#include "MolecularSystem.h"
 
 #include <map>
 #include <iostream>
@@ -66,6 +65,7 @@ Position& Position::operator=(Position&& o)
 	_simulationType=std::move(o._simulationType);
 	_simulation=o._simulation;
 	o._simulation=0;
+	return *this;
 }
 
 Position::Position(const QJsonObject &positionJson, const std::string& name)

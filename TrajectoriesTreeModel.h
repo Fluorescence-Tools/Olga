@@ -45,6 +45,7 @@ public:
 	bool loadSystem(const QString& fileName);
 	bool exportSystem(int row, const QString& filename)
 	{
+		(void)row; (void)filename;
 		return false;//TODO: implement
 	}
 	QStringList cylinders() const
@@ -69,8 +70,6 @@ public slots:
 private slots:
 	void domainsInserted(int from, int to)
 	{
-		std::cerr<<"domains inserted:"<<std::to_string(from)<<"-"<<
-			   std::to_string(to)<<std::endl;
 		for(int i=from; i<=to; i++)
 		{
 			addCalculator(_domainsModel->domain(i));
@@ -78,8 +77,6 @@ private slots:
 	}
 	void positionsInserted(int from, int to)
 	{
-		std::cerr<<"positions inserted:"<<std::to_string(from)<<"-"<<
-			   std::to_string(to)<<std::endl;
 		for(int i=from; i<=to; i++)
 		{
 			addCalculator(_positionsModel->position(i));
@@ -87,8 +84,6 @@ private slots:
 	}
 	void distancesInserted(int from, int to)
 	{
-		std::cerr<<"distances inserted:"<<std::to_string(from)<<"-"<<
-			   std::to_string(to)<<std::endl;
 		for(int i=from; i<=to; i++)
 		{
 			addCalculator(_distancesModel->distance(i));
