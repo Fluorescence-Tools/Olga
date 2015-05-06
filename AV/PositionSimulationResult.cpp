@@ -14,7 +14,7 @@ Eigen::Vector3f PositionSimulationResult::meanPosition() const
 		{
 			_meanPosition+=point;
 		}
-		_meanPosition/=(double)_points.size();
+		_meanPosition/=static_cast<double>(_points.size());
 	}
 	return _meanPosition;
 }
@@ -26,7 +26,7 @@ double PositionSimulationResult::Rda(const PositionSimulationResult &other, unsi
 	unsigned av2length=other._points.size();
 	const unsigned long rndLim=(av1length-1)*(av2length-1);
 	double mean=0.0;
-	if(nsamples<(unsigned long)av1length*av2length && nsamples!=0)//MC sampling
+	if(nsamples<static_cast<unsigned long>(av1length*av2length) && nsamples!=0)//MC sampling
 	{
 		std::random_device rd;
 		std::mt19937 engine(rd());
@@ -42,7 +42,7 @@ double PositionSimulationResult::Rda(const PositionSimulationResult &other, unsi
 			r += (_points.at(i2%av1length)-other._points.at(i1%av2length)).norm();
 		}
 		nsamples*=2;
-		mean = r/((double)(nsamples));
+		mean = r/static_cast<double>(nsamples);
 		return mean;
 	}
 	else//explicit sampling
@@ -56,7 +56,7 @@ double PositionSimulationResult::Rda(const PositionSimulationResult &other, unsi
 			}
 
 		}
-		mean = r/( (double)av1length*(double)av2length );
+		mean = r/static_cast<double>(av1length*av2length);
 		return mean;
 	}
 	return mean;
@@ -69,7 +69,7 @@ double PositionSimulationResult::Rdae(const PositionSimulationResult &other, dou
 	unsigned av2length=other._points.size();
 	const unsigned long rndLim=(av1length-1)*(av2length-1);
 	double r2, e = 0., R0r6 = 1./(R0*R0*R0*R0*R0*R0);
-	if(nsamples<(unsigned long)av1length*av2length && nsamples!=0)//MC sampling
+	if(nsamples<static_cast<unsigned long>(av1length*av2length) && nsamples!=0)//MC sampling
 	{
 		std::random_device rd;
 		std::mt19937 engine(rd());
@@ -86,7 +86,7 @@ double PositionSimulationResult::Rdae(const PositionSimulationResult &other, dou
 			r2 = (_points.at(i2%av1length)-other._points.at(i1%av2length)).squaredNorm();
 			e += 1. / (1. + r2 * r2 * r2 * R0r6);
 		}
-		e /= (double)(nsamples*2);
+		e /= static_cast<double>(nsamples*2);
 	}
 	else//explicit sampling
 	{
@@ -99,7 +99,7 @@ double PositionSimulationResult::Rdae(const PositionSimulationResult &other, dou
 			}
 
 		}
-		e /= (double)av1length*(double)av2length;
+		e /= static_cast<double>(av1length*av2length);
 	}
 	return R0 * pow((1./e - 1.), 1./ 6.);
 }

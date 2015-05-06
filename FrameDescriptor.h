@@ -49,16 +49,22 @@ private:
 	unsigned _frame=0;
 
 };
-
+template <class T>
+inline void hash_combine(std::size_t& seed, const T& v)
+{
+	std::hash<T> hasher;
+	seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+}
 namespace std {
 template <>
 struct hash<FrameDescriptor> {
 	size_t operator()(const FrameDescriptor& desc) const {
-		return hash<string>()(desc._topologyFileName)^
-				hash<string>()(desc._trajFileName)^
-				hash<unsigned>()(desc._frame);
+		size_t seed=hash<string>()(desc._topologyFileName);
+		hash_combine(seed,desc._trajFileName);
+		hash_combine(seed,desc._frame);
+		return seed;
 	}
 };
 }
-Q_DECLARE_METATYPE(FrameDescriptor);
+Q_DECLARE_METATYPE(FrameDescriptor)
 #endif // FRAMEDESCRIPTOR_H

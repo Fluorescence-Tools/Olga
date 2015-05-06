@@ -3,19 +3,29 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#include "CalculatorTrasformationMatrix.h"
+#include "EvaluatorTrasformationMatrix.h"
 #include "CalcResult.h"
 
 
-CalculatorTrasformationMatrix::
-CalculatorTrasformationMatrix(const ResultCache& results, const std::weak_ptr<MolecularSystemDomain> domain) :
-	AbstractCalculator(results),_domain(domain)
+EvaluatorTrasformationMatrix::
+EvaluatorTrasformationMatrix(const TaskStorage& storage, const std::weak_ptr<MolecularSystemDomain> domain) :
+	AbstractEvaluator(storage),_domain(domain)
 {
 }
 
-std::shared_ptr<AbstractCalcResult> CalculatorTrasformationMatrix::calculate(const FrameDescriptor &desc) const
+AbstractEvaluator::Task
+EvaluatorTrasformationMatrix::makeTask(const FrameDescriptor &frame) const
 {
-	auto system=getSystem(desc);
+	auto sysTask=getSysTask(frame);
+	return sysTask.then([this](pteros::System system) {
+		return calculate(system);
+	}).share();
+}
+
+std::shared_ptr<AbstractCalcResult>
+EvaluatorTrasformationMatrix::calculate(const pteros::System& system) const
+{
+	//auto system=getSystem(desc);
 	Eigen::Matrix4d matrix;
 	auto domain = _domain.lock();
 	if( !domain )
@@ -56,6 +66,5 @@ std::shared_ptr<AbstractCalcResult> CalculatorTrasformationMatrix::calculate(con
 
 	}
 	matrix=Eigen::umeyama(positionLocalCS,positionGlobalCS,false);
-
 	return std::make_shared<CalcResult<Eigen::Matrix4d>>(std::move(matrix));
 }

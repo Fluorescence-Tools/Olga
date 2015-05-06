@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 
 #include "AbstractCalcResult.h"
+#include <pteros/pteros.h>
 
 namespace std {
 inline std::string to_string(const Eigen::Matrix4d& matrix)
@@ -44,7 +45,12 @@ inline std::string CalcResult<Eigen::Vector3d>::toString(int i)const
 {
 	return std::to_string(_value[i]);
 }
-
+template <>
+inline std::string CalcResult<pteros::System>::toString(int i)const
+{
+	(void)i;
+	return "atoms:"+std::to_string(_value.num_atoms());
+}
 /*
 template <>
 class CalcResult<int>:public AbstractCalcResult

@@ -1,19 +1,19 @@
-#include "CalculatorChi2.h"
-#include "CalculatorDistance.h"
+#include "EvaluatorChi2.h"
+#include "EvaluatorDistance.h"
 #include "CalcResult.h"
-CalculatorChi2::CalculatorChi2(const AbstractCalculator::ResultCache &results,
-			       const std::vector<std::weak_ptr<CalculatorDistance> > distCalcs):
-	AbstractCalculator(results),_distCalcs(distCalcs)
+EvaluatorChi2::EvaluatorChi2(const AbstractEvaluator::ResultCache &results,
+			       const std::vector<std::weak_ptr<EvaluatorDistance> > distCalcs):
+	AbstractEvaluator(results),_distCalcs(distCalcs)
 {
 
 }
 
-std::shared_ptr<AbstractCalcResult> CalculatorChi2::calculate(const FrameDescriptor &desc) const
+std::shared_ptr<AbstractCalcResult> EvaluatorChi2::calculate(const FrameDescriptor &desc) const
 {
 	double chi2=0.0;
 	for(const auto& calc:_distCalcs)
 	{
-		std::shared_ptr<CalculatorDistance> calcRef=calc.lock();
+		std::shared_ptr<EvaluatorDistance> calcRef=calc.lock();
 		if(!calcRef) {
 			return std::shared_ptr<AbstractCalcResult>();
 		}
@@ -28,7 +28,7 @@ std::shared_ptr<AbstractCalcResult> CalculatorChi2::calculate(const FrameDescrip
 		CalcResult<double> *model=dynamic_cast<CalcResult<double>*>(modelDist.get());
 		if(!model) {
 			std::cerr<<"wrong result type, this should never happen."
-				   "Unexpected behaviour in CalculatorChi2::calculate"
+				   "Unexpected behaviour in EvaluatorChi2::calculate"
 				<<std::endl;
 			return std::shared_ptr<AbstractCalcResult>();
 		}

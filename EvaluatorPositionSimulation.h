@@ -1,15 +1,15 @@
-#ifndef CALCULATORPOSITIONSIMULATION_H
-#define CALCULATORPOSITIONSIMULATION_H
+#ifndef EVALUATORPOSITIONSIMULATION_H
+#define EVALUATORPOSITIONSIMULATION_H
 
-#include "AbstractCalculator.h"
+#include "AbstractEvaluator.h"
 #include "AV/Position.h"
 
-class CalculatorPositionSimulation : public AbstractCalculator
+class EvaluatorPositionSimulation : public AbstractEvaluator
 {
 private:
 	const std::weak_ptr<Position> _position;
 public:
-	CalculatorPositionSimulation(const ResultCache& results, const std::weak_ptr<Position> position);
+	EvaluatorPositionSimulation(const ResultCache& results, const std::weak_ptr<Position> position);
 	virtual std::shared_ptr<AbstractCalcResult>
 		calculate(const FrameDescriptor& desc) const;
 	virtual std::string name(int ) const
@@ -21,7 +21,7 @@ public:
 		}
 		return "unknown(expired)";
 	}
-	//~CalculatorPositionSimulation();
+	//~EvaluatorPositionSimulation();
 };
 
-#endif // CALCULATORPOSITIONSIMULATION_H
+#endif // EVALUATORPOSITIONSIMULATION_H

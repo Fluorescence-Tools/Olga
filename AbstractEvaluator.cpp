@@ -1,0 +1,18 @@
+#include "AbstractEvaluator.h"
+#include "TaskStorage.h"
+
+
+AbstractEvaluator::Task AbstractEvaluator::getTask(const FrameDescriptor &desc, const std::weak_ptr<AbstractEvaluator> eval) const
+{
+	auto evalShared=eval.lock();
+	if(!evalShared) {
+		std::cerr<<"Trying to get a task for the non-existing"
+			   " evaluator. This should never happen."<<std::endl;
+	}
+	return _storage.getTask(desc, evalShared);
+}
+
+AbstractEvaluator::PterosSysTask AbstractEvaluator::getSysTask(const FrameDescriptor &frame) const
+{
+	return _storage.getSysTask(frame);
+}

@@ -81,7 +81,7 @@ QVariant DomainTableModel::data(const QModelIndex &index, int role) const
 	}
 	else if(index.column()==1)
 	{
-	    return (unsigned)_domains.at(index.row())->numPoints();
+	    return static_cast<unsigned>(_domains.at(index.row())->numPoints());
 	}
 
 	return QString("Row%1, Column%2")

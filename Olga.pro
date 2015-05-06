@@ -5,25 +5,33 @@
 #-------------------------------------------------
 QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-VERSION = 20150218b
-DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 TARGET = Olga
-
 TEMPLATE = app
 
-QMAKE_CXXFLAGS += -std=c++1y #-pthread -Wl,--no-as-needed
-QMAKE_LFLAGS += -std=c++1y #-pthread -Wl,--no-as-needed
+#VERSION = YYYYMMDDx
+#DEFINES += APP_VERSION=\\\"$$VERSION\\\"
+COMMIT_BRANCH = $$system(git rev-parse --abbrev-ref HEAD)
+COMMIT_DATE = $$system(git show -s --pretty='%ci')
+COMMIT_DATE = $$first(COMMIT_DATE)
+DEFINES += APP_VERSION=\\\"$$COMMIT_DATE-$$COMMIT_BRANCH\\\"
+CONFIG += c++14
 
-win32:{
-    QTPLUGIN += qsvg
-    INCLUDEPATH += /home/dimura/opt/Pteros-win/include
-    LIBS += -L"/home/dimura/opt/Pteros-win/lib"
-    LIBS += -L"/usr/x86_64-w64-mingw32/plugins/accessible"
-    LIBS += -L"/usr/x86_64-w64-mingw32/plugins/imageformats"
-    LIBS += -L"/usr/x86_64-w64-mingw32/plugins/platforms"
-}
+LIBS += -L$$(HOME)/opt/lib
 
-LIBS += -lpteros -lpteros_analysis -ltng_io -lboost_system -lboost_thread
+QMAKE_CXXFLAGS += -std=c++14 -Wextra -Winit-self -Wold-style-cast -Woverloaded-virtual -Wuninitialized -Winit-self -pedantic-errors #-Werror
+QMAKE_LFLAGS += -std=c++14
+LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io -lboost_system -lboost_thread
+
+#win32:{
+#    QTPLUGIN += qsvg
+#    INCLUDEPATH += /home/dimura/opt/Pteros-win/include
+#    LIBS += -L"/home/dimura/opt/Pteros-win/lib"
+#    LIBS += -L"/usr/x86_64-w64-mingw32/plugins/accessible"
+#    LIBS += -L"/usr/x86_64-w64-mingw32/plugins/imageformats"
+#    LIBS += -L"/usr/x86_64-w64-mingw32/plugins/platforms"
+#}
+
+
 
 RESOURCES += \
     icons.qrc
@@ -46,17 +54,15 @@ HEADERS += \
     combination.hpp \
     AbstractCalcResult.h \
     CalcResult.h \
-    AbstractCalculator.h \
     FrameDescriptor.h \
     MolecularTrajectory.h \
     TrajectoriesTreeModel.h \
     TrajectoriesTreeItem.h \
-    CalculatorTrasformationMatrix.h \
-    ThreadPool.h \
-    CalculatorEulerAngle.h \
-    CalculatorPositionSimulation.h \
-    CalculatorDistance.h \
-    CalculatorChi2.h
+    AbstractEvaluator.h \
+    TaskStorage.h \
+    EvaluatorTrasformationMatrix.h \
+    EvaluatorEulerAngle.h \
+    PterosSystemLoader.h
 
 SOURCES += \
     PositionTableModel.cpp \
@@ -73,17 +79,15 @@ SOURCES += \
     AV/PositionSimulationResult.cpp \
     AbstractCalcResult.cpp \
     CalcResult.cpp \
-    AbstractCalculator.cpp \
     FrameDescriptor.cpp \
     MolecularTrajectory.cpp \
     TrajectoriesTreeModel.cpp \
     TrajectoriesTreeItem.cpp \
-    CalculatorTrasformationMatrix.cpp \
-    ThreadPool.cpp \
-    CalculatorEulerAngle.cpp \
-    CalculatorPositionSimulation.cpp \
-    CalculatorDistance.cpp \
-    CalculatorChi2.cpp
+    AbstractEvaluator.cpp \
+    TaskStorage.cpp \
+    EvaluatorTrasformationMatrix.cpp \
+    EvaluatorEulerAngle.cpp \
+    PterosSystemLoader.cpp
 
 DISTFILES += \
     .gitignore

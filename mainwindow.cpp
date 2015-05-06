@@ -175,8 +175,6 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
 	for(const QModelIndex& index:indexes)
 	{
 
-		std::cerr<<QString("idx(%1 %2 %3)").arg(index.parent().internalId()).
-			   arg(index.row()).arg(index.column()).toStdString()<<std::endl;
 		QString text = model->data(previous).toString();
 		// At this point `text` contains the text in one cell
 		selectedText.append(text);

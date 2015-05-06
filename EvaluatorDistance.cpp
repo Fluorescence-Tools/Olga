@@ -1,16 +1,16 @@
-#include "CalculatorDistance.h"
+#include "EvaluatorDistance.h"
 #include "CalcResult.h"
 
-CalculatorDistance::
-CalculatorDistance(const AbstractCalculator::ResultCache &results,
-		   const std::weak_ptr<CalculatorPositionSimulation> &av1,
-		   const std::weak_ptr<CalculatorPositionSimulation> &av2, const std::weak_ptr<Distance> &dist):
-	AbstractCalculator(results),_av1(av1),_av2(av2),_dist(dist)
+EvaluatorDistance::
+EvaluatorDistance(const AbstractEvaluator::ResultCache &results,
+		   const std::weak_ptr<EvaluatorPositionSimulation> &av1,
+		   const std::weak_ptr<EvaluatorPositionSimulation> &av2, const std::weak_ptr<Distance> &dist):
+	AbstractEvaluator(results),_av1(av1),_av2(av2),_dist(dist)
 {
 
 }
 
-std::shared_ptr<AbstractCalcResult> CalculatorDistance::calculate(const FrameDescriptor &desc) const
+std::shared_ptr<AbstractCalcResult> EvaluatorDistance::calculate(const FrameDescriptor &desc) const
 {
 	auto av1=result(desc,_av1);
 	auto av2=result(desc,_av2);
@@ -23,7 +23,7 @@ std::shared_ptr<AbstractCalcResult> CalculatorDistance::calculate(const FrameDes
 	pAv2=dynamic_cast<CalcResult<PositionSimulationResult>*>(av2.get());
 	if(!pAv1 || !pAv2) {//wrong result type
 		std::cerr<<"wrong result type, this should never happen."
-			   "Unexpected behaviour in CalculatorDistance::calculate"+
+			   "Unexpected behaviour in EvaluatorDistance::calculate"+
 			std::string(typeid(av1.get()).name())<<std::endl;
 		return std::shared_ptr<AbstractCalcResult>();
 	}

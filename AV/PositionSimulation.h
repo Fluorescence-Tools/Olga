@@ -43,7 +43,8 @@ public:
     virtual PositionSimulation *Clone(){
 	return new PositionSimulationAV3(*this);
     }
-    PositionSimulationResult calculate(unsigned atom_i, const std::vector<Eigen::Vector4f>& xyzW);
+    using PositionSimulation::calculate;
+    virtual PositionSimulationResult calculate(unsigned atom_i, const std::vector<Eigen::Vector4f>& xyzW);
 
 
 private:

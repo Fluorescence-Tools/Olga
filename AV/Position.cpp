@@ -120,7 +120,7 @@ QJsonObject Position::jsonObject() const
 	}
 	//position.insert("position_name",QString::fromStdString(_name));
 	position.insert("chain_identifier",QString::fromStdString(_chainIdentifier));
-	position.insert("residue_seq_number",(int)_residueSeqNumber);
+	position.insert("residue_seq_number",static_cast<int>(_residueSeqNumber));
 	position.insert("residue_name",QString::fromStdString(_residueName));
 	position.insert("atom_name",QString::fromStdString(_atomName));
 	position.insert("simulation_type",QString::fromStdString(_simulationType));
@@ -192,83 +192,7 @@ void Position::setSimulationType(const std::string &simulationType)
 {
 	_simulationType = simulationType;
 }
-/*
-double Position::obsolete_chi2(pteros::System &system, const std::vector<Position> &positions,
-		      const std::vector<Distance> &distances)
-{
 
-	//arrange positions for fast access
-	std::map<std::string,std::vector<Position>::const_iterator> positionsMap;
-	for(std::vector<Position>::const_iterator it=positions.begin(); it!=positions.end(); it++ )
-	{
-		positionsMap[it->name()]=it;
-	}
-
-	//prepare memory
-	std::vector<Eigen::Vector4f> xyzW=MolecularSystem::coordsVdW(system);
-
-	typedef std::map<std::string,std::future<PositionSimulationResult>> TFutMap;
-	TFutMap futures;
-	for(const Distance& dist:distances)
-	{
-		//calculate AVs
-		const std::string names[2]={dist.position1(),dist.position2()};
-		TFutMap::const_iterator simIt[2];
-		int iName;
-		for(iName=0; iName<2; iName++)
-		{
-			simIt[iName]=futures.find(names[iName]);
-			if(simIt[iName]==futures.end())
-			{
-				auto it=positionsMap.find(names[iName]);
-				if(it==positionsMap.end())
-				{
-					std::cerr<<"Position "<<names[iName]<<
-						   " not found. Corresponding distances will be ignored."<<std::endl;
-					return std::numeric_limits<double>::quiet_NaN();
-					break;
-				}
-				else
-				{
-					Eigen::Vector3f refPos=it->second->atomXYZ(system);
-					futures[names[iName]]=std::async(std::launch::async,&Position::calculate,it->second,refPos,std::cref(xyzW));
-					//simulations[names[iName]]=it->second->calculate(pos,store);
-					/*threads.push_back(std::thread([=,&simulations,&store](){
-			PositionSimulationResult res=std::move(it->second->calculate(pos,store));
-			if(!res.empty()){
-			    simulations[names[iName]]=std::move(res);
-			}
-		    }));*//*
-				}
-			}
-		}
-	}
-	typedef std::map<std::string,PositionSimulationResult> TSimMap;
-	TSimMap simulations;
-	for(auto& f : futures){
-		auto it=simulations.insert(std::make_pair(f.first,f.second.get())).first;
-
-		if(it->second.empty())
-		{
-			std::cerr<<"AV Simulation failed for "<<f.first<<std::endl;
-			return std::numeric_limits<double>::quiet_NaN();
-			simulations.erase(it);
-		}
-	}
-	double chi2=0.0;
-	for(const Distance& dist:distances)
-	{
-		//calculate system distances
-		const std::string &name1=dist.position1(), &name2=dist.position2();
-		TSimMap::const_iterator simIt1=simulations.find(name1), simIt2=simulations.find(name2);
-		if(simIt1!=simulations.end() && simIt2!=simulations.end())
-		{
-			chi2+=dist.chi2contribution(simIt1->second, simIt2->second);
-		}
-	}
-	return chi2;
-}
-*/
 std::vector<Position> Position::fromLegacy(const std::string &labelingFileName, const std::string &pdbFileName)
 {
 	std::vector<Position> positions;
