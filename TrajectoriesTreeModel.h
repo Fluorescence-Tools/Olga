@@ -16,6 +16,9 @@
 #include "TaskStorage.h"
 //#include "AbstractCalculator.h"
 //#include "CalculatorPositionSimulation.h"
+#include "EvaluatorPositionSimulation.h"
+#include "EvaluatorDistance.h"
+#include "EvaluatorChi2.h"
 #include "TrajectoriesTreeItem.h"
 #include "FrameDescriptor.h"
 #include "AV/MolecularSystemDomain.h"
@@ -59,6 +62,22 @@ public:
 	{
 		return QByteArray();//TODO: implement
 	}
+	int tasksCount() const
+	{
+		return _storage.numTasks();
+	}
+	int tasksCountSubmited() const
+	{
+		return _storage.numTasksSubmited();
+	}
+	int tasksCountFinished() const
+	{
+		return _storage.numTasksFinished();
+	}
+	int sysTasksCount() const
+	{
+		return _storage.numSysTasks();
+	}
 
 public slots:
 private slots:
@@ -74,8 +93,8 @@ private:
 	QString calculatorName(int calcNum) const;
 	FrameDescriptor frameDescriptor(const TrajectoriesTreeItem *parent, int row) const;
 	void addCalculator(const std::shared_ptr<MolecularSystemDomain> domain);
-	//void addCalculator(const std::shared_ptr<Position> position);
-	//void addCalculator(const std::shared_ptr<Distance> distance);
+	void addCalculator(const std::shared_ptr<Position> position);
+	void addCalculator(const std::shared_ptr<Distance> distance);
 	//void recalculateColumn(int column) const;
 	std::shared_ptr<AbstractCalcResult>
 	calculate(const FrameDescriptor desc,
@@ -93,9 +112,8 @@ private:
 	std::unordered_set<std::shared_ptr<AbstractEvaluator>> _calculators;//calculator,column
 	using CalcColumn=std::pair<std::shared_ptr<AbstractEvaluator>,int>;
 	std::vector<CalcColumn> _visibleCalculators;
-	//mutable ResultCache cache;//[FrameDescriptor][AbstractCalculator]
 
-	//std::unordered_map<std::string,std::weak_ptr<CalculatorPositionSimulation>> _avCalculators;//lp_name
+	std::unordered_map<std::string,std::weak_ptr<EvaluatorPositionSimulation>> _avCalculators;//lp_name
 
 	const DomainTableModel* _domainsModel;
 	const PositionTableModel* _positionsModel;
@@ -104,8 +122,8 @@ private:
 	mutable TaskStorage _storage;
 	//mutable ThreadPool threadPool;
 
-	//std::vector<std::weak_ptr<CalculatorDistance>> _distanceCalculators;
-	//std::shared_ptr<CalculatorChi2> _chi2Calc;
+	std::vector<std::weak_ptr<EvaluatorDistance>> _distanceCalculators;
+	std::shared_ptr<EvaluatorChi2> _chi2Calc;
 };
 
 #endif // TRAJECTORIESTREEMODEL_H

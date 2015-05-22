@@ -108,7 +108,6 @@ PositionSimulationResult PositionSimulationAV3::calculate(unsigned atom_i, const
 
 	const float vdWRMax=2.0;
 	const int linknodes=3;
-
 	return PositionSimulationResult(
 				calculate3R(static_cast<float>(linkerLength),
 				static_cast<float>(linkerWidth),

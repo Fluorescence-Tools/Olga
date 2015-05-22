@@ -27,7 +27,7 @@ public:
 
 	Position(const QJsonObject& positionJson, const std::string& name);
 
-	PositionSimulationResult calculate(pteros::System &system) const;
+	PositionSimulationResult calculate(const pteros::System &system) const;
 
 	virtual QJsonObject jsonObject() const;
 	bool load(const QJsonObject& positionJson, const std::string& name);
@@ -59,7 +59,7 @@ public:
 	static QJsonObject jsonObjects(const std::vector<std::shared_ptr<Position> > &arr);
 private:
 	//Eigen::Vector3f atomXYZ(BALL::System &system) const;
-	Eigen::Vector3f atomXYZ(pteros::System &system) const;
+	Eigen::Vector3f atomXYZ(const pteros::System &system) const;
 	PositionSimulationResult calculate(const Eigen::Vector3f& attachmentAtomPos,
 					   const std::vector<Eigen::Vector4f>& store) const;
 	void setFromLegacy(const std::string& entry,const std::string &pdbFileName);

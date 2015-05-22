@@ -1,7 +1,7 @@
 #include "TaskStorage.h"
 #include "AbstractEvaluator.h"
 
-TaskStorage::TaskStorage():_ringBuf(ringBufSize)
+TaskStorage::TaskStorage():_ringBuf(ringBufSize),_sysRingBuf(sysRingBufSize)
 {
 }
 
@@ -10,14 +10,15 @@ TaskStorage::~TaskStorage()
 
 }
 
-const TaskStorage::Task &TaskStorage::getTask(const FrameDescriptor &frame, TaskStorage::EvalPtr eval) const
+const TaskStorage::Task &TaskStorage::getTask(const FrameDescriptor &frame, TaskStorage::EvalPtr eval, bool persistent) const
 {
+	std::lock_guard<std::recursive_mutex> lock(g_mutex);
 	auto it=_cache.find(CacheKey(frame,eval));
 	if(it!=_cache.end()) {
 		return it->second;
 	}
 	else {
-		return makeTask(frame,eval);
+		return makeTask(frame,eval,persistent);
 	}
 }
 
@@ -28,26 +29,57 @@ const TaskStorage::PterosSysTask &TaskStorage::getSysTask(const FrameDescriptor 
 		return it->second;
 	}
 	else {
+		auto oldKey=_sysRingBuf[sysRingBufIndex];
+		_sysRingBuf[sysRingBufIndex]=frame;
+		++sysRingBufIndex;
+		sysRingBufIndex%=sysRingBufSize;
+		_sysCache.erase(oldKey);
 		auto pair=_sysCache.emplace(frame,_systemLoader.makeTask(frame));
 		return pair.first->second;
 	}
 }
 
-std::string TaskStorage::getString(const FrameDescriptor &frame, TaskStorage::EvalPtr eval, int col)
+std::string TaskStorage::getString(const FrameDescriptor &frame,
+				   TaskStorage::EvalPtr eval, int col,
+				   bool persistent) const
 {
-	auto task=getTask(frame,eval);
+	{
+		std::lock_guard<std::recursive_mutex> lock(g_mutex);
+		if(!taskExists(frame,eval) && unfinishedScheduledCount()>maxRunningCount) {
+			_requestList.emplace(frame,eval,persistent);
+			if(_requestList.size()==1)
+			{
+				async::spawn([this]{
+					runRequests();
+				});
+			}
+			return "...";
+		}
+	}
+	auto task=getTask(frame,eval,persistent);
 	if(task.ready()) {
 		return task.get()->toString(col);
 	}
-	else {
-		return "...";
-	}
+	return "...";
 }
 
 TaskStorage::Task &TaskStorage::
-makeTask(const FrameDescriptor &frame, TaskStorage::EvalPtr eval) const
+makeTask(const FrameDescriptor &frame, TaskStorage::EvalPtr eval, bool persistent) const
 {
-	auto pair=_cache.emplace(CacheKey(frame,eval),eval->makeTask(frame));
+	auto key=CacheKey(frame,eval);
+	if(!persistent) {
+		auto oldKey=_ringBuf[ringBufIndex];
+		_ringBuf[ringBufIndex]=key;
+		++ringBufIndex;
+		ringBufIndex%=ringBufSize;
+		_cache.erase(oldKey);
+	}
+	auto pair=_cache.emplace(std::move(key),eval->makeTask(frame));
+	_tasksScheduled++;
+	pair.first->second.then([this](Task t){
+		(void)t;
+		_tasksFinished++;
+	});
 	return pair.first->second;
 }
 

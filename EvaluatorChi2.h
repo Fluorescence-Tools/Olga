@@ -9,10 +9,10 @@ class EvaluatorChi2 : public AbstractEvaluator
 private:
 	const std::vector<std::weak_ptr<EvaluatorDistance>> _distCalcs;
 public:
-	EvaluatorChi2(const ResultCache& results,
+	EvaluatorChi2(const TaskStorage& storage,
 		       const std::vector<std::weak_ptr<EvaluatorDistance>> distCalcs);
-	virtual std::shared_ptr<AbstractCalcResult>
-		calculate(const FrameDescriptor& desc) const;
+
+	virtual Task makeTask(const FrameDescriptor &frame) const;
 	virtual std::string name(int) const
 	{
 		return "chi^2";

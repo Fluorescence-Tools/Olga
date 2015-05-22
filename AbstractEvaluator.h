@@ -24,7 +24,7 @@ public:
 	virtual Task makeTask(const FrameDescriptor &frame) const=0;
 	virtual std::string name(int i) const=0;
 protected:
-	Task getTask(const FrameDescriptor &desc, const std::weak_ptr<AbstractEvaluator> eval) const;
+	Task getTask(const FrameDescriptor &desc, const std::weak_ptr<AbstractEvaluator> eval, bool persistent) const;
 	PterosSysTask getSysTask(const FrameDescriptor &frame) const;
 };
 Q_DECLARE_METATYPE(std::shared_ptr<AbstractEvaluator>)

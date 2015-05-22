@@ -12,6 +12,7 @@
 #include <QClipboard>
 #include <QSignalMapper>
 #include <QMimeData>
+#include <QTimer>
 #include "Q_DebugStream.hpp"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -41,6 +42,17 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->domainsTableView->setModel(&domainsModel);
 
 	setupMenus();
+
+	ui->statusBar->addPermanentWidget(&tasksStatus);
+	QTimer* timer=new QTimer(this);
+	connect(timer,&QTimer::timeout,[=](){
+		QString message=QString("Tasks cached/submited/finished: %1/%2/%3")
+				.arg(trajectoriesModel.tasksCount())
+				.arg(trajectoriesModel.tasksCountSubmited())
+				.arg(trajectoriesModel.tasksCountFinished());
+		tasksStatus.setText(message);
+	});
+	timer->start(1000);
 
 	//new Q_DebugStream(std::cerr, ui->logTextEdit); //Redirect Console output to QTextEdit
 	//Q_DebugStream::registerQDebugMessageHandler();

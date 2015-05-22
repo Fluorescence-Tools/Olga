@@ -138,7 +138,7 @@ double PositionSimulationResult::modelDistance(const PositionSimulationResult &o
 
 
 
-std::ostream &PositionSimulationResult::dump_xyz(std::ostream &os)
+std::ostream &PositionSimulationResult::dump_xyz(std::ostream &os) const
 {
 	int n=_points.size();
 	std::ios::fmtflags osflags  = os.flags();
@@ -149,7 +149,7 @@ std::ostream &PositionSimulationResult::dump_xyz(std::ostream &os)
 	}
 	else
 	{
-		os<<"comment";
+		os<<"comment\n";
 	}
 	os.unsetf ( std::ios::fixed );
 	os<<std::setprecision(5);
@@ -197,7 +197,7 @@ std::ostream &PositionSimulationResult::dumpShellXyz(std::ostream &os)
 	return os;
 }
 
-bool PositionSimulationResult::dumpXyz(const std::string &fileName) {
+bool PositionSimulationResult::dumpXyz(const std::string &fileName) const {
 	std::ofstream outfile;
 	outfile.open(fileName, std::ifstream::out);
 	if(!outfile.is_open())

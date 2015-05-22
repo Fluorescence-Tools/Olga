@@ -14,7 +14,7 @@ public:
 		_trajFileName(std::move(traj)),_frame(frame)
 	{
 	}
-	FrameDescriptor(){}
+	FrameDescriptor() {}
 	FrameDescriptor ( FrameDescriptor && o):
 		_topologyFileName(std::move(o._topologyFileName)),
 		_trajFileName(std::move(o._trajFileName)),
@@ -26,7 +26,7 @@ public:
 		_frame(other._frame) {
 	}
 
-	FrameDescriptor & operator=(const FrameDescriptor&) = delete;
+	FrameDescriptor & operator=(const FrameDescriptor&) = default;
 	FrameDescriptor & operator= ( FrameDescriptor && ) = delete;
 	bool trajNameEmpty() const
 	{

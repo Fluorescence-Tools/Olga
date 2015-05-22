@@ -5,6 +5,7 @@
 #include "TrajectoriesTreeModel.h"
 #include "EvaluatorTrasformationMatrix.h"
 #include "EvaluatorEulerAngle.h"
+#include "EvaluatorPositionSimulation.h"
 //#include "CalculatorPositionSimulation.h"
 //#include "CalculatorDistance.h"
 #include <QTimer>
@@ -32,9 +33,9 @@ TrajectoriesTreeModel(const DomainTableModel *domainsModel,
 		distancesInserted(from, to);
 	});
 
-	//_chi2Calc=std::make_shared<CalculatorChi2>(cache,_distanceCalculators);
-	//_calculators.insert(_chi2Calc);
-	//_visibleCalculators.push_back(std::make_pair(_chi2Calc,0));
+	_chi2Calc=std::make_shared<EvaluatorChi2>(_storage,_distanceCalculators);
+	_calculators.insert(_chi2Calc);
+	_visibleCalculators.push_back(std::make_pair(_chi2Calc,0));
 }
 
 QVariant TrajectoriesTreeModel::data(const QModelIndex &index, int role) const
@@ -189,18 +190,18 @@ void TrajectoriesTreeModel::domainsInserted(int from, int to)
 
 void TrajectoriesTreeModel::positionsInserted(int from, int to)
 {
-	/*for(int i=from; i<=to; i++)
+	for(int i=from; i<=to; i++)
 	{
 		addCalculator(_positionsModel->position(i));
-	}*/
+	}
 }
 
 void TrajectoriesTreeModel::distancesInserted(int from, int to)
 {
-	/*for(int i=from; i<=to; i++)
+	for(int i=from; i<=to; i++)
 	{
 		addCalculator(_distancesModel->distance(i));
-	}*/
+	}
 }
 
 const TrajectoriesTreeItem* TrajectoriesTreeModel::childItem(const TrajectoriesTreeItem *parent, unsigned childRow) const
@@ -297,31 +298,28 @@ void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<MolecularSystemD
 		endInsertColumns();
 	}
 }
-/*
+
 void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<Position> position)
 {
-	auto calculator=std::make_shared<CalculatorPositionSimulation>(cache,position);
+	auto calculator=std::make_shared<EvaluatorPositionSimulation>(_storage,position);
 	_avCalculators[position->name()]=calculator;
 	_calculators.insert(calculator);
 	//_visibleCalculators.push_back(std::make_pair(calculator,0));
-	recalculate(calculator);
 }
 
 void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<Distance> distance)
 {
 	auto av1=_avCalculators.at(distance->position1());
 	auto av2=_avCalculators.at(distance->position2());
-	auto calculator=std::make_shared<CalculatorDistance>(cache,av1,av2,distance);
+	auto calculator=std::make_shared<EvaluatorDistance>(_storage,av1,av2,distance);
 	_calculators.insert(calculator);
 	_visibleCalculators.push_back(std::make_pair(calculator,0));
-	recalculate(calculator);
 	_distanceCalculators.push_back(calculator);
-	_chi2Calc=std::make_shared<CalculatorChi2>(cache,_distanceCalculators);
+	_chi2Calc=std::make_shared<EvaluatorChi2>(_storage,_distanceCalculators);
 	_calculators.insert(_chi2Calc);
 	_visibleCalculators[0]=std::make_pair(_chi2Calc,0);
-	recalculate(_chi2Calc);
 }
-*/
+
 void TrajectoriesTreeModel::appendTask(const FrameDescriptor desc,
 				       const std::shared_ptr<AbstractEvaluator> calc,
 				       const QModelIndex index) const

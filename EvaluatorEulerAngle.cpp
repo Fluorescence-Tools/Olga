@@ -7,16 +7,16 @@
 AbstractEvaluator::Task EvaluatorEulerAngle::makeTask(const FrameDescriptor &frame) const
 {
 	//get tasks for ref and body;
-	Task refTask=getTask(frame,_refCalc);
-	Task bodyTask=getTask(frame,_bodyCalc);
+	Task refTask=getTask(frame,_refCalc,false);
+	Task bodyTask=getTask(frame,_bodyCalc,false);
 	using result_t=std::tuple<Task,Task>;
 	return async::when_all(bodyTask,refTask).then(
 				[this](result_t result){
 		auto ptrBody=std::get<0>(result).get();
 		auto ptrRef=std::get<1>(result).get();
 		auto resRef=dynamic_cast<CalcResult<Eigen::Matrix4d>*>(ptrRef.get());
-		Eigen::Matrix4d ref=resRef->get();
 		auto resBody=dynamic_cast<CalcResult<Eigen::Matrix4d>*>(ptrBody.get());
+		Eigen::Matrix4d ref=resRef->get();
 		Eigen::Matrix4d body=resBody->get();
 		return calculate(ref, body);
 	}).share();

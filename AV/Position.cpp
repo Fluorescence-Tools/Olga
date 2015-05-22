@@ -104,7 +104,7 @@ std::vector<Eigen::Vector4f> coordsVdW(const pteros::System &system)
 	return xyzw;
 }
 
-PositionSimulationResult Position::calculate(pteros::System &system) const
+PositionSimulationResult Position::calculate(const pteros::System &system) const
 {
 	std::vector<Eigen::Vector4f> xyzW=coordsVdW(system);
 	Eigen::Vector3f refPos=atomXYZ(system);
@@ -231,7 +231,7 @@ QJsonObject Position::jsonObjects(const std::vector<std::shared_ptr<Position>> &
 	return positions;
 }
 
-Eigen::Vector3f Position::atomXYZ(pteros::System &system) const
+Eigen::Vector3f Position::atomXYZ(const pteros::System &system) const
 {
 	std::string selectionExpression;
 	if(_chainIdentifier!=""){

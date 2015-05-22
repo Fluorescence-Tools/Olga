@@ -12,12 +12,11 @@ private:
 	const std::weak_ptr<EvaluatorPositionSimulation> _av1, _av2;
 	const std::weak_ptr<Distance> _dist;
 public:
-	EvaluatorDistance(const ResultCache& results,
+	EvaluatorDistance(const TaskStorage& storage,
 			   const std::weak_ptr<EvaluatorPositionSimulation>& av1,
 			   const std::weak_ptr<EvaluatorPositionSimulation>& av2,
 			   const std::weak_ptr<Distance>& dist);
-	virtual std::shared_ptr<AbstractCalcResult>
-		calculate(const FrameDescriptor& desc) const;
+	virtual Task makeTask(const FrameDescriptor &frame) const;
 	virtual std::string name(int) const
 	{
 		auto av1=_av1.lock();
@@ -28,6 +27,10 @@ public:
 		}
 		return "unknown(expired)";
 	}
+private:
+	virtual std::shared_ptr<AbstractCalcResult>
+		calculate(const PositionSimulationResult& av1,
+			  const PositionSimulationResult& av2) const;
 };
 
 #endif // EVALUATORDISTANCE_H

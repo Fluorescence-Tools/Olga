@@ -1,39 +1,43 @@
 #include "EvaluatorChi2.h"
 #include "EvaluatorDistance.h"
 #include "CalcResult.h"
-EvaluatorChi2::EvaluatorChi2(const AbstractEvaluator::ResultCache &results,
+EvaluatorChi2::EvaluatorChi2(const TaskStorage &storage,
 			       const std::vector<std::weak_ptr<EvaluatorDistance> > distCalcs):
-	AbstractEvaluator(results),_distCalcs(distCalcs)
+	AbstractEvaluator(storage),_distCalcs(distCalcs)
 {
 
 }
 
-std::shared_ptr<AbstractCalcResult> EvaluatorChi2::calculate(const FrameDescriptor &desc) const
+AbstractEvaluator::Task EvaluatorChi2::makeTask(const FrameDescriptor &frame) const
 {
-	double chi2=0.0;
+	std::vector<Task> tasks;
+	std::vector<std::shared_ptr<Distance>> distances;
 	for(const auto& calc:_distCalcs)
 	{
 		std::shared_ptr<EvaluatorDistance> calcRef=calc.lock();
 		if(!calcRef) {
-			return std::shared_ptr<AbstractCalcResult>();
+			std::cerr<<"Error!"<<std::endl;
 		}
 		std::shared_ptr<Distance> dist=calcRef->_dist.lock();
 		if(!dist) {
-			return std::shared_ptr<AbstractCalcResult>();
+			std::cerr<<"Error!"<<std::endl;
 		}
-		auto modelDist=result(desc,calc);
-		if(!modelDist) {
-			return std::shared_ptr<AbstractCalcResult>();
-		}
-		CalcResult<double> *model=dynamic_cast<CalcResult<double>*>(modelDist.get());
-		if(!model) {
-			std::cerr<<"wrong result type, this should never happen."
-				   "Unexpected behaviour in EvaluatorChi2::calculate"
-				<<std::endl;
-			return std::shared_ptr<AbstractCalcResult>();
-		}
-		double delta=(model->get()-dist->distance())/dist->err(model->get());
-		chi2+=delta*delta;
+		tasks.push_back(getTask(frame,calc,true));
+		distances.push_back(dist);
 	}
-	return std::make_shared<CalcResult<double>>(chi2);
+	return async::when_all(tasks).then([this,distances](std::vector<Task> tasks){
+		double chi2=0.0;
+		int i=0;
+		for(const auto& task:tasks)
+		{
+			auto res=dynamic_cast<CalcResult<double>*>(task.get().get());
+			double dist=res->get();
+			double delta=(dist-distances[i]->distance())/distances[i]->err(dist);
+			++i;
+			chi2+=delta*delta;
+		}
+		auto result=std::make_shared<CalcResult<double>>(chi2);
+		return std::shared_ptr<AbstractCalcResult>(result);
+	}).share();
+
 }

@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QMenu>
 #include <QItemSelectionModel>
+#include <QLabel>
 //#include "SystemsTableModel.h"
 #include "TrajectoriesTreeModel.h"
 #include "DomainTableModel.h"
@@ -77,6 +78,8 @@ private:
 	TrajectoriesTreeModel trajectoriesModel;
 
 	DistanceDelegate distanceDelegate;
+
+	QLabel tasksStatus;
 
 };
 

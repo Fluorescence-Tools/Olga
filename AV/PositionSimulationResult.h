@@ -27,9 +27,9 @@ public:
 	double Rdae(const PositionSimulationResult& other, double R0, unsigned nsamples=100000) const;
 	double Rmp(const PositionSimulationResult& other) const;
 	double modelDistance(const PositionSimulationResult& other, const std::string& type, double R0=0) const;
-	std::ostream& dump_xyz(std::ostream& os);
+	std::ostream& dump_xyz(std::ostream& os) const;
 	std::ostream& dumpShellXyz(std::ostream& os);
-	bool dumpXyz(const std::string& fileName);
+	bool dumpXyz(const std::string& fileName) const;
 	bool dumpShellXyz(const std::string& fileName);
 	bool empty() const
 	{
