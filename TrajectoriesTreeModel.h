@@ -78,6 +78,7 @@ public:
 	{
 		return _storage.numSysTasks();
 	}
+	void updateColumn(int column);
 
 public slots:
 private slots:
@@ -95,7 +96,6 @@ private:
 	void addCalculator(const std::shared_ptr<MolecularSystemDomain> domain);
 	void addCalculator(const std::shared_ptr<Position> position);
 	void addCalculator(const std::shared_ptr<Distance> distance);
-	//void recalculateColumn(int column) const;
 	std::shared_ptr<AbstractCalcResult>
 	calculate(const FrameDescriptor desc,
 		  const std::shared_ptr<AbstractEvaluator> calc) const;

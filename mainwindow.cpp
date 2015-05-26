@@ -232,6 +232,7 @@ void MainWindow::loadStructures()
 			trajectoriesModel.loadSystem(fileName);
 		}
 	}
+	trajectoriesModel.updateColumn(0);
 	//ui->mainTreeView->resizeColumnsToContents();
 }
 
@@ -278,6 +279,7 @@ void MainWindow::loadJson()
 	ui->domainsTableView->resizeColumnsToContents();
 
 	//ui->mainTreeView->resizeColumnsToContents();
+	trajectoriesModel.updateColumn(0);
 }
 
 bool MainWindow::saveJson()

@@ -313,11 +313,32 @@ void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<Distance> distan
 	auto av2=_avCalculators.at(distance->position2());
 	auto calculator=std::make_shared<EvaluatorDistance>(_storage,av1,av2,distance);
 	_calculators.insert(calculator);
-	_visibleCalculators.push_back(std::make_pair(calculator,0));
+
+	beginInsertColumns(QModelIndex(), columnCount(),columnCount());
+		_visibleCalculators.push_back(std::make_pair(calculator,0));
+	endInsertColumns();
+
 	_distanceCalculators.push_back(calculator);
 	_chi2Calc=std::make_shared<EvaluatorChi2>(_storage,_distanceCalculators);
 	_calculators.insert(_chi2Calc);
 	_visibleCalculators[0]=std::make_pair(_chi2Calc,0);
+}
+
+void TrajectoriesTreeModel::updateColumn(int column)
+{
+	//TODO:approach should be reconsidered. A hack.
+	const auto& calccol=_visibleCalculators[column];
+	QModelIndex start=index(0,column);
+	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1, Qt::MatchWildcard|Qt::MatchRecursive);
+	for(const auto& idx:indexes)
+	{
+		const TrajectoriesTreeItem *parentItem =
+				static_cast<TrajectoriesTreeItem*>(idx.internalPointer());
+		auto frame=frameDescriptor(parentItem,idx.row());
+		_storage.getString(frame,calccol.first,calccol.second);
+		//emit dataChanged(idx,idx);
+	}
+
 }
 
 void TrajectoriesTreeModel::appendTask(const FrameDescriptor desc,
