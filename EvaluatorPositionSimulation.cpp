@@ -8,9 +8,12 @@ std::shared_ptr<AbstractCalcResult> EvaluatorPositionSimulation::calculate(const
 			   "does not exist anymore."<<std::endl;
 		return std::shared_ptr<AbstractCalcResult>();
 	}
-	//auto res=position->calculate(system);
+	auto res=position->calculate(system);
+	if(res.empty()) {
+		std::cerr<<"simulation "+position->name()+" failed: empty AV\n";
+	}
 	//res.dumpShellXyz(position->name()+".xyz");
-	return std::make_shared<CalcResult<PositionSimulationResult>>(position->calculate(system));
+	return std::make_shared<CalcResult<PositionSimulationResult>>(std::move(res));
 }
 
 EvaluatorPositionSimulation::

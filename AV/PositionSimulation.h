@@ -34,7 +34,7 @@ public:
     PositionSimulationAV3();
     PositionSimulationAV3(const QJsonObject& positionJson);
     bool load(const QJsonObject& positionJson);
-    int loadLegacy(std::istream& is){
+    int loadLegacy(std::istream& is) {
 	int pdbId;
 	    is >> linkerLength >> linkerWidth >> radius[0] >>radius[1]>>radius[2]>>pdbId;
 	    return pdbId;
@@ -93,7 +93,7 @@ private:
     double linkerLength=0.0;
     double linkerWidth=0.0;
     double radius=0.0;
-    double allowedSphereRadius=-1.0;
+    double allowedSphereRadius=0.5;
     double allowedSphereRadiusMin=0.5;
     double allowedSphereRadiusMax=2.0;
 };

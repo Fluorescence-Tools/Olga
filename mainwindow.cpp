@@ -156,7 +156,7 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
 	}
 
 	std::sort(indexes.begin(), indexes.end(),
-	[](const QModelIndex& lhs, const QModelIndex& rhs)
+		  [](const QModelIndex& lhs, const QModelIndex& rhs)
 	{
 		if(lhs.sibling(rhs.row(),rhs.column())==rhs) {
 			return lhs<rhs;
@@ -322,10 +322,10 @@ bool MainWindow::exportData()
 		return false;
 	}
 	/*QFileInfo fileInfo( fileName );
-    if (fileInfo.suffix().isEmpty())
-    {
+	if (fileInfo.suffix().isEmpty())
+	{
 	fileName += ".csv";
-    }*/
+	}*/
 
 	QFile file(fileName);
 	if (!file.open(QFile::WriteOnly | QFile::Text)) {
@@ -579,6 +579,6 @@ void MainWindow::expand(const QModelIndex &parentIndex, int first, int last)
 }
 void MainWindow::showAbout()
 {
-    QMessageBox::about(this,"SRHDDumpReader",QString("Olga v. %1\nMykola Dimura, dimura@hhu.de\n")
-		       .arg(QApplication::applicationVersion()));
+	QMessageBox::about(this,"SRHDDumpReader",QString("Olga v. %1\nMykola Dimura, dimura@hhu.de\n")
+			   .arg(QApplication::applicationVersion()));
 }

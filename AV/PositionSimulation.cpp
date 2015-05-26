@@ -136,7 +136,7 @@ bool PositionSimulationAV1::load(const QJsonObject &positionJson)
 	linkerLength=positionJson.value("linker_length").toDouble(0.0);
 	linkerWidth=positionJson.value("linker_width").toDouble(0.0);
 	radius=positionJson.value("radius1").toDouble(0.0);
-	allowedSphereRadius=positionJson.value("allowed_sphere_radius").toDouble(-1.0);
+	allowedSphereRadius=positionJson.value("allowed_sphere_radius").toDouble(0.5);
 	allowedSphereRadiusMin=positionJson.value("allowed_sphere_radius_min").toDouble(0.5);
 	allowedSphereRadiusMax=positionJson.value("allowed_sphere_radius_max").toDouble(2.0);
 	return true;
