@@ -95,5 +95,6 @@ SOURCES += \
     EvaluatorChi2.cpp
 
 DISTFILES += \
-    .gitignore
+    .gitignore \
+    vdWRadii.json
 
