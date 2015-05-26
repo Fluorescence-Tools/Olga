@@ -8,10 +8,13 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = Olga
 TEMPLATE = app
 
+QMAKE_CXXFLAGS -= -O
+QMAKE_CXXFLAGS -= -O1
+QMAKE_CXXFLAGS -= -O2
 QMAKE_CXXFLAGS_RELEASE -= -O
 QMAKE_CXXFLAGS_RELEASE -= -O1
 QMAKE_CXXFLAGS_RELEASE -= -O2
-QMAKE_CXXFLAGS_RELEASE += -O3 -march=native -flto -fwhole-program
+QMAKE_CXXFLAGS_RELEASE *= -O3 -march=native -flto -fwhole-program
 
 #VERSION = YYYYMMDDx
 #DEFINES += APP_VERSION=\\\"$$VERSION\\\"
@@ -28,17 +31,6 @@ QMAKE_CXXFLAGS += -std=c++14 -Wextra -Winit-self -Wold-style-cast \
 -Woverloaded-virtual -Wuninitialized -Winit-self -pedantic-errors -Wno-attributes#-Werror
 QMAKE_LFLAGS += -std=c++14
 LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io
-
-#win32:{
-#    QTPLUGIN += qsvg
-#    INCLUDEPATH += /home/dimura/opt/Pteros-win/include
-#    LIBS += -L"/home/dimura/opt/Pteros-win/lib"
-#    LIBS += -L"/usr/x86_64-w64-mingw32/plugins/accessible"
-#    LIBS += -L"/usr/x86_64-w64-mingw32/plugins/imageformats"
-#    LIBS += -L"/usr/x86_64-w64-mingw32/plugins/platforms"
-#}
-
-
 
 RESOURCES += \
     icons.qrc

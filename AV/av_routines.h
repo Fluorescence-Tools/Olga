@@ -27,7 +27,11 @@ std::vector<Eigen::Vector3f> calculate3R(float L, float W, float R1, float R2,
 					 float vdWRMax,				// v.d.Waals radii
 					 float linkersphere, int linknodes,
 					 const std::vector<Eigen::Vector4f> &xyzW);
-
+std::vector<Eigen::Vector3f> calculate1R(double L, double W, double R,
+					 int atom_i, double dg,
+					 double vdWRMax,				// v.d.Waals radii
+					 double linkersphere, int linknodes,
+					 const std::vector<Eigen::Vector4f> &xyzW);
 enum GridFlags : unsigned char
 {
 	ClashLinker = 0x01,

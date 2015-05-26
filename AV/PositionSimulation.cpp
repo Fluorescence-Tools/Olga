@@ -15,6 +15,10 @@ PositionSimulation* PositionSimulation::create(const std::string &simulationType
 	{
 		return new PositionSimulationAV3;
 	}
+	else if(simulationType=="AV1")
+	{
+		return new PositionSimulationAV1;
+	}
 	std::cerr<<"PositionSimulation creation error!\n"<<std::endl;
 	return 0;
 }
@@ -119,3 +123,59 @@ PositionSimulationResult PositionSimulationAV3::calculate(unsigned atom_i, const
 				linknodes, xyzW));
 }
 
+
+
+PositionSimulationAV1::PositionSimulationAV1(const QJsonObject &positionJson)
+{
+	load(positionJson);
+}
+
+bool PositionSimulationAV1::load(const QJsonObject &positionJson)
+{
+	gridResolution=positionJson.value("simulation_grid_resolution").toDouble(0.4);
+	linkerLength=positionJson.value("linker_length").toDouble(0.0);
+	linkerWidth=positionJson.value("linker_width").toDouble(0.0);
+	radius=positionJson.value("radius1").toDouble(0.0);
+	allowedSphereRadius=positionJson.value("allowed_sphere_radius").toDouble(-1.0);
+	allowedSphereRadiusMin=positionJson.value("allowed_sphere_radius_min").toDouble(0.5);
+	allowedSphereRadiusMax=positionJson.value("allowed_sphere_radius_max").toDouble(2.0);
+	return true;
+}
+
+QJsonObject PositionSimulationAV1::jsonObject()
+{
+	QJsonObject position;
+	position.insert("simulation_grid_resolution",gridResolution);
+	position.insert("linker_length",linkerLength);
+	position.insert("linker_width",linkerWidth);
+	position.insert("radius1",radius);
+	position.insert("allowed_sphere_radius",allowedSphereRadius);
+	position.insert("allowed_sphere_radius_min",allowedSphereRadiusMin);
+	position.insert("allowed_sphere_radius_max",allowedSphereRadiusMax);
+	return position;
+}
+
+PositionSimulationResult PositionSimulationAV1::calculate(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW)
+{
+	const float vdWRMax=2.0;
+	const int linknodes=3;
+	return PositionSimulationResult(
+				calculate1R(linkerLength,
+				linkerWidth,
+				radius,atom_i,
+				gridResolution,
+				vdWRMax,allowedSphereRadius,
+					    linknodes, xyzW));
+}
+
+double PositionSimulationAV1::getAllowedSphereRadius(int atom_i, const double *XLocal, const double *YLocal, const double *ZLocal, const double *vdWR, int NAtoms, double linkersphere, int linknodes, unsigned char *density) const
+{
+	if(allowedSphereRadius>=0.0)
+	{
+		return allowedSphereRadius;
+	}
+	(void)atom_i; (void)XLocal; (void)YLocal; (void)ZLocal; (void)vdWR;
+	(void)NAtoms; (void)linkersphere; (void)linknodes; (void)density;
+	//TODO: add automatic sphere radius determination
+	return allowedSphereRadiusMin;
+}
