@@ -7,6 +7,7 @@
 #include <future>
 
 #include <QJsonObject>
+#include <QJsonDocument>
 #include <QVariant>
 Position::Position()
 {
@@ -73,18 +74,35 @@ Position::Position(const QJsonObject &positionJson, const std::string& name)
 	_simulation=0;
 	load(positionJson, name);
 }
+QMap<QString,double> loadvdWRadii(const QString& fileName)
+{
+	QMap<QString,double> map={{"H",0.1},
+				  {"C",0.17},
+				  {"N",0.1625},
+				  {"O",0.149},
+				  {"S",0.1782},
+				  {"P",0.1}};
+	QFile file(fileName);
+	if (!file.open(QIODevice::ReadOnly|QIODevice::Text)) {
+		return map;
+	}
+	QJsonDocument doc=QJsonDocument::fromJson(file.readAll());
+	if(doc.isNull()) {
+		return map;
+	}
+	QVariantMap varMap=doc.toVariant().toMap();
+	using VarMapCI=QVariantMap::const_iterator;
+	for (VarMapCI i = varMap.begin(); i != varMap.end(); ++i)
+	{
+		map[i.key()]=i.value().toDouble();
+	}
+	return map;
+}
 float pterosVDW(const pteros::System &system, int i)
 {
 	//TODO: This is a hack. One shoul define a corresponding function in pteros::System
-	switch(system.Atom_data(i).name[0]){
-	case 'H': return  0.1;
-	case 'C': return  0.17;
-	case 'N': return  0.1625;
-	case 'O': return  0.149; //mean value used
-	case 'S': return  0.1782;
-	case 'P': return  0.1871;
-	default:  return  0.17;
-	}
+	static QMap<QString,double> vdWRMap=loadvdWRadii("vdWRadii.json");
+	return vdWRMap.value(QString::fromStdString(system.Atom_data(i).name),0.17);
 }
 
 std::vector<Eigen::Vector4f> coordsVdW(const pteros::System &system)
