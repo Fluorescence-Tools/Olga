@@ -46,13 +46,14 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->statusBar->addPermanentWidget(&tasksStatus);
 	QTimer* timer=new QTimer(this);
 	connect(timer,&QTimer::timeout,[=](){
-		QString message=QString("Tasks cached/submited/finished: %1/%2/%3")
+		QString message=QString("Tasks cached/submited/finished/left: %1/%2/%3/%4")
 				.arg(trajectoriesModel.tasksCount())
 				.arg(trajectoriesModel.tasksCountSubmited())
-				.arg(trajectoriesModel.tasksCountFinished());
+				.arg(trajectoriesModel.tasksCountFinished())
+				.arg(trajectoriesModel.tasksCountSubmited()-trajectoriesModel.tasksCountFinished());
 		tasksStatus.setText(message);
 	});
-	timer->start(1000);
+	timer->start(3000);
 
 	//new Q_DebugStream(std::cerr, ui->logTextEdit); //Redirect Console output to QTextEdit
 	//Q_DebugStream::registerQDebugMessageHandler();
@@ -288,10 +289,10 @@ bool MainWindow::saveJson()
 	if (fileName.isEmpty())
 		return false;
 	/*QFileInfo fileInfo( fileName );
-    if (fileInfo.suffix().isEmpty())
-    {
+	if (fileInfo.suffix().isEmpty())
+	{
 	fileName += ".o.json";
-    }*/
+	}*/
 
 	QFile file(fileName);
 	if (!file.open(QFile::WriteOnly | QFile::Text)) {

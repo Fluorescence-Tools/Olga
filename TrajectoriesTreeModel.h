@@ -58,34 +58,7 @@ public:
 	{
 		return QStringList();//TODO: implement
 	}
-	QByteArray tabSeparatedData() const
-	{
-		QString tsv;
-		QModelIndex start=index(0,0);
-		QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1,
-						Qt::MatchWildcard|Qt::MatchRecursive);
-		int numCols=columnCount();
-		for(int c=0;c<numCols; c++)
-		{
-			tsv+=headerData(c,Qt::Horizontal).toString()+"\t";
-		}
-		tsv+="\n";
-		for(const auto& idx:indexes)
-		{
-			TrajectoriesTreeItem *parentItem;
-			parentItem = static_cast<TrajectoriesTreeItem*>(idx.internalPointer());
-			if(parentItem->nesting()<2) {
-				continue;
-			}
-			tsv+=data(parent(idx)).toString()+" ";
-			for(int c=0;c<numCols; c++)
-			{
-				tsv+=data(idx.sibling(idx.row(),c)).toString()+"\t";
-			}
-			tsv+="\n";
-		}
-		return tsv.toUtf8();
-	}
+	QByteArray tabSeparatedData() const;
 	int tasksCount() const
 	{
 		return _storage.numTasks();

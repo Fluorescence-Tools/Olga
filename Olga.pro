@@ -21,7 +21,8 @@ QMAKE_CXXFLAGS_RELEASE *= -O3 -march=native -flto -fwhole-program
 COMMIT_BRANCH = $$system(git rev-parse --abbrev-ref HEAD)
 COMMIT_DATE = $$system(git show -s --pretty='%ci')
 COMMIT_DATE = $$first(COMMIT_DATE)
-DEFINES += APP_VERSION=\\\"$$COMMIT_DATE-$$COMMIT_BRANCH\\\"
+COMMIT_HASH = $$system(git log --pretty=format:'%h' -n 1)
+DEFINES += APP_VERSION=\\\"$$COMMIT_DATE-$$COMMIT_BRANCH-$$COMMIT_HASH\\\"
 CONFIG += c++14
 
 #LIBS += -L$$(HOME)/opt/lib
