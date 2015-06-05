@@ -14,8 +14,6 @@
 #include "AbstractEvaluator.h"
 #include "AbstractCalcResult.h"
 #include "TaskStorage.h"
-//#include "AbstractCalculator.h"
-//#include "CalculatorPositionSimulation.h"
 #include "EvaluatorPositionSimulation.h"
 #include "EvaluatorDistance.h"
 #include "EvaluatorChi2.h"
@@ -25,8 +23,6 @@
 #include "DomainTableModel.h"
 #include "DistanceTableModel.h"
 #include "PositionTableModel.h"
-//#include "CalculatorDistance.h"
-//#include "CalculatorChi2.h"
 
 
 class TrajectoriesTreeModel : public QAbstractItemModel
@@ -59,26 +55,26 @@ public:
 		return QStringList();//TODO: implement
 	}
 	QByteArray tabSeparatedData() const;
-	int tasksCount() const
+	int tasksRunningCount() const
 	{
-		return _storage.numTasks();
+		return _storage.tasksRunningCount();
 	}
-	int tasksCountSubmited() const
+	int tasksPendingCount() const
 	{
-		return _storage.numTasksSubmited();
+		return _storage.tasksPendingCount();
 	}
-	int tasksCountFinished() const
+	int resultsCount() const
 	{
-		return _storage.numTasksFinished();
+		return _storage.resultCount();
 	}
 	int sysTasksCount() const
 	{
-		return _storage.numSysTasks();
+		return _storage.sysTaskCount();
 	}
 	void updateColumn(int column);
 
-public slots:
-private slots:
+public Q_SLOTS:
+private Q_SLOTS:
 	void domainsInserted(int from, int to);
 	void positionsInserted(int from, int to);
 	void distancesInserted(int from, int to);

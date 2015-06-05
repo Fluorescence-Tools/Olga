@@ -1,6 +1,5 @@
 #ifndef TASKSTORAGE_H
 #define TASKSTORAGE_H
-
 #include "AbstractCalcResult.h"
 #include "FrameDescriptor.h"
 #include "PterosSystemLoader.h"
@@ -15,6 +14,41 @@
 #include <atomic>
 #include <unordered_set>
 
+#include <readerwriterqueue/readerwriterqueue.h>
+
+#include <libcuckoo/cuckoohash_map.hh>
+template<typename K, typename V> using CuckooMap=cuckoohash_map<K, V, std::hash<K>>;
+/*
+inline int parseLine(char* line){
+    int i = strlen(line);
+    while (*line < '0' || *line > '9') line++;
+    line[i-3] = '\0';
+    i = atoi(line);
+    return i;
+}
+
+
+inline size_t getMemUsed(){ //Note: this value is in bytes!
+    FILE* file = fopen("/proc/self/status", "r");
+    size_t result = -1;
+    char line[128];
+
+
+    while (fgets(line, 128, file) != NULL){
+	if (strncmp(line, "VmSize:", 7) == 0){
+	    result = parseLine(line);
+	    break;
+	}
+    }
+    fclose(file);
+    return result;
+}
+inline void printMemUse()
+{
+    std::cout<<"memUsed: "+std::to_string((double)getMemUsed()/1024)+"MB\n";
+    std::cout.flush();
+}
+*/
 class AbstractEvaluator;
 
 namespace std {
@@ -44,101 +78,73 @@ struct hash<std::tuple<FrameDescriptor,shared_ptr<AbstractEvaluator>,bool>>
 
 class TaskStorage
 {
+	friend class AbstractEvaluator;
 public:
 	TaskStorage();
 	~TaskStorage();
 	using EvalPtr=std::shared_ptr<AbstractEvaluator>;
 	using CacheKey=std::pair<FrameDescriptor,EvalPtr>;
-	using Task=async::shared_task<std::shared_ptr<AbstractCalcResult>>;
+	using Result=std::shared_ptr<AbstractCalcResult>;
+	using Task=async::shared_task<Result>;
 	using PterosSysTask=async::shared_task<pteros::System>;
-	const Task& getTask(const FrameDescriptor &frame, EvalPtr eval,
-			    bool persistent=true) const;
 	const PterosSysTask& getSysTask(const FrameDescriptor &frame) const;
 	std::string getString(const FrameDescriptor &frame, EvalPtr eval, int col,
 			      bool persistent=true) const;
-	int numTasks() const
+	int sysTaskCount() const
 	{
-		std::lock_guard<std::recursive_mutex> lock(g_mutex);
-		return _cache.size();
-	}
-	int numSysTasks() const
-	{
-		std::lock_guard<std::recursive_mutex> lock(g_mutex);
 		return _sysCache.size();
 	}
-	int numTasksScheduled() const
+	int tasksRunningCount() const
 	{
-		std::lock_guard<std::recursive_mutex> lock(g_mutex);
-		return _tasksScheduled;
+		return _tasksRunning;
 	}
-	int numTasksFinished() const
+	int resultCount() const
 	{
-		std::lock_guard<std::recursive_mutex> lock(g_mutex);
-		return _tasksFinished;
+		return _results.size();
 	}
-	int numTasksSubmited() const
+	int tasksPendingCount() const
 	{
-		std::lock_guard<std::recursive_mutex> lock(g_mutex);
-		return _tasksScheduled+_requestList.size();
+		return _requests.size();
 	}
 private:
-	int unfinishedScheduledCount() const
-	{
-		return _tasksScheduled-_tasksFinished;
-	}
-	bool taskExists(const FrameDescriptor &frame,EvalPtr eval) const
-	{
-		auto it=_cache.find(CacheKey(frame,eval));
-		if(it!=_cache.end()) {
-			return true;
-		}
-		return false;
-	}
-	Task& makeTask(const FrameDescriptor &frame, EvalPtr eval,
-		       bool persistent) const;
+	const Task& getTask(const FrameDescriptor &frame, EvalPtr eval,
+			    bool persistent) const;
+	//must only run in worker thread
 	void runRequests() const
 	{
-		std::lock_guard<std::recursive_mutex> lock(g_mutex);
-		if(unfinishedScheduledCount()>minRunningCount) {
-			async::spawn([this]{
-				runRequests();
-			});
-			return;
-		}
-		while(!_requestList.empty() && maxRunningCount>unfinishedScheduledCount())
+		static auto tid=std::this_thread::get_id();
+		assert(tid==std::this_thread::get_id());
+		CacheKey key;
+		while(_tasksRunning<_maxRunningCount)//consume
 		{
-			auto req=_requestList.begin();
-			if(!taskExists(std::get<0>(*req),std::get<1>(*req)))
-			{
-				makeTask(std::get<0>(*req),
-					 std::get<1>(*req),std::get<2>(*req));
+			if(_requestQueue.try_dequeue(key)) {
+				getTask(key.first,key.second,true);
+			} else {
+				_requests.reserve(0);
+				return;
 			}
-			_requestList.erase(req);
-		}
-		if(!_requestList.empty()) {
-			async::spawn([this]{
-				runRequests();
-			});
 		}
 	}
 private:
-	mutable std::recursive_mutex g_mutex;
-	const int maxRunningCount=50,minRunningCount=maxRunningCount/2;
-	mutable std::unordered_set<std::tuple<FrameDescriptor,EvalPtr,bool>> _requestList;
-	mutable std::unordered_map<CacheKey,Task> _cache;
-	const size_t ringBufSize=50;
-	mutable std::vector<CacheKey> _ringBuf;
-	mutable size_t ringBufIndex=0;
+	mutable CuckooMap<CacheKey,bool> _requests;
+	using RWQueue=moodycamel::ReaderWriterQueue<CacheKey>;
+	mutable RWQueue _requestQueue;
+
+	mutable CuckooMap<CacheKey,Result> _results;
+
+	const int _maxRunningCount=50,_minRunningCount=_maxRunningCount/2;
+	mutable std::unordered_map<CacheKey,Task> _tasks;
+	mutable std::atomic<int> _tasksRunning{0};
+	const size_t _tasksRingBufSize=_maxRunningCount*3;
+	mutable std::vector<CacheKey> _tasksRingBuf;
+	mutable size_t _tasksRBpos=0;
+	mutable async::threadpool_scheduler workerPool{1};
 
 	mutable std::unordered_map<FrameDescriptor,PterosSysTask> _sysCache;
-	const size_t sysRingBufSize=20;
+	const size_t _sysRingBufSize=10;
 	mutable std::vector<FrameDescriptor> _sysRingBuf;
 	mutable size_t sysRingBufIndex=0;
 	PterosSystemLoader _systemLoader;
-
-	mutable int _tasksScheduled=0;
-	mutable std::atomic<int> _tasksFinished{0};
-	mutable std::atomic<bool> _runRequstsScheduled{false};
 };
 
 #endif // TASKSTORAGE_H

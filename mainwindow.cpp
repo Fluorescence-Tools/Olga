@@ -13,7 +13,8 @@
 #include <QSignalMapper>
 #include <QMimeData>
 #include <QTimer>
-#include "Q_DebugStream.hpp"
+#include <QTime>
+#include "Q_DebugStream.h"
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -44,19 +45,28 @@ MainWindow::MainWindow(QWidget *parent) :
 	setupMenus();
 
 	ui->statusBar->addPermanentWidget(&tasksStatus);
+	const int timerInterval=5000;
 	QTimer* timer=new QTimer(this);
 	connect(timer,&QTimer::timeout,[=](){
-		QString message=QString("Tasks cached/submited/finished/left: %1/%2/%3/%4")
-				.arg(trajectoriesModel.tasksCount())
-				.arg(trajectoriesModel.tasksCountSubmited())
-				.arg(trajectoriesModel.tasksCountFinished())
-				.arg(trajectoriesModel.tasksCountSubmited()-trajectoriesModel.tasksCountFinished());
-		tasksStatus.setText(message);
-	});
-	timer->start(3000);
+		static int tasksPendindOld=0;
+		int tasksPending=trajectoriesModel.tasksPendingCount();
+		int ETA=tasksPending<tasksPendindOld?
+				timerInterval/1000*tasksPending/(tasksPendindOld-tasksPending):0;
+		tasksPendindOld=tasksPending;
 
-	//new Q_DebugStream(std::cerr, ui->logTextEdit); //Redirect Console output to QTextEdit
-	//Q_DebugStream::registerQDebugMessageHandler();
+		QString message=QString("Tasks pending/ready/running: %1/%2/%3; ETA: ")
+				.arg(tasksPending)
+				.arg(trajectoriesModel.resultsCount())
+				.arg(trajectoriesModel.tasksRunningCount())
+				+timespan(ETA);
+		tasksStatus.setText(message);
+		ui->mainTreeView->viewport()->update();
+	});
+	timer->start(timerInterval);
+
+	auto degugStream=new QDebugStream(std::cerr); //Capture stderr
+	connect(degugStream,SIGNAL(errorPrinted(QString )),
+		ui->logTextEdit,SLOT(append(const QString&)));
 
 	connect(&trajectoriesModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
 		this, SLOT(expand(const QModelIndex &,int,int)));
@@ -213,10 +223,10 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	/*if (maybeSave()) {
-	writeSettings();
-	event->accept();
+    writeSettings();
+    event->accept();
     } else {
-	event->ignore();
+    event->ignore();
     }*/
 	writeSettings();
 	event->accept();
@@ -225,7 +235,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::loadStructures()
 {
 	QStringList fileNames = QFileDialog::getOpenFileNames(this,tr("Load strcutures from files or folders"),"",tr("Molecular Structure Files (*.pdb *.mol2 *.mol *.hin *.xyz *.kcf *.sd *.ac)"));
-	foreach(const QString& fileName,fileNames)
+	for(const QString& fileName:fileNames)
 	{
 		if (!fileName.isEmpty())
 		{
@@ -289,10 +299,10 @@ bool MainWindow::saveJson()
 	if (fileName.isEmpty())
 		return false;
 	/*QFileInfo fileInfo( fileName );
-	if (fileInfo.suffix().isEmpty())
-	{
-	fileName += ".o.json";
-	}*/
+    if (fileInfo.suffix().isEmpty())
+    {
+    fileName += ".o.json";
+    }*/
 
 	QFile file(fileName);
 	if (!file.open(QFile::WriteOnly | QFile::Text)) {
@@ -323,10 +333,10 @@ bool MainWindow::exportData()
 		return false;
 	}
 	/*QFileInfo fileInfo( fileName );
-	if (fileInfo.suffix().isEmpty())
-	{
-	fileName += ".csv";
-	}*/
+    if (fileInfo.suffix().isEmpty())
+    {
+    fileName += ".csv";
+    }*/
 
 	QFile file(fileName);
 	if (!file.open(QFile::WriteOnly | QFile::Text)) {
@@ -351,7 +361,7 @@ bool MainWindow::exportCylinders()
 	/*QFileInfo fileInfo( fileName );
     if (fileInfo.suffix().isEmpty())
     {
-	fileName += ".csv";
+    fileName += ".csv";
     }*/
 
 	QFile file(fileName);
@@ -582,4 +592,17 @@ void MainWindow::showAbout()
 {
 	QMessageBox::about(this,"SRHDDumpReader",QString("Olga v. %1\nMykola Dimura, dimura@hhu.de\n")
 			   .arg(QApplication::applicationVersion()));
+}
+
+QString MainWindow::timespan(unsigned seconds)
+{
+	if(seconds<61) {
+		return QString::number(seconds)+"s";
+	} else if (seconds<3600) {
+		return QString::number(seconds/60)+"m";
+	} else if (seconds<86400) {
+		return QString::number(seconds/3600)+"h";
+	}
+	return QString::number(seconds/86400)+"d "
+			+QString::number(seconds/3600%24) +"h";
 }

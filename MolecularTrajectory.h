@@ -36,6 +36,15 @@ public:
 		//TODO: implement correct frame number determination
 		return 0;
 	}
+	int totalFrameCount() const
+	{
+		int total=0;
+		for(const auto& pair:_trajectories)
+		{
+			total+=pair.second.size();
+		}
+		return total;
+	}
 	bool setTopology(const std::string& fileName)
 	{
 		_topFileName=fileName;

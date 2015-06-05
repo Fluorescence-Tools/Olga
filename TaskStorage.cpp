@@ -1,85 +1,103 @@
 #include "TaskStorage.h"
 #include "AbstractEvaluator.h"
 
-TaskStorage::TaskStorage():_ringBuf(ringBufSize),_sysRingBuf(sysRingBufSize)
+TaskStorage::TaskStorage():_tasksRingBuf(_tasksRingBufSize),_sysRingBuf(_sysRingBufSize)
 {
 }
 
 TaskStorage::~TaskStorage()
 {
-
 }
 
-const TaskStorage::Task &TaskStorage::getTask(const FrameDescriptor &frame, TaskStorage::EvalPtr eval, bool persistent) const
+//must only run in worker thread
+const TaskStorage::Task &
+TaskStorage::getTask(const FrameDescriptor &frame, TaskStorage::EvalPtr eval,
+		     bool persistent) const
 {
-	std::lock_guard<std::recursive_mutex> lock(g_mutex);
-	auto it=_cache.find(CacheKey(frame,eval));
-	if(it!=_cache.end()) {
-		return it->second;
-	}
-	else {
-		return makeTask(frame,eval,persistent);
-	}
-}
+	static auto tid=std::this_thread::get_id();
+	assert(tid==std::this_thread::get_id());
+	auto key=CacheKey(frame,eval);
 
+	//check in tasks
+	auto it=_tasks.find(key);
+	if(it!=_tasks.end()) {
+		return it->second;
+	} else {
+		//check in results
+		Result res;
+		bool exists=_results.find(key,res);
+		if(exists) {
+			Task& task=_tasks.emplace(key,async::make_task(res).share()).first->second;
+			auto &oldK=_tasksRingBuf[_tasksRBpos];
+			_tasks.erase(oldK);
+			oldK=key;
+			_tasksRBpos=(_tasksRBpos+1)%_tasksRingBufSize;
+			return task;
+		}
+	}
+
+	//append a new job
+	Task& task=_tasks.emplace(key,eval->makeTask(frame)).first->second;
+	auto &oldK=_tasksRingBuf[_tasksRBpos];
+	_tasks.erase(oldK);
+	oldK=key;
+	_tasksRBpos=(_tasksRBpos+1)%_tasksRingBufSize;
+	_tasksRunning++;
+
+	task.then([this,key,persistent](Task tres){
+		if(persistent) {
+			_results.insert(key,tres.get());
+		}
+		_requests.erase(key);
+		_tasksRunning--;
+		if(_tasksRunning<_minRunningCount) {
+			async::spawn(workerPool,[this]{
+				runRequests();
+			});
+		}
+	});
+	return task;
+}
+//must only run in worker thread
 const TaskStorage::PterosSysTask &TaskStorage::getSysTask(const FrameDescriptor &frame) const
 {
+	static auto tid=std::this_thread::get_id();
+	assert(tid==std::this_thread::get_id());
 	auto it=_sysCache.find(frame);
 	if(it!=_sysCache.end()) {
 		return it->second;
 	}
 	else {
-		auto oldKey=_sysRingBuf[sysRingBufIndex];
-		_sysRingBuf[sysRingBufIndex]=frame;
-		++sysRingBufIndex;
-		sysRingBufIndex%=sysRingBufSize;
+		auto &oldKey=_sysRingBuf[sysRingBufIndex];
 		_sysCache.erase(oldKey);
+		oldKey=frame;
+		++sysRingBufIndex;
+		sysRingBufIndex%=_sysRingBufSize;
 		auto pair=_sysCache.emplace(frame,_systemLoader.makeTask(frame));
 		return pair.first->second;
 	}
 }
 
+//must only run in the main thread;
 std::string TaskStorage::getString(const FrameDescriptor &frame,
 				   TaskStorage::EvalPtr eval, int col,
 				   bool persistent) const
 {
-	{
-		std::lock_guard<std::recursive_mutex> lock(g_mutex);
-		if(!taskExists(frame,eval) && unfinishedScheduledCount()>maxRunningCount) {
-			_requestList.emplace(frame,eval,persistent);
-			if(_requestList.size()==1)
-			{
-				async::spawn([this]{
-					runRequests();
-				});
-			}
-			return "...";
+	static auto tid=std::this_thread::get_id();
+	assert(tid==std::this_thread::get_id());
+	auto key=CacheKey(frame,eval);
+	Result result;
+	bool ready=_results.find(key,result);
+	if(ready) {
+		return result->toString();
+	} else {
+		_requestQueue.enqueue(key);//produce
+		_requests.insert(key,persistent);
+		if(_requestQueue.size_approx()==1) {
+			async::spawn(workerPool,[this]{
+				runRequests();
+			});
 		}
-	}
-	auto task=getTask(frame,eval,persistent);
-	if(task.ready()) {
-		return task.get()->toString(col);
 	}
 	return "...";
 }
-
-TaskStorage::Task &TaskStorage::
-makeTask(const FrameDescriptor &frame, TaskStorage::EvalPtr eval, bool persistent) const
-{
-	auto key=CacheKey(frame,eval);
-	if(!persistent) {
-		auto oldKey=_ringBuf[ringBufIndex];
-		_ringBuf[ringBufIndex]=key;
-		++ringBufIndex;
-		ringBufIndex%=ringBufSize;
-		_cache.erase(oldKey);
-	}
-	auto pair=_cache.emplace(std::move(key),eval->makeTask(frame));
-	_tasksScheduled++;
-	pair.first->second.then([this](Task t){
-		(void)t;
-		_tasksFinished++;
-	});
-	return pair.first->second;
-}
-

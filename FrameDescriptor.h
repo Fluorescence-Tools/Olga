@@ -27,7 +27,7 @@ public:
 	}
 
 	FrameDescriptor & operator=(const FrameDescriptor&) = default;
-	FrameDescriptor & operator= ( FrameDescriptor && ) = delete;
+	FrameDescriptor & operator= ( FrameDescriptor && ) = default;
 	bool trajNameEmpty() const
 	{
 		return _trajFileName.empty();
@@ -43,6 +43,13 @@ public:
 	void setTopologyFileName(const std::string &topologyFileName);
 	std::string trajFileName() const;
 	unsigned frame() const;
+    std::string fullName() const
+    {
+	/*if(_topologyFileName!=_trajFileName) {
+	    return _topologyFileName+","+_trajFileName+"#"+std::to_string(_frame);
+	}*/
+	return _trajFileName+"#"+std::to_string(_frame);
+    }
 
 private:
 	std::string _topologyFileName, _trajFileName;

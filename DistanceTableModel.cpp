@@ -113,7 +113,7 @@ bool DistanceTableModel::setData(const QModelIndex &index, const QVariant &value
 	}
 	if(index.column()<8)
 	{
-	    emit dataChanged(index, index);
+	    Q_EMIT dataChanged(index, index);
 	}
     }
     return false;

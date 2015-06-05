@@ -17,7 +17,7 @@ bool DomainTableModel::load(const QJsonArray &domainsArr)
 	return true;
     }
     QVector<QString> _names=names();
-    foreach(const QJsonValue &val,domainsArr)
+    for(const QJsonValue &val:domainsArr)
     {
 	QJsonObject domain=val.toObject();
 	MolecularSystemDomain d(domain);
@@ -124,7 +124,7 @@ bool DomainTableModel::setData(const QModelIndex &index, const QVariant &value, 
 	}
 	if(index.column()<1)
 	{
-	    emit dataChanged(index, index);
+	    Q_EMIT dataChanged(index, index);
 	}
     }
     return false;

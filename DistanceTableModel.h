@@ -31,9 +31,9 @@ public:
     {
 	    return _distances.at(i);
     }
-signals:
+Q_SIGNALS:
 
-public slots:
+public Q_SLOTS:
 private:
     std::vector<std::shared_ptr<Distance>> _distances;
 };

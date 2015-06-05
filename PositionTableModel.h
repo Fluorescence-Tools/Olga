@@ -27,9 +27,9 @@ public:
     const std::shared_ptr<Position> position(int i) const;
     const std::vector<std::shared_ptr<Position> > &positions() const;
 
-signals:
+Q_SIGNALS:
 
-public slots:
+public Q_SLOTS:
 
 private:
     std::vector<std::shared_ptr<Position>> _positions;

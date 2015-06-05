@@ -10,7 +10,7 @@ MolecularSystemDomain::MolecularSystemDomain(const QJsonObject &obj)
     name=obj.value("domain_name").toString();
     selection=obj.value("domain_selection_expression").toString();
     QJsonArray referencePoints=obj.value("reference_points").toArray();
-    foreach(const QJsonValue &val,referencePoints)
+    for(const QJsonValue &val:referencePoints)
     {
         QJsonObject rp=val.toObject();
         double xLocal=rp.value("x_local").toDouble();

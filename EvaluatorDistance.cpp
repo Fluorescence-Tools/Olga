@@ -34,5 +34,6 @@ std::shared_ptr<AbstractCalcResult> EvaluatorDistance::calculate(const PositionS
 		return std::shared_ptr<AbstractCalcResult>();
 	}
 	double result=dist->modelDistance(av1,av2);
+
 	return std::make_shared<CalcResult<double>>(result);
 }

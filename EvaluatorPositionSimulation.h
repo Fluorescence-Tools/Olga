@@ -8,7 +8,7 @@ class EvaluatorPositionSimulation : public AbstractEvaluator
 {
 private:
 	const std::weak_ptr<Position> _position;
-	std::shared_ptr<AbstractCalcResult> calculate(const pteros::System &system) const;
+    std::shared_ptr<AbstractCalcResult> calculate(const pteros::System &system,const FrameDescriptor &frame) const;
 public:
 	EvaluatorPositionSimulation(const TaskStorage& storage, const std::weak_ptr<Position> position);
 	virtual Task

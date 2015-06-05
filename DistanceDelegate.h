@@ -21,7 +21,7 @@ public:
 		widget.setModel(model);
 	}
 
-signals:
+Q_SIGNALS:
 
 private:
 	mutable QComboBox widget;

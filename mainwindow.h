@@ -5,7 +5,6 @@
 #include <QMenu>
 #include <QItemSelectionModel>
 #include <QLabel>
-//#include "SystemsTableModel.h"
 #include "TrajectoriesTreeModel.h"
 #include "DomainTableModel.h"
 #include "PositionTableModel.h"
@@ -28,7 +27,7 @@ public:
 protected:
 	void closeEvent(QCloseEvent *event);
 
-private slots:
+private Q_SLOTS:
 	void loadStructures();
 	void metropolisSampling();
 	void loadJson();
@@ -56,6 +55,8 @@ private slots:
 	void showAbout();
 
 private:
+	QString timespan(unsigned seconds);
+
 	void readSettings();
 	void writeSettings() const;
 	void setupMenus();

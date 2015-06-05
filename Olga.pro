@@ -16,21 +16,18 @@ QMAKE_CXXFLAGS_RELEASE -= -O1
 QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS_RELEASE *= -O3 -march=native -flto -fwhole-program
 
-#VERSION = YYYYMMDDx
-#DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 COMMIT_BRANCH = $$system(git rev-parse --abbrev-ref HEAD)
 COMMIT_DATE = $$system(git show -s --pretty='%ci')
 COMMIT_DATE = $$first(COMMIT_DATE)
 COMMIT_HASH = $$system(git log --pretty=format:'%h' -n 1)
 DEFINES += APP_VERSION=\\\"$$COMMIT_DATE-$$COMMIT_BRANCH-$$COMMIT_HASH\\\"
 CONFIG += c++14
-
-#LIBS += -L$$(HOME)/opt/lib
+CONFIG += no_keywords
 
 QMAKE_CXXFLAGS -= -std=c++0x
 QMAKE_CXXFLAGS += -std=c++14 -Wextra -Winit-self -Wold-style-cast \
 -Woverloaded-virtual -Wuninitialized -Winit-self -pedantic-errors -Wno-attributes#-Werror
-QMAKE_LFLAGS += -std=c++14
+QMAKE_LFLAGS *= -std=c++14
 LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io
 
 RESOURCES += \
@@ -65,7 +62,8 @@ HEADERS += \
     PterosSystemLoader.h \
     EvaluatorPositionSimulation.h \
     EvaluatorDistance.h \
-    EvaluatorChi2.h
+    EvaluatorChi2.h \
+    Q_DebugStream.h
 
 SOURCES += \
     PositionTableModel.cpp \

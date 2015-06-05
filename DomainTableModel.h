@@ -28,9 +28,9 @@ public:
     QJsonArray jsonArray() const;
     const std::shared_ptr<MolecularSystemDomain> domain(int i) const;
     QVector<QString> names() const;
-signals:
+Q_SIGNALS:
 
-public slots:
+public Q_SLOTS:
 
 private:
     QVector<std::shared_ptr<MolecularSystemDomain>> _domains;
