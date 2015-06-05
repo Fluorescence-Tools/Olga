@@ -28,20 +28,22 @@ TaskStorage::getTask(const FrameDescriptor &frame, TaskStorage::EvalPtr eval,
 		bool exists=_results.find(key,res);
 		if(exists) {
 			Task& task=_tasks.emplace(key,async::make_task(res).share()).first->second;
-			auto &oldK=_tasksRingBuf[_tasksRBpos];
-			_tasks.erase(oldK);
-			oldK=key;
-			_tasksRBpos=(_tasksRBpos+1)%_tasksRingBufSize;
+			pushTask(key);
 			return task;
 		}
 	}
 
+
+	return makeTask(key,persistent);
+}
+//must only run in worker thread
+const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key, bool persistent) const
+{
+	static auto tid=std::this_thread::get_id();
+	assert(tid==std::this_thread::get_id());
 	//append a new job
-	Task& task=_tasks.emplace(key,eval->makeTask(frame)).first->second;
-	auto &oldK=_tasksRingBuf[_tasksRBpos];
-	_tasks.erase(oldK);
-	oldK=key;
-	_tasksRBpos=(_tasksRBpos+1)%_tasksRingBufSize;
+	Task& task=_tasks.emplace(key,key.second->makeTask(key.first)).first->second;
+	pushTask(key);
 	_tasksRunning++;
 
 	task.then([this,key,persistent](Task tres){

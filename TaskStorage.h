@@ -109,6 +109,15 @@ public:
 private:
 	const Task& getTask(const FrameDescriptor &frame, EvalPtr eval,
 			    bool persistent) const;
+	const Task& makeTask(const CacheKey &key,
+			    bool persistent) const;
+	inline void pushTask(const CacheKey &key) const
+	{
+		auto &oldK=_tasksRingBuf[_tasksRBpos];
+		_tasks.erase(oldK);
+		oldK=key;
+		_tasksRBpos=(_tasksRBpos+1)%_tasksRingBufSize;
+	}
 	//must only run in worker thread
 	void runRequests() const
 	{
@@ -118,7 +127,7 @@ private:
 		while(_tasksRunning<_maxRunningCount)//consume
 		{
 			if(_requestQueue.try_dequeue(key)) {
-				getTask(key.first,key.second,true);
+				makeTask(key,true);
 			} else {
 				_requests.reserve(0);
 				return;
