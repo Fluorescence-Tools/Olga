@@ -15,6 +15,8 @@ QMAKE_CXXFLAGS_RELEASE -= -O
 QMAKE_CXXFLAGS_RELEASE -= -O1
 QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS_RELEASE *= -O3 -march=native -flto -fwhole-program
+QMAKE_LFLAGS -= -O1
+QMAKE_LFLAGS *= -O3 -flto -fwhole-program
 
 COMMIT_BRANCH = $$system(git rev-parse --abbrev-ref HEAD)
 COMMIT_DATE = $$system(git show -s --pretty='%ci')
@@ -24,10 +26,8 @@ DEFINES += APP_VERSION=\\\"$$COMMIT_DATE-$$COMMIT_BRANCH-$$COMMIT_HASH\\\"
 CONFIG += c++14
 CONFIG += no_keywords
 
-QMAKE_CXXFLAGS -= -std=c++0x
 QMAKE_CXXFLAGS += -std=c++14 -Wextra -Winit-self -Wold-style-cast \
 -Woverloaded-virtual -Wuninitialized -Winit-self -pedantic-errors -Wno-attributes#-Werror
-QMAKE_LFLAGS *= -std=c++14
 LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io
 
 RESOURCES += \

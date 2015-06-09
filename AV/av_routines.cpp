@@ -214,7 +214,6 @@ std::vector<Eigen::Vector3f> calculate3R(float L, float W, float R1, float R2, f
 }
 
 
-
 int calculate1R(double L, double W, double R, int atom_i, double dg,
 		double *XLocal, double *YLocal, double *ZLocal,
 		double *vdWR, int NAtoms, double vdWRMax,
@@ -400,7 +399,6 @@ int calculate1R(double L, double W, double R, int atom_i, double dg,
 			clash[i] &= GridFlags::ClashAny;
 		}
 	}
-
 	// search for positions satisfying everything
 	n = 0;
 	for (int i = 0; i < ng3; i++)
