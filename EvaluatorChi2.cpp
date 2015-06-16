@@ -5,13 +5,6 @@ EvaluatorChi2::EvaluatorChi2(const TaskStorage &storage,
 			       const std::vector<std::weak_ptr<EvaluatorDistance> > distCalcs):
 	AbstractEvaluator(storage),_distCalcs(distCalcs)
 {
-
-}
-
-AbstractEvaluator::Task EvaluatorChi2::makeTask(const FrameDescriptor &frame) const
-{
-	std::vector<Task> tasks;
-	std::vector<std::shared_ptr<Distance>> distances;
 	for(const auto& calc:_distCalcs)
 	{
 		std::shared_ptr<EvaluatorDistance> calcRef=calc.lock();
@@ -22,17 +15,29 @@ AbstractEvaluator::Task EvaluatorChi2::makeTask(const FrameDescriptor &frame) co
 		if(!dist) {
 			std::cerr<<"Error!"<<std::endl;
 		}
-		tasks.push_back(getTask(frame,calc,true));
-		distances.push_back(dist);
+		distances.push_back(*dist);
 	}
-	return async::when_all(tasks).then([this,distances](std::vector<Task> tasks){
+}
+
+AbstractEvaluator::Task EvaluatorChi2::makeTask(const FrameDescriptor &frame) const
+{
+	std::vector<Task> tasks;
+	for(const auto& calc:_distCalcs)
+	{
+		std::shared_ptr<EvaluatorDistance> calcRef=calc.lock();
+		if(!calcRef) {
+			std::cerr<<"Error!"<<std::endl;
+		}
+		tasks.push_back(getTask(frame,calc,true));
+	}
+	return async::when_all(tasks).then([this](std::vector<Task> tasks){
 		double chi2=0.0;
 		int i=0;
 		for(const auto& task:tasks)
 		{
 			auto res=dynamic_cast<CalcResult<double>*>(task.get().get());
 			double dist=res->get();
-			double delta=(dist-distances[i]->distance())/distances[i]->err(dist);
+			double delta=(dist-distances[i].distance())/distances[i].err(dist);
 			++i;
 			chi2+=delta*delta;
 		}

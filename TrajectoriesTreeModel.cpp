@@ -125,7 +125,6 @@ QModelIndex TrajectoriesTreeModel::parent(const QModelIndex &index) const
 		TrajectoriesTreeItem itm {parentItem->moltrajIndex,-1};
 		const TrajectoriesTreeItem *pitm=&(*(items.emplace(std::move(itm)).first));
 		return createIndex(parentItem->trajindex, 0, const_cast<TrajectoriesTreeItem*>(pitm));
-		//TODO: check const_cast
 	}
 }
 

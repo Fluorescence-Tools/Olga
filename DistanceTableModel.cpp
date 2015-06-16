@@ -157,8 +157,8 @@ bool DistanceTableModel::load(const QJsonObject &distancesListObject)
     }
     QCollator collator;
     collator.setNumericMode(true);
-    //TODO: this is a poor man's solution, it is better to make the program
-    //rememeber the ordering from the settings file, bu QJson does not support it atm.
+    //This is a poor man's solution, it is better to make the program
+    //rememeber the ordering from the settings file, but QJson does not support it atm.
     std::sort(_distances.begin(), _distances.end(),
 	[&collator](const std::shared_ptr<Distance> & a, const std::shared_ptr<Distance> & b) -> bool
     {

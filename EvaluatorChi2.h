@@ -8,6 +8,7 @@ class EvaluatorChi2 : public AbstractEvaluator
 {
 private:
 	const std::vector<std::weak_ptr<EvaluatorDistance>> _distCalcs;
+	std::vector<Distance> distances;
 public:
 	EvaluatorChi2(const TaskStorage& storage,
 		       const std::vector<std::weak_ptr<EvaluatorDistance>> distCalcs);

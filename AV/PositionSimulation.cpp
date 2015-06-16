@@ -76,21 +76,6 @@ QJsonObject PositionSimulationAV3::jsonObject()
 	return position;
 }
 
-double PositionSimulationAV3::
-getAllowedSphereRadius(int atom_i, const double *XLocal, const double *YLocal,
-		       const double *ZLocal, const double *vdWR, int NAtoms,
-		       double linkersphere, int linknodes,
-		       unsigned char *density) const
-{
-	if(allowedSphereRadius>=0.0)
-	{
-		return allowedSphereRadius;
-	}
-	(void)atom_i; (void)XLocal; (void)YLocal; (void)ZLocal; (void)vdWR;
-	(void)NAtoms; (void)linkersphere; (void)linknodes; (void)density;
-	//TODO: add automatic sphere radius determination
-	return allowedSphereRadiusMin;
-}
 PositionSimulationResult PositionSimulation::calculate(const Eigen::Vector3f &attachmentAtomPos, const std::vector<Eigen::Vector4f> &xyzW)
 {
 	Eigen::Vector4f v(attachmentAtomPos(0),attachmentAtomPos(1),attachmentAtomPos(2),0.0f);
@@ -109,18 +94,52 @@ PositionSimulationResult PositionSimulation::calculate(const Eigen::Vector3f &at
 
 PositionSimulationResult PositionSimulationAV3::calculate(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW)
 {
+	std::vector<Eigen::Vector3f> res;
+	double as=getAllowedSphereRadius(atom_i,xyzW,res);
+	if(as!=allowedSphereRadius) {
+		std::cout<<"allowed sphere radius determined: "
+			   +std::to_string(as)+"A\n"<<std::flush;
+	}
+	return PositionSimulationResult(std::move(res));
+}
 
-	const float vdWRMax=2.0;
-	const int linknodes=3;
-	return PositionSimulationResult(
-				calculate3R(static_cast<float>(linkerLength),
-				static_cast<float>(linkerWidth),
-				static_cast<float>(radius[0]),
-				static_cast<float>(radius[1]),
-				static_cast<float>(radius[2]),atom_i,
-				static_cast<float>(gridResolution),
-				vdWRMax,static_cast<float>(allowedSphereRadius),
-				linknodes, xyzW));
+double PositionSimulationAV3::getAllowedSphereRadius(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW, std::vector<Eigen::Vector3f> &res) const
+{
+	res.clear();
+	if(allowedSphereRadius>0.0f) {
+		res=std::move(calculate3R(linkerLength, linkerWidth, radius[0],
+			      radius[1],radius[2], atom_i,gridResolution, vdWRMax,
+				allowedSphereRadius, linknodes, xyzW));
+	}
+	if(res.size()>0) {
+		return allowedSphereRadius;
+	}
+
+	const double minRadius=*std::min_element(radius,radius+3);
+	const double dAs=(allowedSphereRadiusMax-allowedSphereRadiusMin)/5.0;
+	size_t prevResSize=0;
+	for(double as=allowedSphereRadiusMin; as<=allowedSphereRadiusMax;as+=dAs)
+	{
+		res.clear();
+		res=std::move(calculate1R(linkerLength, linkerWidth, minRadius,
+					  atom_i,gridResolution, vdWRMax,
+					  as, linknodes, xyzW));
+		//check if AV size is stable for two different allowed spheres
+		if(res.size()/2<prevResSize) {
+			res=calculate3R(static_cast<float>(linkerLength),
+					static_cast<float>(linkerWidth),
+					static_cast<float>(radius[0]),
+					static_cast<float>(radius[1]),
+					static_cast<float>(radius[2]),atom_i,
+					static_cast<float>(gridResolution),
+					vdWRMax,static_cast<float>(allowedSphereRadius),
+					linknodes, xyzW);
+			return as;
+		}
+		prevResSize=res.size();
+	}
+	res.clear();
+	return -1;
 }
 
 
@@ -157,25 +176,43 @@ QJsonObject PositionSimulationAV1::jsonObject()
 
 PositionSimulationResult PositionSimulationAV1::calculate(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW)
 {
-	const float vdWRMax=2.0;
-	const int linknodes=3;
-	return PositionSimulationResult(
-				calculate1R(linkerLength,
-				linkerWidth,
-				radius,atom_i,
-				gridResolution,
-				vdWRMax,allowedSphereRadius,
-					    linknodes, xyzW));
+	std::vector<Eigen::Vector3f> res;
+	double as=getAllowedSphereRadius(atom_i,xyzW,res);
+	if(as!=allowedSphereRadius) {
+		std::cout<<"allowed sphere radius determined: "
+			   +std::to_string(as)+"A\n"<<std::flush;
+	}
+	return PositionSimulationResult(std::move(res));
 }
 
-double PositionSimulationAV1::getAllowedSphereRadius(int atom_i, const double *XLocal, const double *YLocal, const double *ZLocal, const double *vdWR, int NAtoms, double linkersphere, int linknodes, unsigned char *density) const
+double PositionSimulationAV1::
+getAllowedSphereRadius(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW,
+		       std::vector<Eigen::Vector3f> &res) const
 {
-	if(allowedSphereRadius>=0.0)
-	{
+	res.clear();
+	if(allowedSphereRadius>0.0f) {
+		res=std::move(calculate1R(linkerLength, linkerWidth, radius,
+					  atom_i,gridResolution, vdWRMax,
+					  allowedSphereRadius, linknodes, xyzW));
+	}
+	if(res.size()>0) {
 		return allowedSphereRadius;
 	}
-	(void)atom_i; (void)XLocal; (void)YLocal; (void)ZLocal; (void)vdWR;
-	(void)NAtoms; (void)linkersphere; (void)linknodes; (void)density;
-	//TODO: add automatic sphere radius determination
-	return allowedSphereRadiusMin;
+
+	const double dAs=(allowedSphereRadiusMax-allowedSphereRadiusMin)/5.0;
+	size_t prevResSize=0;
+	for(double as=allowedSphereRadiusMin; as<=allowedSphereRadiusMax;as+=dAs)
+	{
+		res.clear();
+		res=std::move(calculate1R(linkerLength, linkerWidth, radius,
+					  atom_i,gridResolution, vdWRMax,
+					  as, linknodes, xyzW));
+		//check if AV size is stable for two different allowed spheres
+		if(res.size()/2<prevResSize) {
+			return as;
+		}
+		prevResSize=res.size();
+	}
+	res.clear();
+	return -1;
 }

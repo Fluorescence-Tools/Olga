@@ -100,7 +100,7 @@ QMap<QString,double> loadvdWRadii(const QString& fileName)
 }
 float pterosVDW(const pteros::System &system, int i)
 {
-	//TODO: This is a hack. One shoul define a corresponding function in pteros::System
+	//TODO: This is a hack. One should define a corresponding function in pteros::System
 	static QMap<QString,double> vdWRMap=loadvdWRadii("vdWRadii.json");
 	return vdWRMap.value(QString::fromStdString(system.Atom_data(i).name),0.17);
 }

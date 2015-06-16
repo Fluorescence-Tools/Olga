@@ -127,7 +127,7 @@ private:
 		while(_tasksRunning<_maxRunningCount)//consume
 		{
 			if(_requestQueue.try_dequeue(key)) {
-				makeTask(key,true);
+				getTask(key.first,key.second,true);
 			} else {
 				_requests.reserve(0);
 				return;
@@ -150,7 +150,7 @@ private:
 	mutable async::threadpool_scheduler workerPool{1};
 
 	mutable std::unordered_map<FrameDescriptor,PterosSysTask> _sysCache;
-	const size_t _sysRingBufSize=10;
+	const size_t _sysRingBufSize=20;
 	mutable std::vector<FrameDescriptor> _sysRingBuf;
 	mutable size_t sysRingBufIndex=0;
 	PterosSystemLoader _systemLoader;

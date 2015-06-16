@@ -7,7 +7,6 @@ EvaluatorDistance(const TaskStorage& storage,
 		   const std::weak_ptr<EvaluatorPositionSimulation> &av2, const std::weak_ptr<Distance> &dist):
 	AbstractEvaluator(storage),_av1(av1),_av2(av2),_dist(dist)
 {
-
 }
 
 AbstractEvaluator::Task EvaluatorDistance::makeTask(const FrameDescriptor &frame) const
