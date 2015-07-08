@@ -8,6 +8,18 @@ class Distance
 {
 public:
     Distance();
+    bool operator==(const Distance& o) const
+    {
+	    return _name==o._name
+	     && _type==o._type
+	     && _position1==o._position1
+	     && _position2==o._position2
+	     && _distance==o._distance
+	     && _errNeg==o._errNeg
+	     && _errPos==o._errPos
+	     && _R0==o._R0;
+    }
+
     Distance(const QJsonObject& distanceJson, const std::string& name);
     QJsonObject jsonObject() const;
     bool load(const QJsonObject& distanceJson, const std::string& name);

@@ -6,6 +6,7 @@ Distance::Distance()
     _errNeg=-1.0;
     _errPos=-1.0;
     _R0=52.0;
+    _name="new dist";
 }
 
 Distance::Distance(const QJsonObject &distanceJson, const std::string &name)
@@ -31,7 +32,7 @@ bool Distance::load(const QJsonObject &distanceJson, const std::string &name)
     _name=name;
     _type=distanceJson.value("distance_type").toString().toStdString();
     _position1=distanceJson.value("position1_name").toString().toStdString();
-    _position2=distanceJson.value("position2_name").toString().toStdString();
+    _position2=distanceJson.value("position1_name").toString().toStdString();
     _distance=distanceJson.value("distance").toDouble();
     _errNeg=distanceJson.value("error_neg").toDouble();
     _errPos=distanceJson.value("error_pos").toDouble();

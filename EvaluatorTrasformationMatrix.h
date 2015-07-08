@@ -23,6 +23,9 @@ public:
 		}
 		return "unknown(expired)";
 	}
+	virtual std::string className() const {
+		return "Transformation matrix";
+	}
 private:
 	std::shared_ptr<AbstractCalcResult> calculate(const pteros::System &system) const;
 };

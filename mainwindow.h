@@ -4,12 +4,12 @@
 #include <QMainWindow>
 #include <QMenu>
 #include <QItemSelectionModel>
+#include <QAbstractItemView>
 #include <QLabel>
 #include "TrajectoriesTreeModel.h"
-#include "DomainTableModel.h"
-#include "PositionTableModel.h"
-#include "DistanceTableModel.h"
-#include "DistanceDelegate.h"
+#include "TrajectoriesTreeModel.h"
+#include "EvaluatorsTreeModel.h"
+#include "EvaluatorDelegate.h"
 
 
 namespace Ui {
@@ -38,8 +38,9 @@ private Q_SLOTS:
 	bool insertDistances(int position=-1, unsigned num=1);
 	bool insertDomains(int position=-1, unsigned num=1);
 	bool insertPositions(int position=-1, unsigned num=1);
+	void addEvaluator();
 
-	void deleteSelectedDistances();
+	/*void deleteSelectedDistances();
 	void deleteSelectedDomains();
 	void deleteSelectedPositions();
 
@@ -47,7 +48,7 @@ private Q_SLOTS:
 	void ShowDistancesContextMenu(const QPoint& pos);
 	void ShowDomainsContextMenu(const QPoint& pos);
 	void ShowPositionsContextMenu(const QPoint& pos);
-
+*/
 	void copySelectedText(const QItemSelectionModel* selModel) const;
 	void pasteText(QAbstractItemView *view) const;
 
@@ -72,13 +73,12 @@ private:
 	QMenu domainsMenu;
 	QMenu positionsMenu;
 
-	DomainTableModel domainsModel;
-	PositionTableModel positionsModel;
-	DistanceTableModel distancesModel;
-	//SystemsTableModel systemsModel;
-	TrajectoriesTreeModel trajectoriesModel;
+	TaskStorage _storage;
+	TrajectoriesTreeModel trajectoriesModel{_storage,this};
+	EvaluatorsTreeModel evalsModel{_storage,this};
+	EvaluatorDelegate* evaluatorsDelegate;
 
-	DistanceDelegate distanceDelegate;
+	//DistanceDelegate distanceDelegate;
 
 	QLabel tasksStatus;
 

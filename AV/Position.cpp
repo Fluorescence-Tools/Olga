@@ -9,6 +9,10 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QVariant>
+
+#include "PositionSimulation.h"
+#include "Position.h"
+
 Position::Position()
 {
 	_simulation=0;
@@ -31,6 +35,18 @@ Position::Position(const Position &other):_name(other.name()),_chainIdentifier(o
 	}
 }
 
+bool Position::operator==(const Position& o) const
+{
+
+	if(_name!=o._name || _chainIdentifier!=o.chainIdentifier()
+	   || residueSeqNumber()!=o.residueSeqNumber()
+	   || _residueName!=o._residueName || _atomName!=o._atomName
+	   || _simulationType!=o._simulationType
+	   || !(_simulation->operator==(*o._simulation) ) ) {
+		return false;
+	}
+	return true;
+}
 Position& Position::operator=(const Position &other)
 {
 	_name=other.name();
@@ -68,11 +84,16 @@ Position& Position::operator=(Position&& o)
 	o._simulation=0;
 	return *this;
 }
-
+/*
 Position::Position(const QJsonObject &positionJson, const std::string& name)
 {
 	_simulation=0;
 	load(positionJson, name);
+}*/
+Position::Position(const QVariantMap &settings, const std::string& name)
+{
+	_simulation=0;
+	load(settings, name);
 }
 QMap<QString,double> loadvdWRadii(const QString& fileName)
 {
@@ -129,34 +150,80 @@ PositionSimulationResult Position::calculate(const pteros::System &system) const
 	return calculate(refPos,xyzW);
 }
 
-QJsonObject Position::jsonObject() const
-{
-	QJsonObject position;
-	if(_simulation)
-	{
-		position=_simulation->jsonObject();
-	}
-	//position.insert("position_name",QString::fromStdString(_name));
-	position.insert("chain_identifier",QString::fromStdString(_chainIdentifier));
-	position.insert("residue_seq_number",static_cast<int>(_residueSeqNumber));
-	position.insert("residue_name",QString::fromStdString(_residueName));
-	position.insert("atom_name",QString::fromStdString(_atomName));
-	position.insert("simulation_type",QString::fromStdString(_simulationType));
 
-	return position;
+
+std::pair<QString,QVariant> Position::setting(int row) const
+{
+	using Setting=std::pair<QString,QVariant>;
+	int simSettingCount=0;
+	if(_simulation) {
+		simSettingCount=_simulation->settingsCount();
+		if(row<simSettingCount) {
+			return _simulation->setting(row);
+		}
+	}
+	switch(row-simSettingCount)
+	{
+	case 0:
+		return Setting{"chain_identifier",QString::fromStdString(_chainIdentifier)};
+	case 1:
+		return Setting{"residue_seq_number",static_cast<int>(_residueSeqNumber)};
+	case 2:
+		return Setting{"residue_name",QString::fromStdString(_residueName)};
+	case 3:
+		return Setting{"atom_name",QString::fromStdString(_atomName)};
+	case 4:
+		return Setting{"simulation_type",QVariant::fromValue(_simulationType)};
+	}
+	return Setting();
 }
 
-bool Position::load(const QJsonObject &positionJson, const std::string& name)
+void Position::setSetting(int row, const QVariant &val)
 {
-	//_name=positionJson.value("position_name").toString().toStdString();
+	int simSettingCount=0;
+	if(_simulation) {
+		simSettingCount=_simulation->settingsCount();
+		if(row<simSettingCount) {
+			_simulation->setSetting(row,val);
+			return;
+		}
+	}
+	switch(row-simSettingCount)
+	{
+	case 0:
+		_chainIdentifier=val.toString().toStdString();
+		return;
+	case 1:
+		_residueSeqNumber=val.toInt();
+		return;
+	case 2:
+		_residueName=val.toString().toStdString();
+		return;
+	case 3:
+		_atomName=val.toString().toStdString();
+		return ;
+	case 4:
+		setSimulationType(val.value<SimulationType>());
+		return;
+	}
+}
+
+int Position::settingsCount() const {
+	int n=5;
+	n+=_simulation?_simulation->settingsCount():0;
+	return n;
+}
+
+bool Position::load(const QVariantMap &settings, const std::string& name)
+{
 	_name=name;
-	_chainIdentifier=positionJson.value("chain_identifier").toString().toStdString();
-	_residueSeqNumber=positionJson.value("residue_seq_number").toVariant().toInt();
-	_residueName=positionJson.value("residue_name").toString().toStdString();
-	_atomName=positionJson.value("atom_name").toString().toStdString();
-	_simulationType=positionJson.value("simulation_type").toString().toStdString();
+	_chainIdentifier=settings.value("chain_identifier").toString().toStdString();
+	_residueSeqNumber=settings.value("residue_seq_number").toInt();
+	_residueName=settings.value("residue_name").toString().toStdString();
+	_atomName=settings.value("atom_name").toString().toStdString();
+	_simulationType=settings.value("simulation_type").value<SimulationType>();
 	delete _simulation;
-	_simulation=PositionSimulation::create(positionJson);
+	_simulation=PositionSimulation::create(settings);
 	return true;
 }
 
@@ -201,14 +268,18 @@ void Position::setAtomName(const std::string &atomName)
 {
 	_atomName = atomName;
 }
-std::string Position::simulationType() const
+Position::SimulationType Position::simulationType() const
 {
 	return _simulationType;
 }
 
-void Position::setSimulationType(const std::string &simulationType)
+void Position::setSimulationType(const Position::SimulationType &simulationType)
 {
 	_simulationType = simulationType;
+	if(_simulation) {
+		delete _simulation;
+	}
+	_simulation=PositionSimulation::create(_simulationType);
 }
 
 std::vector<Position> Position::fromLegacy(const std::string &labelingFileName, const std::string &pdbFileName)
@@ -238,7 +309,7 @@ std::vector<Position> Position::fromLegacy(const std::string &labelingFileName, 
 	}
 	return positions;
 }
-
+/*
 QJsonObject Position::jsonObjects(const std::vector<std::shared_ptr<Position>> &arr)
 {
 	QJsonObject positions;
@@ -247,7 +318,7 @@ QJsonObject Position::jsonObjects(const std::vector<std::shared_ptr<Position>> &
 		positions.insert(QString::fromStdString(position->name()),position->jsonObject());
 	}
 	return positions;
-}
+}*/
 
 Eigen::Vector3f Position::atomXYZ(const pteros::System &system) const
 {
@@ -296,7 +367,9 @@ void Position::setFromLegacy(const std::string &entry, const std::string &pdbFil
 {
 	std::istringstream iss(entry);
 	std::string buf;
-	iss >> _name >> buf >> buf >> _simulationType;
+	std::string simtypeStr;
+	iss >> _name >> buf >> buf >> simtypeStr;
+	_simulationType=simulationType(simtypeStr);
 	delete _simulation;
 	_simulation=PositionSimulation::create(_simulationType);
 	if(!_simulation)
@@ -333,3 +406,35 @@ void Position::setChainIdentifier(const std::string &chainIdentifier)
 	_chainIdentifier = chainIdentifier;
 }
 
+/*
+QJsonObject Position::jsonObject() const
+{
+	QJsonObject position;
+	if(_simulation)
+	{
+		position=_simulation->jsonObject();
+	}
+	//position.insert("position_name",QString::fromStdString(_name));
+	position.insert("chain_identifier",QString::fromStdString(_chainIdentifier));
+	position.insert("residue_seq_number",static_cast<int>(_residueSeqNumber));
+	position.insert("residue_name",QString::fromStdString(_residueName));
+	position.insert("atom_name",QString::fromStdString(_atomName));
+	position.insert("simulation_type",QString::fromStdString(_simulationType));
+
+	return position;
+}
+
+bool Position::load(const QJsonObject &positionJson, const std::string& name)
+{
+	//_name=positionJson.value("position_name").toString().toStdString();
+	_name=name;
+	_chainIdentifier=positionJson.value("chain_identifier").toString().toStdString();
+	_residueSeqNumber=positionJson.value("residue_seq_number").toVariant().toInt();
+	_residueName=positionJson.value("residue_name").toString().toStdString();
+	_atomName=positionJson.value("atom_name").toString().toStdString();
+	_simulationType=positionJson.value("simulation_type").toString().toStdString();
+	delete _simulation;
+	_simulation=PositionSimulation::create(positionJson);
+	return true;
+}
+*/

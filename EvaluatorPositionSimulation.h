@@ -3,24 +3,68 @@
 
 #include "AbstractEvaluator.h"
 #include "AV/Position.h"
+#include <QVariantMap>
 
 class EvaluatorPositionSimulation : public AbstractEvaluator
 {
 private:
-	const std::weak_ptr<Position> _position;
-    std::shared_ptr<AbstractCalcResult> calculate(const pteros::System &system,const FrameDescriptor &frame) const;
+	Position _position;
+	std::shared_ptr<AbstractCalcResult> calculate(const pteros::System &system,const FrameDescriptor &frame) const;
 public:
-	EvaluatorPositionSimulation(const TaskStorage& storage, const std::weak_ptr<Position> position);
+	EvaluatorPositionSimulation(const TaskStorage& storage,
+				    const QVariantMap& settings,
+				    const std::string& name);
+	EvaluatorPositionSimulation(const TaskStorage& storage,
+				    const std::string& name):EvaluatorPositionSimulation(storage,QVariantMap(),name) {}
+
 	virtual Task
-		makeTask(const FrameDescriptor &frame) const;
-	virtual std::string name(int ) const
+	makeTask(const FrameDescriptor &frame) const;
+	virtual std::string name() const
 	{
-		if(auto position=_position.lock())
-		{
-			return std::string("AV ")+
-					position->name()+"";
+		return _position.name();
+	}
+	virtual std::string columnName(int) const
+	{
+		return std::string("AV ")+_position.name()+"";
+	}
+	virtual std::string className() const {
+		return "Positions";
+	}
+	/*virtual QString settingName(int row) const
+	{
+		return _position.setting(row).first;
+	}
+	virtual QVariant settingValue(int row) const
+	{
+		return _position.setting(row).second;
+	}*/
+	virtual std::pair<QString,QVariant> setting(int row) const
+	{
+		return _position.setting(row);
+	}
+	virtual void setSetting(int row, const QVariant& val)
+	{
+		_position.setSetting(row,val);
+	}
+	virtual void setName(const std::string& name)
+	{
+		_position.setName(name);
+	}
+
+	virtual int settingsCount() const
+	{
+		return _position.settingsCount();
+	}
+	virtual bool inline operator==(AbstractEvaluator& o) const
+	{
+		if(this==&o) {
+			return true;
 		}
-		return "unknown(expired)";
+		auto* new_o = dynamic_cast<const EvaluatorPositionSimulation*>(&o);
+		if(new_o) {
+			return _position==new_o->_position;
+		}
+		return false;
 	}
 	//~EvaluatorPositionSimulation();
 };

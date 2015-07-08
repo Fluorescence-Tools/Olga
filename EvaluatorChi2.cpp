@@ -11,11 +11,7 @@ EvaluatorChi2::EvaluatorChi2(const TaskStorage &storage,
 		if(!calcRef) {
 			std::cerr<<"Error!"<<std::endl;
 		}
-		std::shared_ptr<Distance> dist=calcRef->_dist.lock();
-		if(!dist) {
-			std::cerr<<"Error!"<<std::endl;
-		}
-		distances.push_back(*dist);
+		distances.push_back(calcRef->_dist);
 	}
 }
 

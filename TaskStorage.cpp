@@ -1,5 +1,6 @@
 #include "TaskStorage.h"
 #include "AbstractEvaluator.h"
+#include "EvaluatorPositionSimulation.h"//TODO:remove
 
 TaskStorage::TaskStorage():_tasksRingBuf(_tasksRingBufSize),_sysRingBuf(_sysRingBufSize)
 {
@@ -11,7 +12,7 @@ TaskStorage::~TaskStorage()
 
 //must only run in worker thread
 const TaskStorage::Task &
-TaskStorage::getTask(const FrameDescriptor &frame, TaskStorage::EvalPtr eval,
+TaskStorage::getTask(const FrameDescriptor &frame, const EvalPtr &eval,
 		     bool persistent) const
 {
 	static auto tid=std::this_thread::get_id();
@@ -82,7 +83,7 @@ const TaskStorage::PterosSysTask &TaskStorage::getSysTask(const FrameDescriptor 
 
 //must only run in the main thread;
 std::string TaskStorage::getString(const FrameDescriptor &frame,
-				   TaskStorage::EvalPtr eval, int col,
+				   const EvalPtr &eval, int col,
 				   bool persistent) const
 {
 	static auto tid=std::this_thread::get_id();
@@ -91,7 +92,7 @@ std::string TaskStorage::getString(const FrameDescriptor &frame,
 	Result result;
 	bool ready=_results.find(key,result);
 	if(ready) {
-		return result->toString();
+		return result->toString(col);
 	} else {
 		_requestQueue.enqueue(key);//produce
 		_requests.insert(key,persistent);

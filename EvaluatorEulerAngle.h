@@ -10,8 +10,9 @@ private:
 	const std::weak_ptr<EvaluatorTrasformationMatrix> _refCalc, _bodyCalc;
 public:
 	EvaluatorEulerAngle(const TaskStorage& storage,
-			     const std::weak_ptr<EvaluatorTrasformationMatrix>& refCalc,
-			     const std::weak_ptr<EvaluatorTrasformationMatrix>& bodyCalc):
+			    const QVariantMap& props,
+			    const std::weak_ptr<EvaluatorTrasformationMatrix>& refCalc,
+			    const std::weak_ptr<EvaluatorTrasformationMatrix>& bodyCalc):
 		AbstractEvaluator(storage),_refCalc(refCalc),_bodyCalc(bodyCalc)
 	{	}
 	virtual Task makeTask(const FrameDescriptor &frame) const;
@@ -24,6 +25,9 @@ public:
 					body->name()+")";
 		}
 		return "unknown(expired)";
+	}
+	virtual std::string className() const {
+		return "Euler angles";
 	}
 private:
 	virtual std::shared_ptr<AbstractCalcResult>

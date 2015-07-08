@@ -4,7 +4,7 @@
 
 AbstractEvaluator::Task
 AbstractEvaluator::getTask(const FrameDescriptor &desc,
-			   const std::weak_ptr<AbstractEvaluator> eval,bool persistent) const
+			   const std::weak_ptr<const AbstractEvaluator> eval,bool persistent) const
 {
 	auto evalShared=eval.lock();
 	if(!evalShared) {

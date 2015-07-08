@@ -18,5 +18,6 @@
         <file>icons/svn-commit.svgz</file>
         <file>icons/cylinders.png</file>
         <file>icons/help-about.svgz</file>
+        <file>icons/list-add.svgz</file>
     </qresource>
 </RCC>

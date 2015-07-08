@@ -1,6 +1,5 @@
 #ifndef TRAJECTORIESTREEMODEL_H
 #define TRAJECTORIESTREEMODEL_H
-//#include "ThreadPool.h"
 
 #include <vector>
 #include <memory>
@@ -20,19 +19,16 @@
 #include "TrajectoriesTreeItem.h"
 #include "FrameDescriptor.h"
 #include "AV/MolecularSystemDomain.h"
-#include "DomainTableModel.h"
-#include "DistanceTableModel.h"
-#include "PositionTableModel.h"
+
 
 
 class TrajectoriesTreeModel : public QAbstractItemModel
 {
 	Q_OBJECT
 public:
-	explicit TrajectoriesTreeModel(const DomainTableModel* domainsModel,
-				       const PositionTableModel* positionsModel,
-				       DistanceTableModel* distancesModel,
-				       QObject *parent = 0);
+	//TODO: move to private
+
+	explicit TrajectoriesTreeModel(const TaskStorage& storage, QObject *parent = 0);
 
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 	Qt::ItemFlags flags(const QModelIndex &index) const;
@@ -75,9 +71,6 @@ public:
 
 public Q_SLOTS:
 private Q_SLOTS:
-	void domainsInserted(int from, int to);
-	void positionsInserted(int from, int to);
-	void distancesInserted(int from, int to);
 
 private:
 	const TrajectoriesTreeItem* childItem(const TrajectoriesTreeItem* parent,
@@ -92,31 +85,16 @@ private:
 	std::shared_ptr<AbstractCalcResult>
 	calculate(const FrameDescriptor desc,
 		  const std::shared_ptr<AbstractEvaluator> calc) const;
-	void appendTask(const FrameDescriptor desc,
-			const std::shared_ptr<AbstractEvaluator> calc,
-			const QModelIndex index) const;
-	void appendTask(const FrameDescriptor desc,
-			const std::shared_ptr<AbstractEvaluator> calc) const;
 	//void appendTask(const QModelIndex index) const;
 	pteros::System system(const FrameDescriptor &desc) const;
 private:
 	QVector<MolecularTrajectory> _molTrajs;
 	mutable std::unordered_set<TrajectoriesTreeItem> items;
-	std::unordered_set<std::shared_ptr<AbstractEvaluator>> _calculators;//calculator,column
-	using CalcColumn=std::pair<std::shared_ptr<AbstractEvaluator>,int>;
+	using CalcColumn=std::pair<EvalPtr,int>;
 	std::vector<CalcColumn> _visibleCalculators;
 
-	std::unordered_map<std::string,std::weak_ptr<EvaluatorPositionSimulation>> _avCalculators;//lp_name
+	const TaskStorage& _storage;
 
-	const DomainTableModel* _domainsModel;
-	const PositionTableModel* _positionsModel;
-	const DistanceTableModel* _distancesModel;
-
-	mutable TaskStorage _storage;
-	//mutable ThreadPool threadPool;
-
-	std::vector<std::weak_ptr<EvaluatorDistance>> _distanceCalculators;
-	std::shared_ptr<EvaluatorChi2> _chi2Calc;
 };
 
 #endif // TRAJECTORIESTREEMODEL_H

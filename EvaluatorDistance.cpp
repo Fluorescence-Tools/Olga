@@ -4,7 +4,8 @@
 EvaluatorDistance::
 EvaluatorDistance(const TaskStorage& storage,
 		   const std::weak_ptr<EvaluatorPositionSimulation> &av1,
-		   const std::weak_ptr<EvaluatorPositionSimulation> &av2, const std::weak_ptr<Distance> &dist):
+		   const std::weak_ptr<EvaluatorPositionSimulation> &av2,
+		  Distance dist):
 	AbstractEvaluator(storage),_av1(av1),_av2(av2),_dist(dist)
 {
 }
@@ -28,11 +29,6 @@ AbstractEvaluator::Task EvaluatorDistance::makeTask(const FrameDescriptor &frame
 
 std::shared_ptr<AbstractCalcResult> EvaluatorDistance::calculate(const PositionSimulationResult &av1, const PositionSimulationResult &av2) const
 {
-	auto dist=_dist.lock();
-	if(!dist) {
-		return std::shared_ptr<AbstractCalcResult>();
-	}
-	double result=dist->modelDistance(av1,av2);
-
+	double result=_dist.modelDistance(av1,av2);
 	return std::make_shared<CalcResult<double>>(result);
 }

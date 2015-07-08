@@ -11,31 +11,10 @@
 #include <QTimer>
 
 TrajectoriesTreeModel::
-TrajectoriesTreeModel(const DomainTableModel *domainsModel,
-		      const PositionTableModel *positionsModel,
-		      DistanceTableModel *distancesModel, QObject *parent) :
-	QAbstractItemModel(parent),_domainsModel(domainsModel),
-	_positionsModel(positionsModel),_distancesModel(distancesModel)
+TrajectoriesTreeModel(const TaskStorage &storage, QObject *parent) :
+	QAbstractItemModel(parent),_storage(storage)
 {
-	qRegisterMetaType<std::shared_ptr<AbstractCalcResult>>("shared_ptr<AbstractCalcResult>");
-	qRegisterMetaType<std::shared_ptr<AbstractEvaluator>>("shared_ptr<AbstractEvaluator>");
-	qRegisterMetaType<FrameDescriptor>("FrameDescriptor");
-	connect(_domainsModel,&DomainTableModel::rowsInserted,
-		[&](const QModelIndex &,int from,int to) {
-		domainsInserted(from, to);
-	});
-	connect(_positionsModel,&PositionTableModel::rowsInserted,
-		[&](const QModelIndex &,int from,int to) {
-		positionsInserted(from, to);
-	});
-	connect(_distancesModel,&DistanceTableModel::rowsInserted,
-		[&](const QModelIndex &,int from,int to) {
-		distancesInserted(from, to);
-	});
 
-	_chi2Calc=std::make_shared<EvaluatorChi2>(_storage,_distanceCalculators);
-	_calculators.insert(_chi2Calc);
-	_visibleCalculators.push_back(std::make_pair(_chi2Calc,0));
 }
 
 QVariant TrajectoriesTreeModel::data(const QModelIndex &index, int role) const
@@ -208,30 +187,6 @@ QByteArray TrajectoriesTreeModel::tabSeparatedData() const
 	return tsv.toUtf8();
 }
 
-void TrajectoriesTreeModel::domainsInserted(int from, int to)
-{
-	for(int i=from; i<=to; i++)
-	{
-		addCalculator(_domainsModel->domain(i));
-	}
-}
-
-void TrajectoriesTreeModel::positionsInserted(int from, int to)
-{
-	for(int i=from; i<=to; i++)
-	{
-		addCalculator(_positionsModel->position(i));
-	}
-}
-
-void TrajectoriesTreeModel::distancesInserted(int from, int to)
-{
-	for(int i=from; i<=to; i++)
-	{
-		addCalculator(_distancesModel->distance(i));
-	}
-}
-
 const TrajectoriesTreeItem* TrajectoriesTreeModel::childItem(const TrajectoriesTreeItem *parent, unsigned childRow) const
 {
 	//assert(parent->nesting()<2);
@@ -269,7 +224,8 @@ QString TrajectoriesTreeModel::frameName(const TrajectoriesTreeItem *parent, int
 QString TrajectoriesTreeModel::calculatorName(int calcNum) const
 {
 	const auto& calcCol=_visibleCalculators.at(calcNum);
-	return QString::fromStdString(calcCol.first->name(calcCol.second));
+	const auto& eval=*calcCol.first;
+	return QString::fromStdString(eval.columnName(calcCol.second));
 }
 
 FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeItem *parent, int row) const
@@ -300,6 +256,59 @@ FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeIte
 	return FrameDescriptor(top,traj,frame);
 }
 
+void TrajectoriesTreeModel::updateColumn(int column)
+{
+	//TODO:approach should be reconsidered. A hack.
+	const auto& calccol=_visibleCalculators[column];
+	QModelIndex start=index(0,column);
+	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1, Qt::MatchWildcard|Qt::MatchRecursive);
+	for(const auto& idx:indexes)
+	{
+		const TrajectoriesTreeItem *parentItem =
+				static_cast<TrajectoriesTreeItem*>(idx.internalPointer());
+		auto frame=frameDescriptor(parentItem,idx.row());
+		_storage.getString(frame,calccol.first,calccol.second);
+		//emit dataChanged(idx,idx);
+	}
+
+}
+/*	connect(_domainsModel,&DomainTableModel::rowsInserted,
+		[&](const QModelIndex &,int from,int to) {
+		domainsInserted(from, to);
+	});
+	connect(_positionsModel,&PositionTableModel::rowsInserted,
+		[&](const QModelIndex &,int from,int to) {
+		positionsInserted(from, to);
+	});
+	connect(_distancesModel,&DistanceTableModel::rowsInserted,
+		[&](const QModelIndex &,int from,int to) {
+		distancesInserted(from, to);
+	});
+*/
+/*
+void TrajectoriesTreeModel::domainsInserted(int from, int to)
+{
+	for(int i=from; i<=to; i++)
+	{
+		addCalculator(_domainsModel->domain(i));
+	}
+}
+
+void TrajectoriesTreeModel::positionsInserted(int from, int to)
+{
+	for(int i=from; i<=to; i++)
+	{
+		addCalculator(_positionsModel->position(i));
+	}
+}
+
+void TrajectoriesTreeModel::distancesInserted(int from, int to)
+{
+	for(int i=from; i<=to; i++)
+	{
+		addCalculator(_distancesModel->distance(i));
+	}
+}
 void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<MolecularSystemDomain> domain)
 {
 	auto calculator=std::make_shared<EvaluatorTrasformationMatrix>(_storage,domain);
@@ -351,42 +360,4 @@ void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<Distance> distan
 	_calculators.insert(_chi2Calc);
 	_visibleCalculators[0]=std::make_pair(_chi2Calc,0);
 }
-
-void TrajectoriesTreeModel::updateColumn(int column)
-{
-	//TODO:approach should be reconsidered. A hack.
-	const auto& calccol=_visibleCalculators[column];
-	QModelIndex start=index(0,column);
-	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1, Qt::MatchWildcard|Qt::MatchRecursive);
-	for(const auto& idx:indexes)
-	{
-		const TrajectoriesTreeItem *parentItem =
-				static_cast<TrajectoriesTreeItem*>(idx.internalPointer());
-		auto frame=frameDescriptor(parentItem,idx.row());
-		_storage.getString(frame,calccol.first,calccol.second);
-		//emit dataChanged(idx,idx);
-	}
-
-}
-
-void TrajectoriesTreeModel::appendTask(const FrameDescriptor desc,
-				       const std::shared_ptr<AbstractEvaluator> calc,
-				       const QModelIndex index) const
-{
-	/*threadPool.enqueue([desc,calc,index,this] {
-		emit calculationFinished(desc,calc,calculate(desc,calc),index);
-	});*/
-}
-/*void TrajectoriesTreeModel::appendTask(const QModelIndex index) const
-{
-	FrameDescriptor desc=frameDescriptor(static_cast<TrajectoriesTreeItem*>(index.internalPointer()),index.row());
-	std::shared_ptr<AbstractEvaluator> calc=_visibleCalculators[index.column()-1].first;
-	appendTask(desc,calc,index);
-}*/
-void TrajectoriesTreeModel::appendTask(const FrameDescriptor desc,
-				       const std::shared_ptr<AbstractEvaluator> calc) const
-{
-	/*threadPool.enqueue([desc,calc,this]{
-		emit calculationFinished(desc,calc,calculate(desc,calc));
-	});*/
-}
+*/

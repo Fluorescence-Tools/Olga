@@ -1,10 +1,12 @@
 #ifndef POSITION_H
 #define POSITION_H
-#include <QJsonObject>
+#include <QVariantMap>
 #include <QFile>
 #include <QTextStream>
 #include <QRegularExpression>
-#include "PositionSimulation.h"
+//#include "PositionSimulation.h"
+#include "PositionSimulationResult.h"
+#include "AbstractEvaluator.h"
 #include "av_routines.h"
 #include <iostream>
 #include <vector>
@@ -12,25 +14,57 @@
 #include "pteros/pteros.h"
 
 class Distance;
-
+class PositionSimulation;
 
 class Position
 {
 public:
+	enum class SimulationType {av1, av3, atom};
+	static SimulationType simulationType(const std::string& str)
+	{
+		if(str=="AV1") {
+			return SimulationType::av1;
+		} else if (str=="AV3") {
+			return SimulationType::av3;
+		} else if (str=="ATOM") {
+			return SimulationType::atom;
+		}
+		return SimulationType::av1;
+	}
+	static std::string simulationTypeName(const SimulationType& type) {
+		switch (type) {
+		case SimulationType::av1:
+			return "AV1";
+		case SimulationType::av3:
+			return "AV3";
+		case SimulationType::atom:
+			return "ATOM";
+		default:
+			return "AV1";
+		}
+	}
+
 	explicit Position();
 	virtual ~Position();
-
 	Position(const Position& other);
 	Position& operator=(const Position& other);
 	Position(Position &&o);
 	Position& operator=(Position&& o);
+	bool operator==(const Position& o) const;
 
-	Position(const QJsonObject& positionJson, const std::string& name);
+	//Position(const QJsonObject& positionJson, const std::string& name);
+	Position(const QVariantMap& positionJson, const std::string& name);
 
 	PositionSimulationResult calculate(const pteros::System &system) const;
 
-	virtual QJsonObject jsonObject() const;
-	bool load(const QJsonObject& positionJson, const std::string& name);
+	//virtual QJsonObject jsonObject() const;
+	//virtual QString settingName(int row) const;
+	//virtual QVariant settingValue(int row) const;
+	std::pair<QString,QVariant> setting(int row) const;
+	void setSetting(int row,const QVariant& val);
+	virtual int settingsCount() const;
+	//bool load(const QJsonObject& positionJson, const std::string& name);
+	bool load(const QVariantMap& positionJson, const std::string& name);
 	const std::string& name() const;
 	void setName(const std::string& name);
 
@@ -46,11 +80,9 @@ public:
 	std::string atomName() const;
 	void setAtomName(const std::string &atomName);
 
-	std::string simulationType() const;
-	void setSimulationType(const std::string &simulationType);
-//	static double chi2(BALL::System &system,
-//			   const std::vector<Position> &positions,
-//			   const std::vector<Distance> &distances);
+	SimulationType simulationType() const;
+	void setSimulationType(const SimulationType &simulationType);
+
 	static double obsolete_chi2(pteros::System &system,
 				   const std::vector<Position> &positions,
 				   const std::vector<Distance> &distances);
@@ -70,8 +102,8 @@ private:
 	unsigned _residueSeqNumber;
 	std::string _residueName;
 	std::string _atomName;
-	std::string _simulationType;
+	SimulationType _simulationType;
 	PositionSimulation* _simulation;
 };
-
+Q_DECLARE_METATYPE(Position::SimulationType)
 #endif // POSITION_H

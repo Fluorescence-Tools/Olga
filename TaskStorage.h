@@ -1,6 +1,7 @@
 #ifndef TASKSTORAGE_H
 #define TASKSTORAGE_H
 #include "AbstractCalcResult.h"
+//#include "AbstractEvaluator.h"
 #include "FrameDescriptor.h"
 #include "PterosSystemLoader.h"
 
@@ -13,6 +14,7 @@
 #include <unordered_map>
 #include <atomic>
 #include <unordered_set>
+#include <cstdint>
 
 #include <readerwriterqueue/readerwriterqueue.h>
 
@@ -50,12 +52,22 @@ inline void printMemUse()
 }
 */
 class AbstractEvaluator;
-
-namespace std {
-template <>
-struct hash<std::pair<FrameDescriptor,shared_ptr<AbstractEvaluator>>>
+/*
+template<class Tag, class Base = int> struct def_enum
 {
-	std::size_t operator()(const std::pair<FrameDescriptor,shared_ptr<AbstractEvaluator>>& k) const
+    enum class type : Base { }; // Base задаёт ёмкость типа; можно сделать через пару минимум-максимум
+};
+using EvalIdBase=uint_fast16_t;
+using EvalId=def_enum<EvalPtr,EvalIdBase>::type;
+*/
+using EvalPtr=std::shared_ptr<const AbstractEvaluator>;
+using CacheKey=std::pair<FrameDescriptor,EvalPtr>;
+namespace std {
+//shared_ptr
+/*template <>
+struct hash<pair<FrameDescriptor,shared_ptr<AbstractEvaluator>>>
+{
+	size_t operator()(const pair<FrameDescriptor,shared_ptr<AbstractEvaluator>>& k) const
 	{
 		size_t seed=hash<shared_ptr<AbstractEvaluator>>()(k.second);
 		hash_combine(seed,k.first);
@@ -63,17 +75,26 @@ struct hash<std::pair<FrameDescriptor,shared_ptr<AbstractEvaluator>>>
 	}
 };
 template <>
-struct hash<std::tuple<FrameDescriptor,shared_ptr<AbstractEvaluator>,bool>>
+struct hash<tuple<FrameDescriptor,shared_ptr<AbstractEvaluator>,bool>>
 {
-	std::size_t operator()(const std::tuple<FrameDescriptor,shared_ptr<AbstractEvaluator>,bool>& k) const
+	size_t operator()(const tuple<FrameDescriptor,shared_ptr<AbstractEvaluator>,bool>& k) const
 	{
 		size_t seed=hash<FrameDescriptor>()(get<0>(k));
 		hash_combine(seed,get<1>(k));
 		hash_combine(seed,get<2>(k));
 		return seed;
 	}
+};*/
+template <>
+struct hash<CacheKey>
+{
+	size_t operator()(const CacheKey& k) const
+	{
+		size_t seed=hash<FrameDescriptor>()(k.first);
+		hash_combine(seed,k.second);
+		return seed;
+	}
 };
-
 }
 
 class TaskStorage
@@ -82,14 +103,27 @@ class TaskStorage
 public:
 	TaskStorage();
 	~TaskStorage();
-	using EvalPtr=std::shared_ptr<AbstractEvaluator>;
-	using CacheKey=std::pair<FrameDescriptor,EvalPtr>;
+	using EvalPtr=::EvalPtr;
+	using CacheKey=::CacheKey;
 	using Result=std::shared_ptr<AbstractCalcResult>;
 	using Task=async::shared_task<Result>;
 	using PterosSysTask=async::shared_task<pteros::System>;
+
 	const PterosSysTask& getSysTask(const FrameDescriptor &frame) const;
-	std::string getString(const FrameDescriptor &frame, EvalPtr eval, int col,
+	std::string getString(const FrameDescriptor &frame, const EvalPtr& eval, int col,
 			      bool persistent=true) const;
+	const AbstractEvaluator& eval(int i) const
+	{
+		return *_evals.at(i);
+	}
+	EvalPtr evalPtr(int i) const
+	{
+		return _evals.at(i);
+	}
+	int evalCount() const
+	{
+		return _evals.size();
+	}
 	int sysTaskCount() const
 	{
 		return _sysCache.size();
@@ -106,14 +140,24 @@ public:
 	{
 		return _requests.size();
 	}
+	void addEvaluator(EvalPtr eval)
+	{
+		_evals.push_back(eval);
+	}
+
 private:
-	const Task& getTask(const FrameDescriptor &frame, EvalPtr eval,
-			    bool persistent) const;
+
+	/*std::string getString(const FrameDescriptor &frame, EvalPtr eval, int col,
+			      bool persistent=true) const;*/
+	/*const Task& getTask(const FrameDescriptor &frame, std::shared_ptr<AbstractEvaluator> eval,
+			    bool persistent) const;*/
+	const Task& getTask(const FrameDescriptor &frame, const EvalPtr& eval,
+				    bool persistent) const;
 	const Task& makeTask(const CacheKey &key,
 			    bool persistent) const;
 	inline void pushTask(const CacheKey &key) const
 	{
-		auto &oldK=_tasksRingBuf[_tasksRBpos];
+		auto& oldK=_tasksRingBuf[_tasksRBpos];
 		_tasks.erase(oldK);
 		oldK=key;
 		_tasksRBpos=(_tasksRBpos+1)%_tasksRingBufSize;
@@ -154,6 +198,8 @@ private:
 	mutable std::vector<FrameDescriptor> _sysRingBuf;
 	mutable size_t sysRingBufIndex=0;
 	PterosSystemLoader _systemLoader;
+
+	std::vector<EvalPtr> _evals;
 };
 
 #endif // TASKSTORAGE_H

@@ -2,15 +2,9 @@
 #include "CalcResult.h"
 std::shared_ptr<AbstractCalcResult> EvaluatorPositionSimulation::calculate(const pteros::System &system,const FrameDescriptor &frame) const
 {
-	auto position = _position.lock();
-	if( !position ) {
-		std::cerr<<"Error! Position for AV calculation "
-			   "does not exist anymore."<<std::endl;
-		return std::shared_ptr<AbstractCalcResult>();
-	}
-	auto res=position->calculate(system);
+	auto res=_position.calculate(system);
 	if(res.empty()) {
-		std::cerr<<frame.fullName()+" simulation "+position->name()+" failed: empty AV\n";
+		std::cerr<<frame.fullName()+" simulation "+_position.name()+" failed: empty AV\n";
 		std::cerr.flush();
 	}
 	//res.dumpShellXyz(position->name()+".xyz");
@@ -20,8 +14,8 @@ std::shared_ptr<AbstractCalcResult> EvaluatorPositionSimulation::calculate(const
 
 EvaluatorPositionSimulation::
 EvaluatorPositionSimulation(const TaskStorage& storage,
-			    const std::weak_ptr<Position> position):
-	AbstractEvaluator(storage),_position(position)
+			    const QVariantMap& settings, const std::string &name):
+	AbstractEvaluator(storage),_position(settings,name)
 {
 
 }

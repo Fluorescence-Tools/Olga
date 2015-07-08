@@ -25,10 +25,12 @@ COMMIT_HASH = $$system(git log --pretty=format:'%h' -n 1)
 DEFINES += APP_VERSION=\\\"$$COMMIT_DATE-$$COMMIT_BRANCH-$$COMMIT_HASH\\\"
 CONFIG += c++14
 CONFIG += no_keywords
+CONFIG(release, debug|release): DEFINES+=NDEBUG
 
 QMAKE_CXXFLAGS += -std=c++14 -Wextra -Winit-self -Wold-style-cast \
 -Woverloaded-virtual -Wuninitialized -Winit-self -pedantic-errors -Wno-attributes#-Werror
-LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io
+
+LIBS += -lasync++ -lyomm11 -lpteros -lpteros_analysis -ltng_io
 
 RESOURCES += \
     icons.qrc
@@ -37,11 +39,7 @@ FORMS += \
     mainwindow.ui
 
 HEADERS += \
-    PositionTableModel.h \
-    DistanceTableModel.h \
-    DomainTableModel.h \
     mainwindow.h \
-    DistanceDelegate.h \
     AV/av_routines.h \
     AV/Distance.h \
     AV/MolecularSystemDomain.h \
@@ -63,15 +61,13 @@ HEADERS += \
     EvaluatorPositionSimulation.h \
     EvaluatorDistance.h \
     EvaluatorChi2.h \
-    Q_DebugStream.h
+    Q_DebugStream.h \
+    EvaluatorsTreeModel.h \
+    EvaluatorDelegate.h
 
 SOURCES += \
-    PositionTableModel.cpp \
-    DistanceTableModel.cpp \
-    DomainTableModel.cpp \
     main.cpp \
     mainwindow.cpp \
-    DistanceDelegate.cpp \
     AV/av_routines.cpp \
     AV/Distance.cpp \
     AV/MolecularSystemDomain.cpp \
@@ -91,7 +87,9 @@ SOURCES += \
     PterosSystemLoader.cpp \
     EvaluatorPositionSimulation.cpp \
     EvaluatorDistance.cpp \
-    EvaluatorChi2.cpp
+    EvaluatorChi2.cpp \
+    EvaluatorsTreeModel.cpp \
+    EvaluatorDelegate.cpp
 
 DISTFILES += \
     .gitignore \
