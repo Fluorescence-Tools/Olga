@@ -92,7 +92,7 @@ void PositionSimulationAV3::setSetting(int row, const QVariant &val)
 		radius[2]=val.toDouble();
 		return;
 	case 6:
-		allowedSphereRadius==val.toDouble();
+		allowedSphereRadius=val.toDouble();
 		return;
 	case 7:
 		allowedSphereRadiusMin=val.toDouble();
@@ -165,14 +165,17 @@ getAllowedSphereRadius(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW
 					static_cast<float>(radius[1]),
 					static_cast<float>(radius[2]),atom_i,
 					static_cast<float>(gridResolution),
-					vdWRMax,static_cast<float>(allowedSphereRadius),
+					vdWRMax,
+					static_cast<float>(as),
 					linknodes, xyzW);
-			return as;
+			if(!res.empty()) {
+				return as;
+			}
 		}
 		prevResSize=res.size();
 	}
 	res.clear();
-	return -1;
+	return -1.0;
 }
 
 bool PositionSimulationAV1::load(const QVariantMap& settings)

@@ -10,6 +10,11 @@ TaskStorage::~TaskStorage()
 {
 }
 
+std::string TaskStorage::getString(const FrameDescriptor &frame, int calcNum, int col, bool persistent) const
+{
+	return getString(frame,evalPtr(calcNum),col,persistent);
+}
+
 //must only run in worker thread
 const TaskStorage::Task &
 TaskStorage::getTask(const FrameDescriptor &frame, const EvalPtr &eval,
@@ -79,6 +84,16 @@ const TaskStorage::PterosSysTask &TaskStorage::getSysTask(const FrameDescriptor 
 		auto pair=_sysCache.emplace(frame,_systemLoader.makeTask(frame));
 		return pair.first->second;
 	}
+}
+
+std::string TaskStorage::getColumnName(int calcNum, int col) const
+{
+	return eval(calcNum).columnName(col);
+}
+
+int TaskStorage::getColumnCount(int calcNum) const
+{
+	return eval(calcNum).columnCount();
 }
 
 //must only run in the main thread;

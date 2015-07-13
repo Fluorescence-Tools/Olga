@@ -1,14 +1,5 @@
 #include "Distance.h"
 
-Distance::Distance()
-{
-    _distance=-1.0;
-    _errNeg=-1.0;
-    _errPos=-1.0;
-    _R0=52.0;
-    _name="new dist";
-}
-
 Distance::Distance(const QJsonObject &distanceJson, const std::string &name)
 {
     load(distanceJson, name);

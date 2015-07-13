@@ -1,7 +1,8 @@
 #include "av_routines.h"
 #include <iostream>
 
-std::vector<Eigen::Vector3f> calculate3R(float L, float W, float R1, float R2, float R3, unsigned atom_i, float dg,
+std::vector<Eigen::Vector3f> calculate3R(float L, float W, float R1, float R2, float R3,
+					 unsigned atom_i, float dg,
 					 float vdWRMax,				// v.d.Waals radii
 					 float linkersphere, int linknodes, 					// linker routing parameters
 					 const std::vector<Eigen::Vector4f> &xyzW)									// returns density array

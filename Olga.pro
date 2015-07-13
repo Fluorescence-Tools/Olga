@@ -63,7 +63,8 @@ HEADERS += \
     EvaluatorChi2.h \
     Q_DebugStream.h \
     EvaluatorsTreeModel.h \
-    EvaluatorDelegate.h
+    EvaluatorDelegate.h \
+    CheckBoxList.h
 
 SOURCES += \
     main.cpp \
@@ -89,7 +90,8 @@ SOURCES += \
     EvaluatorDistance.cpp \
     EvaluatorChi2.cpp \
     EvaluatorsTreeModel.cpp \
-    EvaluatorDelegate.cpp
+    EvaluatorDelegate.cpp \
+    CheckBoxList.cpp
 
 DISTFILES += \
     .gitignore \

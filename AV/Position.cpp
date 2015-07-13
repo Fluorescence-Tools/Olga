@@ -155,14 +155,7 @@ PositionSimulationResult Position::calculate(const pteros::System &system) const
 std::pair<QString,QVariant> Position::setting(int row) const
 {
 	using Setting=std::pair<QString,QVariant>;
-	int simSettingCount=0;
-	if(_simulation) {
-		simSettingCount=_simulation->settingsCount();
-		if(row<simSettingCount) {
-			return _simulation->setting(row);
-		}
-	}
-	switch(row-simSettingCount)
+	switch(row)
 	{
 	case 0:
 		return Setting{"chain_identifier",QString::fromStdString(_chainIdentifier)};
@@ -174,21 +167,15 @@ std::pair<QString,QVariant> Position::setting(int row) const
 		return Setting{"atom_name",QString::fromStdString(_atomName)};
 	case 4:
 		return Setting{"simulation_type",QVariant::fromValue(_simulationType)};
+	default:
+		return _simulation->setting(row-5);
 	}
 	return Setting();
 }
 
 void Position::setSetting(int row, const QVariant &val)
 {
-	int simSettingCount=0;
-	if(_simulation) {
-		simSettingCount=_simulation->settingsCount();
-		if(row<simSettingCount) {
-			_simulation->setSetting(row,val);
-			return;
-		}
-	}
-	switch(row-simSettingCount)
+	switch(row)
 	{
 	case 0:
 		_chainIdentifier=val.toString().toStdString();
@@ -204,6 +191,9 @@ void Position::setSetting(int row, const QVariant &val)
 		return ;
 	case 4:
 		setSimulationType(val.value<SimulationType>());
+		return;
+	default:
+		_simulation->setSetting(row-5,val);
 		return;
 	}
 }
@@ -275,6 +265,9 @@ Position::SimulationType Position::simulationType() const
 
 void Position::setSimulationType(const Position::SimulationType &simulationType)
 {
+	if(simulationType==_simulationType) {
+		return;
+	}
 	_simulationType = simulationType;
 	if(_simulation) {
 		delete _simulation;

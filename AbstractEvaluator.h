@@ -47,6 +47,7 @@ public:
 	virtual Task makeTask(const FrameDescriptor &frame) const=0;
 
 	virtual std::string columnName(int i) const = 0;
+	virtual int columnCount() const = 0;
 	virtual std::string className() const = 0;
 
 	using Setting=std::pair<QString,QVariant>;
@@ -62,5 +63,4 @@ protected:
 	PterosSysTask getSysTask(const FrameDescriptor &frame) const;
 };
 Q_DECLARE_METATYPE(std::shared_ptr<const AbstractEvaluator>)
-Q_DECLARE_METATYPE(std::vector<std::shared_ptr<const AbstractEvaluator>>)
 #endif // ABSTRACTEVALUATOR_H

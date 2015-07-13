@@ -73,25 +73,22 @@ public Q_SLOTS:
 private Q_SLOTS:
 
 private:
+	void evaluatorAdded(int i);
 	const TrajectoriesTreeItem* childItem(const TrajectoriesTreeItem* parent,
 					      unsigned row) const;
 
 	QString frameName(const TrajectoriesTreeItem *parent, int row) const;
 	QString calculatorName(int calcNum) const;
 	FrameDescriptor frameDescriptor(const TrajectoriesTreeItem *parent, int row) const;
-	void addCalculator(const std::shared_ptr<MolecularSystemDomain> domain);
-	void addCalculator(const std::shared_ptr<Position> position);
-	void addCalculator(const std::shared_ptr<Distance> distance);
 	std::shared_ptr<AbstractCalcResult>
 	calculate(const FrameDescriptor desc,
 		  const std::shared_ptr<AbstractEvaluator> calc) const;
-	//void appendTask(const QModelIndex index) const;
 	pteros::System system(const FrameDescriptor &desc) const;
 private:
 	QVector<MolecularTrajectory> _molTrajs;
 	mutable std::unordered_set<TrajectoriesTreeItem> items;
-	using CalcColumn=std::pair<EvalPtr,int>;
-	std::vector<CalcColumn> _visibleCalculators;
+	using CalcColumn=std::pair<int,int>;//calcNum,calcCol
+	std::vector<CalcColumn> _columns;
 
 	const TaskStorage& _storage;
 

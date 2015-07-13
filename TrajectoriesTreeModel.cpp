@@ -14,7 +14,8 @@ TrajectoriesTreeModel::
 TrajectoriesTreeModel(const TaskStorage &storage, QObject *parent) :
 	QAbstractItemModel(parent),_storage(storage)
 {
-
+	connect(&_storage,&TaskStorage::evaluatorAdded,
+		[this](int i){evaluatorAdded(i);});
 }
 
 QVariant TrajectoriesTreeModel::data(const QModelIndex &index, int role) const
@@ -35,7 +36,7 @@ QVariant TrajectoriesTreeModel::data(const QModelIndex &index, int role) const
 		if(parentItem->nesting()<2) {
 			return "";
 		}
-		auto calccol=_visibleCalculators[index.column()-1];
+		auto calccol=_columns[index.column()-1];
 		auto frame=frameDescriptor(parentItem,index.row());
 		auto string=_storage.getString(frame,calccol.first,calccol.second);
 		return QString::fromStdString(string);
@@ -56,11 +57,14 @@ QVariant TrajectoriesTreeModel::headerData(int section, Qt::Orientation orientat
 {
 	if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
-		if(section>0 && section<int(_visibleCalculators.size()+1))
+		if(section==0) {
+			return "structure";
+		}
+		if(section>0 && section<int(_columns.size()+1))
 		{
 			return calculatorName(section-1);
 		}
-		return QString("name");
+		return QString("WRONG COLUMN");
 	}
 
 	return QVariant();
@@ -141,7 +145,7 @@ int TrajectoriesTreeModel::rowCount(const QModelIndex &parent) const
 
 int TrajectoriesTreeModel::columnCount(const QModelIndex &/*parent*/) const
 {
-	return _visibleCalculators.size()+1;
+	return _columns.size()+1;
 }
 
 bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
@@ -223,9 +227,8 @@ QString TrajectoriesTreeModel::frameName(const TrajectoriesTreeItem *parent, int
 
 QString TrajectoriesTreeModel::calculatorName(int calcNum) const
 {
-	const auto& calcCol=_visibleCalculators.at(calcNum);
-	const auto& eval=*calcCol.first;
-	return QString::fromStdString(eval.columnName(calcCol.second));
+	const auto& cc=_columns.at(calcNum);
+	return QString::fromStdString(_storage.getColumnName(cc.first,cc.second));
 }
 
 FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeItem *parent, int row) const
@@ -259,7 +262,7 @@ FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeIte
 void TrajectoriesTreeModel::updateColumn(int column)
 {
 	//TODO:approach should be reconsidered. A hack.
-	const auto& calccol=_visibleCalculators[column];
+	const auto& calccol=_columns[column];
 	QModelIndex start=index(0,column);
 	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1, Qt::MatchWildcard|Qt::MatchRecursive);
 	for(const auto& idx:indexes)
@@ -271,6 +274,14 @@ void TrajectoriesTreeModel::updateColumn(int column)
 		//emit dataChanged(idx,idx);
 	}
 
+}
+
+void TrajectoriesTreeModel::evaluatorAdded(int ev)
+{
+	int colCount=_storage.getColumnCount(ev);
+	for(int i=0; i<colCount; ++i) {
+		_columns.emplace_back(ev,i);
+	}
 }
 /*	connect(_domainsModel,&DomainTableModel::rowsInserted,
 		[&](const QModelIndex &,int from,int to) {

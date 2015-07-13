@@ -13,6 +13,7 @@
 #include "AbstractEvaluator.h"
 #include "TaskStorage.h"
 #include "AV/Position.h"
+#include "EvaluatorDelegate.h"
 
 union EvaluatorsTreeItem {
 	static_assert(sizeof(size_t)==8 || sizeof(size_t)==4,
@@ -60,13 +61,6 @@ union EvaluatorsTreeItem {
 private:
 	EvaluatorsTreeItem(size_t ptr):intptr(ptr) {}
 };
-struct ButtonFlags {
-	char save : 1;
-	char remove : 1;
-	char duplicate : 1;
-
-};
-Q_DECLARE_METATYPE(ButtonFlags)
 class EvaluatorsTreeModel : public QAbstractItemModel
 {
 	Q_OBJECT
@@ -85,13 +79,16 @@ public:
 		     int role = Qt::EditRole) override;
 	~EvaluatorsTreeModel();
 
+	using ButtonFlags=EvaluatorDelegate::ButtonFlags;
 	using EvalPtr=std::shared_ptr<const AbstractEvaluator>;
 	using MutableEvalPtr=std::shared_ptr<AbstractEvaluator>;
 	std::string evalTypeName(int typeNum) const;
 	QStringList supportedTypes() const;
 	void addEvaluator(int typeNum);
-	void removeEvaluator(const QModelIndex& index);
-	void saveEvaluator(const QModelIndex& index);
+	//void removeEvaluator(const QModelIndex& index);
+	void removeEvaluator(int evRow);
+	void activateEvaluator(const QModelIndex& index);
+	void activateEvaluator(int evRow);
 	QVariantMap evaluators() const;
 	void loadEvaluators(const QVariantMap &settings);
 private:
@@ -103,11 +100,15 @@ private:
 	std::string className(int classRow) const;
 	std::string evalName(int classRow, int evalRow) const;
 	EvalPtr eval(int classIndex, int evalRow) const;
-	EvalPtr eval(int classIndex, const QString& evName) const;
+	EvalPtr findEval(int classIndex, const QString& evName) const;
 	const AbstractEvaluator& eval(const EvaluatorsTreeItem& item) const;
-
 	int addClassRow(const EvalPtr& eval);
 	int classRow(const EvalPtr& eval) const;
+	int evalRow(const EvalPtr& eval) const;
+	QStringList evalListByType(const EvalPtr& eval) const;
+	QList<int> evalRowList(const QList<EvalPtr>& list) const;
+	QVariantMap propMap(const AbstractEvaluator &eval) const;
+
 
 	void loadEvaluator(int i);
 	TaskStorage& _storage;
@@ -122,6 +123,7 @@ private:
 
 	const int evalType=QVariant::fromValue(EvalPtr()).userType();
 	const int simulationType=QVariant::fromValue(Position::SimulationType()).userType();
+	const int evalListType=QVariant::fromValue(QList<EvalPtr>()).userType();
 	const QStringList _simTypes{
 		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::av1)),
 		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::av3)),

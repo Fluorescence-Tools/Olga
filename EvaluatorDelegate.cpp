@@ -6,96 +6,72 @@
 #include <QDebug>
 #include <QAbstractItemView>
 #include <QLayout>
+#include <QApplication>
 
-EvaluatorDelegate::EvaluatorDelegate(EvaluatorsTreeModel &evalModel,
-				     QAbstractItemView *parent) :
-	QStyledItemDelegate(parent),_evalModel(evalModel),_view(parent)
+EvaluatorDelegate::EvaluatorDelegate(QAbstractItemView *parent) :
+	QStyledItemDelegate(parent),_view(parent)//,_evalModel(evalModel)
 {
 	//evalComboBox.setModel(&evalModel);
 	comboBox.setFrame(false);
+	checkBoxList.setFrame(false);
 
 	connect(&save,&QAction::triggered,[this]{
 		const QModelIndex& index=toolBar.property("index").value<QModelIndex>();
-		_evalModel.saveEvaluator(index);
+		ButtonFlags flgs{0,0,0};
+		flgs.save=true;
+		QVariant var;
+		var.setValue(flgs);
+		_view->model()->setData(index,var,Qt::EditRole);
 	});
 	setupToolBar(toolBar);
 	setupToolBar(toolBarPaint);
 	toolBarPaint.setParent(_view);
 	toolBarPaint.hide();
 
-	/*saveEvalBtn.setFocusPolicy(Qt::NoFocus);
-	saveEvalBtn.setIcon(QIcon("://icons/document-save.svgz"));
-	saveEvalBtn.hide();
-	connect(&saveEvalBtn,&QToolButton::pressed,[this]{
-		const QModelIndex& index=saveEvalBtn.property("index").value<QModelIndex>();
-		_evalModel.saveEvaluator(index);
-	});
-
-
-	saveEvalBtnPaint.setIcon(QIcon("://icons/document-save.svgz"));
-	saveEvalBtnPaint.hide();
-	*/
-
 	_view->setMouseTracking(true);
 	connect(_view, SIGNAL(entered(QModelIndex)),
 		this, SLOT(cellEntered(QModelIndex)));
-
-	qDebug()<<"CBox:"<<&comboBox;
-//	qDebug()<<"simCBox"<<&simtypeComboBox;
-//	qDebug()<<"saveEvalBtn"<<&saveEvalBtn;
-	qDebug()<<"_view"<<_view;
 }
 
 QWidget *EvaluatorDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
 	QVariant data=index.data(Qt::EditRole);
 	if(data.type()==QVariant::StringList) {
-		if(index.data().type()==QVariant::String) {//single selection
+		const auto& dispData=index.data();
+		if(dispData.type()==QVariant::Int) {//single selection
 			comboBox.clear();
 			comboBox.addItems(data.toStringList());
+			comboBox.setCurrentIndex(dispData.toInt());
 			comboBox.setParent(parent);
 			return &comboBox;
-		} else {// if(index.data().type()==QVariant::StringList) //
+		} else if(dispData.userType()==intListType) {
+			checkBoxList.clear();
+			checkBoxList.addItems(data.toStringList());
+			checkBoxList.setChecked(dispData.value<QList<int>>());
+			checkBoxList.setParent(parent);
+			return &checkBoxList;
 		}
 	}
-	/*if(data.userType()==evalType) {
-		const EvalPtr& eval=data.value<EvalPtr>();
-		evalComboBox.setParent(parent);
-		populate(eval);
-		return &evalComboBox;
-	}*/
 	if(data.userType()==buttonsType) {
 		ButtonFlags btnFlags=data.value<ButtonFlags>();
 		if(btnFlags.save) {
-			/*saveEvalBtn.setParent(parent);
-			saveEvalBtn.setProperty("index",index);
-			auto rect=option.rect;
-			rect.setWidth(rect.height());
-			saveEvalBtn.setGeometry(rect);
-			return &saveEvalBtn;*/
-			//toolBar.setGeometry(option.rect);
 			toolBar.setProperty("index",index);
 			toolBar.setParent(parent);
 			toolBar.setGeometry(option.rect);
 			return &toolBar;
 		}
 	}
-	/*if(data.userType()==simtypeType) {
-		simtypeComboBox.setParent(parent);
-		setSimtype(data);
-		return &simtypeComboBox;
-	}*/
 	return QStyledItemDelegate::createEditor(parent, option, index);
 }
 
 void EvaluatorDelegate::destroyEditor(QWidget *editor, const QModelIndex &index) const
 {
 	QVariant data=index.data(Qt::EditRole);
-	if(editor==&comboBox || editor==&toolBar) {
-		//simtypeComboBox.setParent(nullptr);
+	if(editor==&comboBox || editor==&toolBar || editor==&checkBoxList) {
 		comboBox.setParent(nullptr);
 		toolBar.setParent(nullptr);
 		toolBarPaint.setParent(nullptr);
+		checkBoxList.setParent(nullptr);
 		return;
 	}
 	/*if(data.userType()==evalType || data.userType()==buttonsType ||
@@ -111,59 +87,64 @@ void EvaluatorDelegate::setEditorData(QWidget *editor, const QModelIndex &index)
 	if(data.type()==QVariant::StringList) {
 		QVariant displayData=index.data();
 		if(displayData.type()==QVariant::String) {
-			comboBox.setCurrentText(displayData.toString());
+			comboBox.setCurrentIndex(displayData.toInt());
+			return;
+		} else if(displayData.userType()==intListType) {
+			checkBoxList.setChecked(displayData.value<QList<int>>());
 			return;
 		}
 	}
-	/*if(data.userType()==evalType) {
-		QString name=QString::fromStdString(data.value<EvalPtr>()->name());
-		comboBox.setCurrentText(name);
-		return;
-	}*/
 	if(data.canConvert<ButtonFlags>()) {
 		return;
 	}
-	/*if(data.userType()==simtypeType) {
-		setSimtype(data);
-		return;
-	}*/
 	QStyledItemDelegate::setEditorData(editor, index);
 }
 
 void EvaluatorDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
 	QVariant data=index.data(Qt::EditRole);
-	/*
-	if(data.canConvert<EvalPtr>()) {
-		auto oldEval=data.value<EvalPtr>();
-		auto newEval=_evalModel.eval(oldEval,evalComboBox.currentIndex());
-		if(newEval) {
-			model->setData(index,QVariant::fromValue(newEval), Qt::EditRole);
-		}
-		return;
-	}*/
 	if(data.type()==QVariant::StringList) {
 		QVariant displayData=index.data();
-		if(displayData.type()==QVariant::String) {
-			model->setData(index,comboBox.currentText(), Qt::EditRole);
+		if(displayData.type()==QVariant::Int) {
+			model->setData(index,comboBox.currentIndex(), Qt::EditRole);
+			return;
+		} else if(displayData.userType()==intListType) {
+			const auto& var=QVariant::fromValue(checkBoxList.getChecked());
+			model->setData(index,var,Qt::EditRole);
 			return;
 		}
 	}
 	if(data.canConvert<ButtonFlags>()) {
 		return;
 	}
-	/*if(data.userType()==simtypeType) {
-		auto type=static_cast<Position::SimulationType>(simtypeComboBox.currentIndex());
-		model->setData(index,QVariant::fromValue(type),Qt::EditRole);
-		return;
-	}*/
 	QStyledItemDelegate::setModelData(editor, model, index);
 }
 
 void EvaluatorDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-	QVariant data=index.data(Qt::EditRole);
-	if(data.canConvert<ButtonFlags>()) {
+	QVariant data=index.data();
+	if(index.data(Qt::EditRole).type()==QVariant::StringList) {
+		QStringList all=index.data(Qt::EditRole).toStringList();
+		QStyleOptionViewItem opt = option;
+		initStyleOption(&opt, index);
+		if (data.userType()==intListType) {
+			QList<int> checked=data.value<QList<int>>();
+			QStringList selected;
+			for(int i:checked) {
+				selected<<all.at(i);
+			}
+			opt.text=selected.join(", ");
+		} else if(data.type()==QVariant::Int) {
+			if(data.toInt()>=0) {
+				opt.text=all.at(data.toInt());
+			} else {
+				opt.text="";
+			}
+		}
+		const QWidget *widget = option.widget;
+		QStyle *style = widget ? widget->style() : QApplication::style();
+		style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);
+	} else if(data.canConvert<ButtonFlags>()) {
 		if (option.state == QStyle::State_Selected) {
 			painter->fillRect(option.rect, option.palette.highlight());
 		}
@@ -171,7 +152,8 @@ void EvaluatorDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 		toolBarPaint.setGeometry(option.rect);
 		QPixmap map = toolBarPaint.grab();
 		painter->drawPixmap(option.rect.x(),option.rect.y(),map);
-	} else {
+	}
+	else {
 		QStyledItemDelegate::paint(painter,option, index);
 	}
 }
@@ -208,7 +190,8 @@ void EvaluatorDelegate::setupToolBar(QToolBar &toolBar) {
 	toolBar.setMovable(false);
 	toolBar.layout()->setMargin(0);
 	toolBar.layout()->setContentsMargins(0,0,0,0);
-	toolBar.setStyleSheet("QToolBar { background-color : rgba(255,255,255,0) ; color:white; border-color: transparent;}  QToolButton{} ");
+	toolBar.setStyleSheet("QToolBar { background-color : rgba(255,255,255,0);"
+			      " color:white; border-color: transparent;}  QToolButton{} ");
 	toolBar.setFocusPolicy(Qt::NoFocus);
 }
 

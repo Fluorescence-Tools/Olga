@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->evalTypeAddComboBox->addItems(evalsModel.supportedTypes());
 
-	evaluatorsDelegate = new EvaluatorDelegate(evalsModel, ui->evaluatorsTreeView);
+	evaluatorsDelegate = new EvaluatorDelegate(ui->evaluatorsTreeView);
 	//tabifyDockWidget();
 
 	readSettings();

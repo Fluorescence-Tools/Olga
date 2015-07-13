@@ -1,26 +1,19 @@
 #include "EvaluatorChi2.h"
 #include "EvaluatorDistance.h"
 #include "CalcResult.h"
+/*
 EvaluatorChi2::EvaluatorChi2(const TaskStorage &storage,
 			       const std::vector<std::weak_ptr<EvaluatorDistance> > distCalcs):
 	AbstractEvaluator(storage),_distCalcs(distCalcs)
 {
-	for(const auto& calc:_distCalcs)
-	{
-		std::shared_ptr<EvaluatorDistance> calcRef=calc.lock();
-		if(!calcRef) {
-			std::cerr<<"Error!"<<std::endl;
-		}
-		distances.push_back(calcRef->_dist);
-	}
 }
-
+*/
 AbstractEvaluator::Task EvaluatorChi2::makeTask(const FrameDescriptor &frame) const
 {
 	std::vector<Task> tasks;
 	for(const auto& calc:_distCalcs)
 	{
-		std::shared_ptr<EvaluatorDistance> calcRef=calc.lock();
+		std::shared_ptr<const EvaluatorDistance> calcRef=calc.lock();
 		if(!calcRef) {
 			std::cerr<<"Error!"<<std::endl;
 		}

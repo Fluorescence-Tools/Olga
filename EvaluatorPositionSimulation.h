@@ -27,17 +27,13 @@ public:
 	{
 		return std::string("AV ")+_position.name()+"";
 	}
+	virtual int columnCount() const
+	{
+		return 0;
+	}
 	virtual std::string className() const {
 		return "Positions";
 	}
-	/*virtual QString settingName(int row) const
-	{
-		return _position.setting(row).first;
-	}
-	virtual QVariant settingValue(int row) const
-	{
-		return _position.setting(row).second;
-	}*/
 	virtual std::pair<QString,QVariant> setting(int row) const
 	{
 		return _position.setting(row);

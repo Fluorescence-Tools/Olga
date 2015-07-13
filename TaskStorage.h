@@ -16,6 +16,8 @@
 #include <unordered_set>
 #include <cstdint>
 
+#include <QObject>
+
 #include <readerwriterqueue/readerwriterqueue.h>
 
 #include <libcuckoo/cuckoohash_map.hh>
@@ -97,9 +99,12 @@ struct hash<CacheKey>
 };
 }
 
-class TaskStorage
+class TaskStorage:public QObject
 {
+	Q_OBJECT
 	friend class AbstractEvaluator;
+	friend class EvaluatorsTreeModel;
+	//TODO: specify functions instead;
 public:
 	TaskStorage();
 	~TaskStorage();
@@ -109,16 +114,14 @@ public:
 	using Task=async::shared_task<Result>;
 	using PterosSysTask=async::shared_task<pteros::System>;
 
-	const PterosSysTask& getSysTask(const FrameDescriptor &frame) const;
-	std::string getString(const FrameDescriptor &frame, const EvalPtr& eval, int col,
+	std::string getString(const FrameDescriptor &frame, int calcNum, int col,
 			      bool persistent=true) const;
+	const PterosSysTask& getSysTask(const FrameDescriptor &frame) const;
+	std::string getColumnName(int calcNum, int col) const;
+	int getColumnCount(int calcNum) const;
 	const AbstractEvaluator& eval(int i) const
 	{
 		return *_evals.at(i);
-	}
-	EvalPtr evalPtr(int i) const
-	{
-		return _evals.at(i);
 	}
 	int evalCount() const
 	{
@@ -140,13 +143,20 @@ public:
 	{
 		return _requests.size();
 	}
+Q_SIGNALS:
+	void evaluatorAdded(int evalNum);
+private:
+	std::string getString(const FrameDescriptor &frame, const EvalPtr& eval, int col,
+			      bool persistent=true) const;
 	void addEvaluator(EvalPtr eval)
 	{
 		_evals.push_back(eval);
+		Q_EMIT evaluatorAdded(evalCount()-1);
 	}
-
-private:
-
+	EvalPtr evalPtr(int i) const
+	{
+		return _evals.at(i);
+	}
 	/*std::string getString(const FrameDescriptor &frame, EvalPtr eval, int col,
 			      bool persistent=true) const;*/
 	/*const Task& getTask(const FrameDescriptor &frame, std::shared_ptr<AbstractEvaluator> eval,

@@ -7,7 +7,7 @@
 class Distance
 {
 public:
-    Distance();
+    Distance(){}
     bool operator==(const Distance& o) const
     {
 	    return _name==o._name
@@ -51,14 +51,14 @@ public:
 private:
     void setFromLegacy(const std::string &entry, const std::string &type);
 private:
-    std::string _name;
-    std::string _type;
+    std::string _name="new dist";
+    std::string _type="RDAMean";
     std::string _position1;
     std::string _position2;
-    double _distance;
-    double _errNeg;
-    double _errPos;
-    double _R0;
+    double _distance=0.0;
+    double _errNeg=1.0;
+    double _errPos=1.0;
+    double _R0=52.0;
 };
 
 #endif // DISTANCE_H

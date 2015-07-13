@@ -16,7 +16,8 @@ public:
 			   const std::weak_ptr<EvaluatorPositionSimulation>& av1,
 			   const std::weak_ptr<EvaluatorPositionSimulation>& av2,
 			   Distance dist);
-	EvaluatorDistance(const TaskStorage& storage):AbstractEvaluator(storage){}
+	EvaluatorDistance(const TaskStorage& storage, const std::string& name):
+		AbstractEvaluator(storage){_dist.setName(name);}
 	virtual Task makeTask(const FrameDescriptor &frame) const;
 	virtual std::string name() const
 	{
@@ -28,6 +29,10 @@ public:
 	virtual std::string columnName(int) const
 	{
 		return name();
+	}
+	virtual int columnCount() const
+	{
+		return 1;
 	}
 	virtual int settingsCount() const
 	{
