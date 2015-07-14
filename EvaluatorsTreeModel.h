@@ -14,12 +14,13 @@
 #include "TaskStorage.h"
 #include "AV/Position.h"
 #include "EvaluatorDelegate.h"
-
 union EvaluatorsTreeItem {
 	static_assert(sizeof(size_t)==8 || sizeof(size_t)==4,
 		      "Only x64 and x32 platforms are supported");
 	using size_tHalf = std::conditional<sizeof(size_t)==8, uint32_t, uint16_t>::type;
-
+	static constexpr size_tHalf Half_Max() {
+		return pow(2,sizeof(size_tHalf)*8)-1;
+	}
 	size_t intptr;
 	struct {
 		size_tHalf classRow;
@@ -39,23 +40,23 @@ union EvaluatorsTreeItem {
 		return parent.evaluatorRow;
 	}
 	bool isEvaluatorsClass() const {
-		return parent.classRow!=-1 && parent.evaluatorRow==-1;
+		return parent.classRow!=Half_Max() && parent.evaluatorRow==Half_Max();
 	}
 	bool isInvalid() const {
-		return parent.classRow==-1 && parent.evaluatorRow==-1;
+		return parent.classRow==Half_Max() && parent.evaluatorRow==Half_Max();
 	}
 	bool isEvaluator() const {
-		return parent.classRow!=-1 && parent.evaluatorRow!=-1;
+		return parent.classRow!=Half_Max() && parent.evaluatorRow!=Half_Max();
 	}
 
 	static EvaluatorsTreeItem invalidItem() {
-		return EvaluatorsTreeItem(-1, -1);
+		return EvaluatorsTreeItem(Half_Max(), Half_Max());
 	}
 	static EvaluatorsTreeItem fromIntptr(size_t ptr) {
 		return EvaluatorsTreeItem(ptr);
 	}
 	static EvaluatorsTreeItem evaluatorsClass(int evalClassRow) {
-		return EvaluatorsTreeItem(evalClassRow,-1);
+		return EvaluatorsTreeItem(evalClassRow,Half_Max());
 	}
 
 private:
@@ -85,10 +86,11 @@ public:
 	std::string evalTypeName(int typeNum) const;
 	QStringList supportedTypes() const;
 	void addEvaluator(int typeNum);
-	//void removeEvaluator(const QModelIndex& index);
+	void removeEvaluator(const QModelIndex& index);
 	void removeEvaluator(int evRow);
 	void activateEvaluator(const QModelIndex& index);
 	void activateEvaluator(int evRow);
+	void duplicateEvaluator(const QModelIndex& index);
 	QVariantMap evaluators() const;
 	void loadEvaluators(const QVariantMap &settings);
 private:
@@ -108,6 +110,7 @@ private:
 	QStringList evalListByType(const EvalPtr& eval) const;
 	QList<int> evalRowList(const QList<EvalPtr>& list) const;
 	QVariantMap propMap(const AbstractEvaluator &eval) const;
+	void setEval(int evNum,const QVariantMap& propMap);
 
 
 	void loadEvaluator(int i);
@@ -124,6 +127,7 @@ private:
 	const int evalType=QVariant::fromValue(EvalPtr()).userType();
 	const int simulationType=QVariant::fromValue(Position::SimulationType()).userType();
 	const int evalListType=QVariant::fromValue(QList<EvalPtr>()).userType();
+	const int vec3dType=QVariant::fromValue(QVector3D()).userType();
 	const QStringList _simTypes{
 		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::av1)),
 		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::av3)),

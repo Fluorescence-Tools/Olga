@@ -18,6 +18,8 @@ PositionSimulation* PositionSimulation::create(const Position::SimulationType &s
 		return new PositionSimulationAV1;
 	case Position::SimulationType::av3:
 		return new PositionSimulationAV3;
+	case Position::SimulationType::atom:
+		return new PositionSimulationAV1;
 	}
 	return new PositionSimulationAV1;
 }

@@ -72,35 +72,6 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1004</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>File</string>
-    </property>
-    <addaction name="actionLoadStructures"/>
-    <addaction name="actionLoadSettings"/>
-    <addaction name="actionSaveSettings"/>
-    <addaction name="actionExportData"/>
-   </widget>
-   <widget class="QMenu" name="menuAdd">
-    <property name="title">
-     <string>Add</string>
-    </property>
-    <addaction name="actionAddLabellingPosition"/>
-    <addaction name="actionAddDistance"/>
-    <addaction name="actionAddDomain"/>
-   </widget>
-   <addaction name="menuFile"/>
-   <addaction name="menuAdd"/>
-  </widget>
   <widget class="QToolBar" name="mainToolBar">
    <property name="windowTitle">
     <string>Toolbar</string>
@@ -295,6 +266,26 @@
      </item>
     </layout>
    </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1004</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionLoadStructures"/>
+    <addaction name="actionLoadSettings"/>
+    <addaction name="actionSaveSettings"/>
+    <addaction name="actionExportData"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <action name="actionAddLabellingPosition">
    <property name="icon">

@@ -35,18 +35,6 @@ Position::Position(const Position &other):_name(other.name()),_chainIdentifier(o
 	}
 }
 
-bool Position::operator==(const Position& o) const
-{
-
-	if(_name!=o._name || _chainIdentifier!=o.chainIdentifier()
-	   || residueSeqNumber()!=o.residueSeqNumber()
-	   || _residueName!=o._residueName || _atomName!=o._atomName
-	   || _simulationType!=o._simulationType
-	   || !(_simulation->operator==(*o._simulation) ) ) {
-		return false;
-	}
-	return true;
-}
 Position& Position::operator=(const Position &other)
 {
 	_name=other.name();

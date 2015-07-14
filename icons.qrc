@@ -19,5 +19,7 @@
         <file>icons/cylinders.png</file>
         <file>icons/help-about.svgz</file>
         <file>icons/list-add.svgz</file>
+        <file>icons/edit-delete.svgz</file>
+        <file>icons/edit-copy.svgz</file>
     </qresource>
 </RCC>

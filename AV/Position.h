@@ -50,7 +50,6 @@ public:
 	Position& operator=(const Position& other);
 	Position(Position &&o);
 	Position& operator=(Position&& o);
-	bool operator==(const Position& o) const;
 
 	//Position(const QJsonObject& positionJson, const std::string& name);
 	Position(const QVariantMap& positionJson, const std::string& name);

@@ -12,18 +12,14 @@
 class MolecularSystemDomain
 {
 public:
-    MolecularSystemDomain();
-    MolecularSystemDomain(const QJsonObject &obj);
-    QJsonObject jsonObj() const;
+    MolecularSystemDomain(const std::string& name);
     size_t numPoints() const;
-
-
-    //Each string defines a set of atoms. Center Of Mass of these atoms is taken as a reference for determination of orientation of the domain
-    std::vector<QString> COMselections;
+    //Each string defines a set of atoms.
+    //Center Of Mass of these atoms is taken as a reference for determination of orientation of the domain
     //Coordinates of respective selection's COM in LOCAL coordinate system
-    std::vector<Eigen::Vector3d> COMpositionLocalCS;
+    std::vector<std::pair<QString,Eigen::Vector3d>> comSellPos;
     QString name;
-    QString selection;
+    //QString selection;
 };
 
 #endif // MOLECULARSYSTEMDOMAIN_H

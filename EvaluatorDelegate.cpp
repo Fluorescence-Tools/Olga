@@ -7,6 +7,7 @@
 #include <QAbstractItemView>
 #include <QLayout>
 #include <QApplication>
+#include <QVector3D>
 
 EvaluatorDelegate::EvaluatorDelegate(QAbstractItemView *parent) :
 	QStyledItemDelegate(parent),_view(parent)//,_evalModel(evalModel)
@@ -14,11 +15,32 @@ EvaluatorDelegate::EvaluatorDelegate(QAbstractItemView *parent) :
 	//evalComboBox.setModel(&evalModel);
 	comboBox.setFrame(false);
 	checkBoxList.setFrame(false);
+	vec3dedit.setFrame(false);
+	QRegularExpression re("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?[;\\s]+){2}"
+			      "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?[;\\s]*");
+	QRegularExpressionValidator *validator=new QRegularExpressionValidator(re);
+	vec3dedit.setValidator(validator);
 
 	connect(&save,&QAction::triggered,[this]{
 		const QModelIndex& index=toolBar.property("index").value<QModelIndex>();
-		ButtonFlags flgs{0,0,0};
+		ButtonFlags flgs;
 		flgs.save=true;
+		QVariant var;
+		var.setValue(flgs);
+		_view->model()->setData(index,var,Qt::EditRole);
+	});
+	connect(&del,&QAction::triggered,[this]{
+		const QModelIndex& index=toolBar.property("index").value<QModelIndex>();
+		ButtonFlags flgs;
+		flgs.remove=true;
+		QVariant var;
+		var.setValue(flgs);
+		_view->model()->setData(index,var,Qt::EditRole);
+	});
+	connect(&duplicate,&QAction::triggered,[this]{
+		const QModelIndex& index=toolBar.property("index").value<QModelIndex>();
+		ButtonFlags flgs;
+		flgs.duplicate=true;
 		QVariant var;
 		var.setValue(flgs);
 		_view->model()->setData(index,var,Qt::EditRole);
@@ -51,33 +73,35 @@ QWidget *EvaluatorDelegate::createEditor(QWidget *parent, const QStyleOptionView
 			checkBoxList.setParent(parent);
 			return &checkBoxList;
 		}
-	}
-	if(data.userType()==buttonsType) {
-		ButtonFlags btnFlags=data.value<ButtonFlags>();
-		if(btnFlags.save) {
-			toolBar.setProperty("index",index);
-			toolBar.setParent(parent);
-			toolBar.setGeometry(option.rect);
-			return &toolBar;
-		}
+	} else if (data.userType()==vec3dType) {
+		const QVector3D& vec=data.value<QVector3D>();
+		QString str=QString("%1 %2 %3").arg(vec[0]).arg(vec[1])
+				.arg(vec[2]);
+		vec3dedit.setText(str);
+		vec3dedit.setParent(parent);
+		return &vec3dedit;
+	} else if(data.userType()==buttonsType) {
+		updateToolBar(toolBar,data.value<ButtonFlags>());
+		toolBar.setProperty("index",index);
+		toolBar.setParent(parent);
+		toolBar.setGeometry(option.rect);
+		return &toolBar;
 	}
 	return QStyledItemDelegate::createEditor(parent, option, index);
 }
 
 void EvaluatorDelegate::destroyEditor(QWidget *editor, const QModelIndex &index) const
 {
-	QVariant data=index.data(Qt::EditRole);
-	if(editor==&comboBox || editor==&toolBar || editor==&checkBoxList) {
-		comboBox.setParent(nullptr);
+	if(editor==&comboBox || editor==&toolBar || editor==&checkBoxList
+	   || editor==&vec3dedit) {
+		editor->setParent(nullptr);
+		/*comboBox.setParent(nullptr);
 		toolBar.setParent(nullptr);
 		toolBarPaint.setParent(nullptr);
 		checkBoxList.setParent(nullptr);
+		vec3dedit.setParent(nullptr);*/
 		return;
 	}
-	/*if(data.userType()==evalType || data.userType()==buttonsType ||
-	   data.userType()==simtypeType) {
-	}*/
-	//qDebug()<<"destroying:"<<editor;
 	QStyledItemDelegate::destroyEditor(editor,index);
 }
 
@@ -91,6 +115,15 @@ void EvaluatorDelegate::setEditorData(QWidget *editor, const QModelIndex &index)
 			return;
 		} else if(displayData.userType()==intListType) {
 			checkBoxList.setChecked(displayData.value<QList<int>>());
+			return;
+		} else if(data.userType()==vec3dType) {
+			const QVector3D& vec=data.value<QVector3D>();
+			QString str=QString("%1 %2 %3").arg(vec[0]).arg(vec[1])
+					.arg(vec[2]);
+			vec3dedit.setText(str);
+			return;
+		} else if(data.userType()==buttonsType) {
+			updateToolBar(toolBar,data.value<ButtonFlags>());
 			return;
 		}
 	}
@@ -113,8 +146,17 @@ void EvaluatorDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 			model->setData(index,var,Qt::EditRole);
 			return;
 		}
-	}
-	if(data.canConvert<ButtonFlags>()) {
+	} else if(data.userType()==vec3dType) {
+		QVector3D vec;
+		QRegularExpression re("[;\\s]+");
+		const QString& str=vec3dedit.text();
+		QVector<QStringRef> list=str.splitRef(re,QString::SkipEmptyParts);
+		for(int i:{0,1,2}) {
+			vec[i]=list[i].toDouble();
+		}
+		model->setData(index,vec,Qt::EditRole);
+		return;
+	} else if(data.canConvert<ButtonFlags>()) {
 		return;
 	}
 	QStyledItemDelegate::setModelData(editor, model, index);
@@ -123,7 +165,17 @@ void EvaluatorDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 void EvaluatorDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
 	QVariant data=index.data();
-	if(index.data(Qt::EditRole).type()==QVariant::StringList) {
+	if(QMetaType::Type(data.type())==QMetaType::QVector3D) {
+		const QVector3D& vec=data.value<QVector3D>();
+		const auto& str=QString("(%1 %2 %3)")
+				.arg(vec[0]).arg(vec[1]).arg(vec[2]);
+		QStyleOptionViewItem opt = option;
+		initStyleOption(&opt, index);
+		opt.text=str;
+		const QWidget *widget = option.widget;
+		QStyle *style = widget ? widget->style() : QApplication::style();
+		style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);
+	} else if(index.data(Qt::EditRole).type()==QVariant::StringList) {
 		QStringList all=index.data(Qt::EditRole).toStringList();
 		QStyleOptionViewItem opt = option;
 		initStyleOption(&opt, index);
@@ -150,6 +202,7 @@ void EvaluatorDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 		}
 		toolBarPaint.setParent(_view);
 		toolBarPaint.setGeometry(option.rect);
+		updateToolBar(toolBarPaint,data.value<ButtonFlags>());
 		QPixmap map = toolBarPaint.grab();
 		painter->drawPixmap(option.rect.x(),option.rect.y(),map);
 	}
@@ -185,7 +238,7 @@ bool EvaluatorDelegate::editorEvent(QEvent *event, QAbstractItemModel *model,
 }
 
 void EvaluatorDelegate::setupToolBar(QToolBar &toolBar) {
-	toolBar.insertAction(0,&save);
+	//toolBar.addActions({&save,&del,&duplicate});
 	toolBar.setFloatable(false);
 	toolBar.setMovable(false);
 	toolBar.layout()->setMargin(0);

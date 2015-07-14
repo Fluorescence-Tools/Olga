@@ -145,6 +145,7 @@ public:
 	}
 Q_SIGNALS:
 	void evaluatorAdded(int evalNum);
+	void evaluatorIsGoingToBeRemoved(int evalNum);
 private:
 	std::string getString(const FrameDescriptor &frame, const EvalPtr& eval, int col,
 			      bool persistent=true) const;
@@ -152,6 +153,10 @@ private:
 	{
 		_evals.push_back(eval);
 		Q_EMIT evaluatorAdded(evalCount()-1);
+	}
+	void removeEvaluator(int i) {
+		Q_EMIT evaluatorIsGoingToBeRemoved(i);
+		_evals.erase(_evals.begin()+i);
 	}
 	EvalPtr evalPtr(int i) const
 	{

@@ -51,17 +51,6 @@ public:
 	{
 		return _position.settingsCount();
 	}
-	virtual bool inline operator==(AbstractEvaluator& o) const
-	{
-		if(this==&o) {
-			return true;
-		}
-		auto* new_o = dynamic_cast<const EvaluatorPositionSimulation*>(&o);
-		if(new_o) {
-			return _position==new_o->_position;
-		}
-		return false;
-	}
 	//~EvaluatorPositionSimulation();
 };
 

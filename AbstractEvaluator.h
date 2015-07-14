@@ -32,25 +32,16 @@ public:
 	{
 		return this->setting(row).second;
 	}
-	/*virtual QVariantMap settings() const final
-	{
-		QVariantMap map;
-		for(int i=0; i<settingsCount(); ++i) {
-			map.insert(settingName(i),settingValue(i));
-		}
-		return map;
-	}*/
-//pure virtual:
-	//virtual bool inline operator==(AbstractEvaluator& o) const =0;
+
 	using Task=async::shared_task<std::shared_ptr<AbstractCalcResult>>;
 	using PterosSysTask=async::shared_task<pteros::System>;
+	using Setting=std::pair<QString,QVariant>;
+//pure virtual:
 	virtual Task makeTask(const FrameDescriptor &frame) const=0;
-
 	virtual std::string columnName(int i) const = 0;
 	virtual int columnCount() const = 0;
 	virtual std::string className() const = 0;
 
-	using Setting=std::pair<QString,QVariant>;
 	virtual Setting setting(int row) const = 0;
 	virtual void setSetting(int row, const QVariant& val) = 0;
 	virtual int settingsCount() const = 0;

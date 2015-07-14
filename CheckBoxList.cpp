@@ -4,6 +4,7 @@
 #include <QCheckBox>
 #include <QAbstractItemView>
 #include <QStylePainter>
+#include <QDebug>
 
 // internal private delegate
 class CheckBoxListDelegate : public QItemDelegate
@@ -38,8 +39,8 @@ public:
 	}
 
 	QWidget *createEditor(QWidget *parent,
-			      const QStyleOptionViewItem & option ,
-			      const QModelIndex & index ) const
+			      const QStyleOptionViewItem & /*option*/ ,
+			      const QModelIndex & /*index*/ ) const
 	{
 		// create check box as our editor
 
@@ -77,7 +78,8 @@ public:
 	}
 
 	void updateEditorGeometry(QWidget *editor,
-				  const QStyleOptionViewItem &option, const QModelIndex &index ) const
+				  const QStyleOptionViewItem &option,
+				  const QModelIndex &/*index*/ ) const
 	{
 
 		editor->setGeometry(option.rect);

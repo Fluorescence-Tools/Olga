@@ -7,6 +7,9 @@
 #include <QToolButton>
 #include <QToolBar>
 #include <QAction>
+#include <QLineEdit>
+#include <QVector3D>
+#include <QDebug>
 
 #include "CheckBoxList.h"
 
@@ -32,7 +35,7 @@ public:
 		uint8_t save : 1;
 		uint8_t remove : 1;
 		uint8_t duplicate : 1;
-
+		ButtonFlags():save(0),remove(0),duplicate(0){}
 	};
 protected:
 	bool editorEvent(QEvent *event, QAbstractItemModel *model,
@@ -41,20 +44,35 @@ protected:
 Q_SIGNALS:
 private:
 	QAbstractItemView* _view=0;
-
 	mutable QComboBox comboBox;
 	mutable CheckBoxList checkBoxList;
-	//mutable QComboBox simtypeComboBox;
+	mutable QLineEdit vec3dedit;
 	mutable QToolBar toolBar;
 	mutable QToolBar toolBarPaint;
 
 	void setupToolBar(QToolBar &toolBar);
 
-	//mutable QToolBar toolBarPaint;
-	QAction save{QIcon("://icons/document-save.svgz"),"save",this};
-	//QAction save2{QIcon("://icons/document-save.svgz"),"save2",this};
-	//mutable QToolButton saveEvalBtn;
-	//mutable QToolButton saveEvalBtnPaint;
+	mutable QAction save{QIcon("://icons/document-save.svgz"),"save",this};
+	mutable QAction del{QIcon("://icons/edit-delete.svgz"),"delete",this};
+	mutable QAction duplicate{QIcon("://icons/edit-copy.svgz"),"duplicate",this};
+	void updateToolBar(QToolBar &toolBar, const ButtonFlags& btnFlags) const {
+		//save.setEnabled(btnFlags.save);
+		//del.setEnabled(btnFlags.remove);
+		//duplicate.setEnabled(btnFlags.duplicate);
+		QList<QAction*> actions;
+		if(btnFlags.save) {
+			actions.push_back(&save);
+			qDebug()<<"save is true";
+		}
+		if(btnFlags.remove) {
+			actions.push_back(&del);
+		}
+		if(btnFlags.duplicate) {
+			actions.push_back(&duplicate);
+		}
+		toolBar.clear();
+		toolBar.addActions(actions);
+	}
 	bool isOneCellInEditMode=false;
 
 	QModelIndex currentEditedCellIndex;
@@ -67,6 +85,7 @@ private:
 	}*/
 	const int buttonsType=QVariant::fromValue(ButtonFlags()).userType();
 	const int intListType=QVariant::fromValue(QList<int>()).userType();
+	const int vec3dType=QVariant::fromValue(QVector3D()).userType();
 	//const int evalType=QVariant::fromValue(EvalPtr()).userType();
 	//const int evalsType=;
 	//const int simtypeType=QVariant::fromValue(Position::SimulationType()).userType();

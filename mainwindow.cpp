@@ -416,24 +416,6 @@ bool MainWindow::exportStructures()
 	return true;
 }
 
-bool MainWindow::insertDistances(int position, unsigned num)
-{
-	/*position=position<0?distancesModel.rowCount():position;
-	   return distancesModel.insertRows(position,num);*/
-}
-
-bool MainWindow::insertDomains(int position, unsigned num)
-{
-	/*position=position<0?domainsModel.rowCount():position;
-	   return domainsModel.insertRows(position,num);*/
-}
-
-bool MainWindow::insertPositions(int position, unsigned num)
-{
-	/*position=position<0?positionsModel.rowCount():position;
-	   return positionsModel.insertRows(position,num);*/
-}
-
 void MainWindow::addEvaluator()
 {
 	evalsModel.addEvaluator(ui->evalTypeAddComboBox->currentIndex());

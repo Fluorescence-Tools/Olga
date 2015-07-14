@@ -12,7 +12,7 @@ std::vector<Eigen::Vector3f> calculate3R(float L, float W, float R1, float R2, f
 	// grid
 	float Rmax = __max(R1, R2); Rmax = __max(Rmax, R3);
 	float x0 = xyzW[atom_i][0], y0 = xyzW[atom_i][1], z0 = xyzW[atom_i][2];
-	int npm = (int)floor(L / dg);
+	int npm = int(floor(L / dg));
 	int ng = 2 * npm + 1, n;
 	int ng3 = ng * ng * ng;
 	float* grid = new float[ng] + npm;

@@ -8,9 +8,10 @@
 
 
 EvaluatorTrasformationMatrix::
-EvaluatorTrasformationMatrix(const TaskStorage& storage, const std::weak_ptr<MolecularSystemDomain> domain) :
-	AbstractEvaluator(storage),_domain(domain)
+EvaluatorTrasformationMatrix(const TaskStorage& storage, const std::string &name) :
+	AbstractEvaluator(storage),_name(name)
 {
+	comSellPos.resize(3,std::make_pair("",Eigen::Vector3d(0.0,0.0,0.0)));
 }
 
 AbstractEvaluator::Task
@@ -27,24 +28,16 @@ EvaluatorTrasformationMatrix::calculate(const pteros::System& system) const
 {
 	//auto system=getSystem(desc);
 	Eigen::Matrix4d matrix;
-	auto domain = _domain.lock();
-	if( !domain )
-	{
-		std::cerr<<"Error! Domain for trasformation matrix calculation "
-			   "does not exist anymore."<<std::endl;
-	}
 
-	size_t nPoints=std::min(domain->COMselections.size(),
-				domain->COMpositionLocalCS.size());
 	using Eigen::Dynamic;
-	Eigen::Matrix<double,3,Dynamic> positionGlobalCS(3,nPoints);
-	Eigen::Matrix<double,3,Dynamic> positionLocalCS(3,nPoints);
-	for(size_t i=0; i<nPoints; i++)
+	Eigen::Matrix<double,3,Dynamic> positionGlobalCS(3,numPoints());
+	Eigen::Matrix<double,3,Dynamic> positionLocalCS(3,numPoints());
+	for(int i=0; i<numPoints(); i++)
 	{
 		pteros::Selection select;
 		try
 		{
-			select.modify(system,domain->COMselections.at(i).toStdString());
+			select.modify(system,comSellPos[i].first);
 		}
 		catch (const pteros::Pteros_error &err)
 		{
@@ -55,14 +48,14 @@ EvaluatorTrasformationMatrix::calculate(const pteros::System& system) const
 		{
 			std::cerr<<std::endl;
 			std::cerr  << "Specified selection could not be mapped correctly: " <<
-				      domain->COMselections.at(i).toStdString() << std::endl;
+				      comSellPos[i].first << std::endl;
 			matrix = Eigen::Matrix4d().setConstant(
 					 std::numeric_limits<double>::quiet_NaN());
 			return std::make_shared<CalcResult<Eigen::Matrix4d>>(std::move(matrix));
 		}
 
 		positionGlobalCS.col(i)=select.XYZ(0).cast<double>()*10.0;
-		positionLocalCS.col(i)=domain->COMpositionLocalCS.at(i);
+		positionLocalCS.col(i)=comSellPos[i].second;
 
 	}
 	matrix=Eigen::umeyama(positionLocalCS,positionGlobalCS,false);

@@ -36,7 +36,7 @@ public:
 	virtual Setting setting(int row) const = 0;
 	virtual void setSetting(int row, const QVariant& val) = 0;
 	virtual int settingsCount() const = 0;
-	virtual bool inline operator==(const PositionSimulation& o) const =0;
+
 protected:
 	const float vdWRMax=6.0f;
 };

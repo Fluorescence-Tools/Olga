@@ -35,9 +35,6 @@ private Q_SLOTS:
 	bool exportData();
 	bool exportCylinders();
 	bool exportStructures();
-	bool insertDistances(int position=-1, unsigned num=1);
-	bool insertDomains(int position=-1, unsigned num=1);
-	bool insertPositions(int position=-1, unsigned num=1);
 	void addEvaluator();
 
 	/*void deleteSelectedDistances();

@@ -3,6 +3,8 @@
 #include "EvaluatorPositionSimulation.h"
 #include "EvaluatorDistance.h"
 #include "EvaluatorChi2.h"
+#include "EvaluatorTrasformationMatrix.h"
+#include "EvaluatorEulerAngle.h"
 
 #include <QDebug>
 
@@ -32,9 +34,16 @@ QVariant EvaluatorsTreeModel::data(const QModelIndex &index, int role) const
 		if(item.isEvaluatorsClass()) {//index is evaluator
 			if(index.column()==0) {
 				return QString::fromStdString(evalName(item.classRow(),index.row()));
-			} else if(index.column()==1 && item.classRow()==0) {//space for buttons
+			} else if(index.column()==1) {//space for buttons
 				ButtonFlags btnFlags;
-				btnFlags.save=1;
+				if(item.classRow()==0) {
+					btnFlags.save=true;
+					btnFlags.remove=true;
+					btnFlags.duplicate=true;
+				} else {
+					btnFlags.remove=true;
+					btnFlags.duplicate=true;
+				}
 				return QVariant::fromValue<ButtonFlags>(btnFlags);
 			}
 			return QVariant();
@@ -86,10 +95,16 @@ bool EvaluatorsTreeModel::setData(const QModelIndex &index, const QVariant &valu
 	}
 	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
 	if(item.isEvaluatorsClass()) {
-		if(index.column()==1 && item.classRow()==0) {
+		if(index.column()==1) {
 			ButtonFlags btnFlags=value.value<ButtonFlags>();
 			if(btnFlags.save) {
 				activateEvaluator(index);
+			}
+			if(btnFlags.remove) {
+				removeEvaluator(index);
+			}
+			if(btnFlags.duplicate) {
+				duplicateEvaluator(index);
 			}
 			return true;
 		}
@@ -149,8 +164,10 @@ Qt::ItemFlags EvaluatorsTreeModel::flags(const QModelIndex &index) const
 		return 0;
 
 	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
-	if(item.classRow()==0) {
-		if(index.column()==1 || item.isEvaluatorsClass()) {
+	if(index.column()==1 || item.isEvaluatorsClass()) {
+		if(item.classRow()==0){
+			return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+		} else if(item.isEvaluatorsClass() && index.column()==1){
 			return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 		}
 	}
@@ -247,7 +264,7 @@ int EvaluatorsTreeModel::rowCount(const QModelIndex &parent) const
 
 }
 
-int EvaluatorsTreeModel::columnCount(const QModelIndex &parent) const
+int EvaluatorsTreeModel::columnCount(const QModelIndex &/*parent*/) const
 {
 	return 2;
 }
@@ -317,6 +334,10 @@ EvaluatorsTreeModel::MutableEvalPtr EvaluatorsTreeModel::makeEvaluator(int typeN
 		return std::make_shared<EvaluatorDistance>(_storage,"new dist");
 	case 2:
 		return std::make_shared<EvaluatorChi2>(_storage,"new χ²");
+	case 3:
+		return std::make_shared<EvaluatorTrasformationMatrix>(_storage,"new coordinate system");
+	case 4:
+		return std::make_shared<EvaluatorEulerAngle>(_storage,"new euler angles");
 	default:
 		return MutableEvalPtr();
 	}
@@ -328,19 +349,32 @@ void EvaluatorsTreeModel::addEvaluator(const std::shared_ptr<AbstractEvaluator> 
 	pendingEvals.push_back(eval);
 	endInsertRows();
 }
-/*
-void EvaluatorsTreeModel::removeEvaluator(const QModelIndex &index) {
 
+void EvaluatorsTreeModel::removeEvaluator(const QModelIndex &index) {
+	//TODO: this is all funny because TaskStorage is supposed to return only EvalIds outside, but so far...
 	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
-	if(item.isEvaluatorsClass() && item.classRow()==0) {
-		beginRemoveRows(index.parent(),index.row(),index.row());
-		pendingEvals.erase(pendingEvals.begin()+index.row());
-		endRemoveRows();
-		return;
-	} else {
-		//TODO: remove evaluator from _storage
+	if(item.isEvaluatorsClass()) {
+		if(item.classRow()==0) {
+			removeEvaluator(index.row());
+			return;
+		} else {
+			EvalPtr ev=eval(item.classRow(),index.row());
+			int evalNum=-1;
+			for(int i=0; i<_storage.evalCount(); ++i) {
+				if (&_storage.eval(i)==ev.get()) {
+					evalNum=i;
+					break;
+				}
+			}
+			const QModelIndex& parent = classRowIndex(ev);
+			beginRemoveRows(parent,index.row(),index.row());
+			auto& evVec=evals[item.classRow()-1].second;
+			evVec.erase(evVec.begin()+index.row());
+			endRemoveRows();
+			_storage.removeEvaluator(evalNum);
+		}
 	}
-}*/
+}
 
 void EvaluatorsTreeModel::removeEvaluator(int evRow) {
 
@@ -369,6 +403,21 @@ void EvaluatorsTreeModel::activateEvaluator(int evRow)
 	loadEvaluator(_storage.evalCount()-1);
 }
 
+void EvaluatorsTreeModel::duplicateEvaluator(const QModelIndex &index)
+{
+	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
+	if(item.isEvaluatorsClass()) {
+		EvalPtr origEval=eval(item.classRow(),index.row());
+		QVariantMap properties=propMap(*origEval);
+		QStringList types=supportedTypes();
+		int origEvalType=types.indexOf(QString::fromStdString(origEval->className()));
+		addEvaluator(origEvalType);
+		std::shared_ptr<AbstractEvaluator>& ev=pendingEvals.back();
+		ev->setName(origEval->name()+" copy");
+		setEval(pendingEvals.size()-1,properties);
+	}
+}
+
 void EvaluatorsTreeModel::loadEvaluators(const QVariantMap& settings)
 {
 	static const QStringList classOrder{supportedTypes()};
@@ -382,34 +431,7 @@ void EvaluatorsTreeModel::loadEvaluators(const QVariantMap& settings)
 			std::shared_ptr<AbstractEvaluator>& ev=pendingEvals.back();
 			ev->setName(evName.toStdString());
 			const QVariantMap& propMap=i.value().toMap();
-			for(int propRow=0; propRow<ev->settingsCount(); ++propRow) {
-				QVariant oldVal=ev->settingValue(propRow);
-				const QString& propName=ev->settingName(propRow);
-				if(!propMap.contains(propName)) {
-					continue;
-				}
-				const QVariant& propVal=propMap[propName];
-				QVariant newVal;
-				if(oldVal.userType()==evalType) {
-					int cr=classRow(oldVal.value<EvalPtr>());
-					newVal.setValue(findEval(cr,propVal.toString()));
-				} else if(oldVal.userType()==simulationType) {
-					auto simName=propVal.toString().toStdString();
-					const auto& simType=Position::simulationType(simName);
-					newVal.setValue(simType);
-				} else if(oldVal.userType()==evalListType) {
-					QList<EvalPtr> ptrs;
-					int cr=classRow(oldVal.value<QList<EvalPtr>>().front());
-					QStringList names=propVal.toStringList();
-					for(const QString& name:names) {
-						ptrs.append(findEval(cr,name));
-					}
-					newVal.setValue(ptrs);
-				} else {
-					newVal=propVal;
-				}
-				ev->setSetting(propRow,newVal);
-			}
+			setEval(pendingEvals.size()-1,propMap);
 			if(!(propMap["isDraft"]==true)) {
 				activateEvaluator(pendingEvals.size()-1);
 			}
@@ -524,8 +546,12 @@ std::string EvaluatorsTreeModel::evalName(int classRow, int evalRow) const {
 	return evals[classRow-1].second[evalRow]->name();
 }
 
-EvaluatorsTreeModel::EvalPtr EvaluatorsTreeModel::eval(int classIndex, int evalRow) const {
-	return evals[classIndex-1].second[evalRow];
+EvaluatorsTreeModel::EvalPtr EvaluatorsTreeModel::eval(int classRow, int evalRow) const {
+	if(classRow>0) {
+		return evals[classRow-1].second[evalRow];
+	} else {
+		return pendingEvals[evalRow];
+	}
 }
 
 EvaluatorsTreeModel::EvalPtr EvaluatorsTreeModel::findEval(int classRow, const QString& evName) const {
@@ -584,7 +610,7 @@ int EvaluatorsTreeModel::evalRow(const EvaluatorsTreeModel::EvalPtr &eval) const
 	if(cr<=0) {
 		return -1;
 	}
-	for(int i=0; i<evals[cr-1].second.size(); ++i ) {
+	for(size_t i=0; i<evals[cr-1].second.size(); ++i ) {
 		if(evals[cr-1].second[i]==eval) {
 			return i;
 		}
@@ -613,7 +639,7 @@ evalRowList(const QList<EvaluatorsTreeModel::EvalPtr> &selected) const
 	if(cr<=0) {
 		return list;
 	}
-	for(int i=0; i<evals[cr-1].second.size(); ++i ) {
+	for(size_t i=0; i<evals[cr-1].second.size(); ++i ) {
 		if(selected.contains(evals[cr-1].second[i])) {
 			list<<i;
 		}
@@ -641,11 +667,57 @@ QVariantMap EvaluatorsTreeModel::propMap(const AbstractEvaluator &eval) const
 				evnames<<QString::fromStdString(ev->name());
 			}
 			val=evnames;
+		} else if(opt.second.userType()==vec3dType) {
+			const QVector3D& vec=opt.second.value<QVector3D>();
+			QVariantList list;
+			for(int i:{0,1,2}) {
+				list.push_back(vec[i]);
+			}
+			val=list;
 		} else {
 			val=opt.second;
 		}
 		propMap[optName]=val;
 	}
 	return propMap;
+}
+
+void EvaluatorsTreeModel::setEval(int evNum, const QVariantMap &propMap) {
+	std::shared_ptr<AbstractEvaluator>& ev=pendingEvals[evNum];
+	for(int propRow=0; propRow<ev->settingsCount(); ++propRow) {
+		QVariant oldVal=ev->settingValue(propRow);
+		const QString& propName=ev->settingName(propRow);
+		if(!propMap.contains(propName)) {
+			continue;
+		}
+		const QVariant& propVal=propMap[propName];
+		QVariant newVal;
+		if(oldVal.userType()==evalType) {
+			int cr=classRow(oldVal.value<EvalPtr>());
+			newVal.setValue(findEval(cr,propVal.toString()));
+		} else if(oldVal.userType()==simulationType) {
+			auto simName=propVal.toString().toStdString();
+			const auto& simType=Position::simulationType(simName);
+			newVal.setValue(simType);
+		} else if(oldVal.userType()==evalListType) {
+			QList<EvalPtr> ptrs;
+			int cr=classRow(oldVal.value<QList<EvalPtr>>().front());
+			QStringList names=propVal.toStringList();
+			for(const QString& name:names) {
+				ptrs.append(findEval(cr,name));
+			}
+			newVal.setValue(ptrs);
+		} else if(oldVal.userType()==vec3dType) {
+			QVector3D vec;
+			const QVariantList& list=propVal.toList();
+			for(int i:{0,1,2}) {
+				vec[i]=list[i].toDouble();
+			}
+			newVal.setValue(vec);
+		} else {
+			newVal=propVal;
+		}
+		ev->setSetting(propRow,newVal);
+	}
 }
 

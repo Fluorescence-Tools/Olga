@@ -26,8 +26,6 @@ class TrajectoriesTreeModel : public QAbstractItemModel
 {
 	Q_OBJECT
 public:
-	//TODO: move to private
-
 	explicit TrajectoriesTreeModel(const TaskStorage& storage, QObject *parent = 0);
 
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
@@ -74,11 +72,12 @@ private Q_SLOTS:
 
 private:
 	void evaluatorAdded(int i);
+	void evaluatorRemove(int i);
 	const TrajectoriesTreeItem* childItem(const TrajectoriesTreeItem* parent,
 					      unsigned row) const;
 
 	QString frameName(const TrajectoriesTreeItem *parent, int row) const;
-	QString calculatorName(int calcNum) const;
+	QString colName(int section) const;
 	FrameDescriptor frameDescriptor(const TrajectoriesTreeItem *parent, int row) const;
 	std::shared_ptr<AbstractCalcResult>
 	calculate(const FrameDescriptor desc,

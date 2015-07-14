@@ -16,6 +16,8 @@ TrajectoriesTreeModel(const TaskStorage &storage, QObject *parent) :
 {
 	connect(&_storage,&TaskStorage::evaluatorAdded,
 		[this](int i){evaluatorAdded(i);});
+	connect(&_storage,&TaskStorage::evaluatorIsGoingToBeRemoved,
+		[this](int i){evaluatorRemove(i);});
 }
 
 QVariant TrajectoriesTreeModel::data(const QModelIndex &index, int role) const
@@ -62,7 +64,7 @@ QVariant TrajectoriesTreeModel::headerData(int section, Qt::Orientation orientat
 		}
 		if(section>0 && section<int(_columns.size()+1))
 		{
-			return calculatorName(section-1);
+			return colName(section-1);
 		}
 		return QString("WRONG COLUMN");
 	}
@@ -225,9 +227,9 @@ QString TrajectoriesTreeModel::frameName(const TrajectoriesTreeItem *parent, int
 	return name;
 }
 
-QString TrajectoriesTreeModel::calculatorName(int calcNum) const
+QString TrajectoriesTreeModel::colName(int section) const
 {
-	const auto& cc=_columns.at(calcNum);
+	const auto& cc=_columns.at(section);
 	return QString::fromStdString(_storage.getColumnName(cc.first,cc.second));
 }
 
@@ -279,9 +281,34 @@ void TrajectoriesTreeModel::updateColumn(int column)
 void TrajectoriesTreeModel::evaluatorAdded(int ev)
 {
 	int colCount=_storage.getColumnCount(ev);
+	if(colCount==0) {
+		return;
+	}
+	beginInsertColumns(QModelIndex(),_columns.size(),_columns.size()+colCount-1);
 	for(int i=0; i<colCount; ++i) {
 		_columns.emplace_back(ev,i);
 	}
+	endInsertColumns();
+}
+
+void TrajectoriesTreeModel::evaluatorRemove(int ev)
+{
+	int colCount=_storage.getColumnCount(ev);
+	if(colCount==0) {
+		return;
+	}
+	int firstCol;
+	for(firstCol=0; _columns[firstCol].first!=ev; ++firstCol);
+	int lastCol;
+	for(lastCol=firstCol+1; _columns[lastCol].first==ev; ++lastCol);
+	--lastCol;
+	beginRemoveColumns(QModelIndex(),firstCol+1,lastCol+1);
+	_columns.erase(_columns.begin()+firstCol,_columns.begin()+lastCol+1);
+	for(size_t s=0; s<_columns.size(); s++) {
+		auto& ccev=_columns[s].first;
+		if(ccev>ev) {--ccev;}
+	}
+	endRemoveColumns();
 }
 /*	connect(_domainsModel,&DomainTableModel::rowsInserted,
 		[&](const QModelIndex &,int from,int to) {
