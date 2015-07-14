@@ -44,10 +44,6 @@ protected:
 class PositionSimulationAV3: public PositionSimulation
 {
 public:
-	//PositionSimulationAV3(const QJsonObject& positionJson);
-	//bool load(const QJsonObject& positionJson);
-	//QJsonObject jsonObject() const;
-
 	bool load(const QVariantMap& settings);
 	int loadLegacy(std::istream& is) {
 		int pdbId;
@@ -66,27 +62,6 @@ public:
 	using PositionSimulation::calculate;
 	virtual PositionSimulationResult
 	calculate(unsigned atom_i,const std::vector<Eigen::Vector4f>& xyzW);
-	virtual bool inline operator==(const PositionSimulation& o) const
-	{
-		if(this==&o) {
-			return true;
-		}
-		auto* new_o = dynamic_cast<const PositionSimulationAV3*>(&o);
-		if(new_o) {
-			if(gridResolution!=new_o->gridResolution
-			   || linkerLength!=new_o->linkerLength
-			   || linkerWidth!=new_o->linkerWidth
-			   || allowedSphereRadius!=new_o->allowedSphereRadius
-			   || allowedSphereRadiusMin!=new_o->allowedSphereRadiusMin
-			   || allowedSphereRadiusMax!=new_o->allowedSphereRadiusMax
-			   || radius[0]!=new_o->radius[0] || radius[1]!=new_o->radius[1]
-			   || radius[2]!=new_o->radius[2]) {
-				return false;
-			}
-			return true;
-		}
-		return false;
-	}
 
 private:
 	double getAllowedSphereRadius(unsigned atom_i,
@@ -128,26 +103,6 @@ public:
 	}
 	using PositionSimulation::calculate;
 	virtual PositionSimulationResult calculate(unsigned atom_i, const std::vector<Eigen::Vector4f>& xyzW);
-	virtual bool inline operator==(const PositionSimulation& o) const
-	{
-		if(this==&o) {
-			return true;
-		}
-		auto* new_o = dynamic_cast<const PositionSimulationAV1*>(&o);
-		if(new_o) {
-			if(gridResolution!=new_o->gridResolution
-			   || linkerLength!=new_o->linkerLength
-			   || linkerWidth!=new_o->linkerWidth
-			   || allowedSphereRadius!=new_o->allowedSphereRadius
-			   || allowedSphereRadiusMin!=new_o->allowedSphereRadiusMin
-			   || allowedSphereRadiusMax!=new_o->allowedSphereRadiusMax
-			   || radius!=new_o->radius) {
-				return false;
-			}
-			return true;
-		}
-		return false;
-	}
 
 private:
 	double getAllowedSphereRadius(unsigned atom_i,
@@ -163,6 +118,35 @@ private:
 	double allowedSphereRadiusMax=2.0;
 
 	const int linknodes=3;
+};
+
+class PositionSimulationAtom: public PositionSimulation
+{
+public:
+	bool load(const QVariantMap& /*settings*/){return true;}
+	PositionSimulationAtom()=default;
+
+	Setting setting(int /*row*/) const
+	{
+		return {"",""};
+	}
+	virtual void setSetting(int /*row*/, const QVariant& /*val*/) {}
+
+	virtual int settingsCount() const {
+		return 0;
+	}
+	virtual PositionSimulation *Clone(){
+		return new PositionSimulationAtom(*this);
+	}
+	using PositionSimulation::calculate;
+	virtual PositionSimulationResult calculate(unsigned atom_i,
+						   const std::vector<Eigen::Vector4f>& xyzW)
+	{
+		std::vector<Eigen::Vector3f> vec{xyzW[atom_i].head<3>()};
+		return PositionSimulationResult(std::move(vec));
+	}
+
+private:
 };
 
 #endif // POSITIONSIMULATION_H

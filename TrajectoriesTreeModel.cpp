@@ -264,6 +264,9 @@ FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeIte
 void TrajectoriesTreeModel::updateColumn(int column)
 {
 	//TODO:approach should be reconsidered. A hack.
+	if(column>=_columns.size()) {
+		return;
+	}
 	const auto& calccol=_columns[column];
 	QModelIndex start=index(0,column);
 	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1, Qt::MatchWildcard|Qt::MatchRecursive);

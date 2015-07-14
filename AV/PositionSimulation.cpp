@@ -19,10 +19,11 @@ PositionSimulation* PositionSimulation::create(const Position::SimulationType &s
 	case Position::SimulationType::av3:
 		return new PositionSimulationAV3;
 	case Position::SimulationType::atom:
-		return new PositionSimulationAV1;
+		return new PositionSimulationAtom;
 	}
 	return new PositionSimulationAV1;
 }
+
 PositionSimulation* PositionSimulation::create(const QVariantMap &settings)
 {
 	Position::SimulationType type=settings.value("simulation_type").value<Position::SimulationType>();
