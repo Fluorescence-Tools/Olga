@@ -657,10 +657,6 @@
   <slot>metropolisSampling()</slot>
   <slot>exportData()</slot>
   <slot>exportStructures()</slot>
-  <slot>insertDistances(int,unsigned)</slot>
-  <slot>insertDistances()</slot>
-  <slot>insertDomains()</slot>
-  <slot>insertPositions()</slot>
   <slot>exportCylinders()</slot>
   <slot>showAbout()</slot>
   <slot>addEvaluator()</slot>

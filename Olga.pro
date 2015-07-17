@@ -30,7 +30,7 @@ CONFIG(release, debug|release): DEFINES+=NDEBUG
 QMAKE_CXXFLAGS += -std=c++14 -Wextra -Winit-self -Wold-style-cast \
 -Woverloaded-virtual -Wuninitialized -Winit-self -pedantic-errors -Wno-attributes#-Werror
 
-LIBS += -lasync++ -lyomm11 -lpteros -lpteros_analysis -ltng_io
+LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io #-lyomm11
 
 RESOURCES += \
     icons.qrc
