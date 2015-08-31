@@ -28,7 +28,11 @@ public:
     std::string type() const;
     std::string position1() const;
     std::string position2() const;
-    double modelDistance(const PositionSimulationResult& pos1, const PositionSimulationResult& pos2) const;
+    double modelDistance(const PositionSimulationResult& pos1,
+			 const PositionSimulationResult& pos2) const;
+    double RmpFromModelDistance(const PositionSimulationResult& av1,
+				PositionSimulationResult av2, const double targetModelDist,
+				const double accuracy = 0.5) const;
     double errNeg() const;
     double errPos() const;
     double err(double modelDist) const;

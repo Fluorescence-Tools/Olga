@@ -39,6 +39,12 @@ public:
 	{
 		return _points.size();
 	}
+	void translate(const Eigen::Vector3f r) {
+		for(auto& point:_points) {
+			point+=r;
+		}
+		_meanPosition+=r;
+	}
 
 protected:
 	typedef boost::multi_array<bool, 3> densityArray_t;
@@ -63,4 +69,5 @@ inline std::string to_string(const PositionSimulationResult& res)
 }
 
 }
+
 #endif // POSITIONSIMULATIONRESULT_H

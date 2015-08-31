@@ -143,6 +143,11 @@ public:
 	{
 		return _requests.size();
 	}
+	void evaluate(const FrameDescriptor& frame, const std::vector<int>& evIds) const {
+		for(int evId:evIds) {
+			getString(frame,_evals[evId],0);
+		}
+	}
 Q_SIGNALS:
 	void evaluatorAdded(int evalNum);
 	void evaluatorIsGoingToBeRemoved(int evalNum);

@@ -186,11 +186,14 @@ void EvaluatorDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 				selected<<all.at(i);
 			}
 			opt.text=selected.join(", ");
+			if(selected.empty()) {
+				opt.text="none (click to select)";
+			}
 		} else if(data.type()==QVariant::Int) {
 			if(data.toInt()>=0) {
 				opt.text=all.at(data.toInt());
 			} else {
-				opt.text="";
+				opt.text="none (click to select)";
 			}
 		}
 		const QWidget *widget = option.widget;

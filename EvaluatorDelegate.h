@@ -62,7 +62,6 @@ private:
 		QList<QAction*> actions;
 		if(btnFlags.save) {
 			actions.push_back(&save);
-			qDebug()<<"save is true";
 		}
 		if(btnFlags.remove) {
 			actions.push_back(&del);

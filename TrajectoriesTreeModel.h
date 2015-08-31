@@ -8,6 +8,7 @@
 
 #include <QAbstractItemModel>
 #include <QVector>
+#include <QTimer>
 
 #include "MolecularTrajectory.h"
 #include "AbstractEvaluator.h"
@@ -65,8 +66,9 @@ public:
 	{
 		return _storage.sysTaskCount();
 	}
-	void updateColumn(int column);
-
+	/*void updateColumn(int column);
+	void updateRow(const QModelIndex & parent, int row);
+	*/
 public Q_SLOTS:
 private Q_SLOTS:
 
@@ -90,6 +92,9 @@ private:
 	std::vector<CalcColumn> _columns;
 
 	const TaskStorage& _storage;
+
+	std::vector<int> _evalsPending;
+	QTimer _evaluatePending{this};
 
 };
 

@@ -46,7 +46,30 @@ std::string Distance::position2() const
 
 double Distance::modelDistance(const PositionSimulationResult &pos1, const PositionSimulationResult &pos2) const
 {
-    return pos1.modelDistance(pos2,_type,_R0);
+	return pos1.modelDistance(pos2,_type,_R0);
+}
+
+double Distance::RmpFromModelDistance(const PositionSimulationResult &av1,
+				      PositionSimulationResult av2,
+				      const double targetModelDist,
+				      const double accuracy) const
+{
+	Eigen::Vector3f av1Mp=av1.meanPosition();
+	Eigen::Vector3f av2Mp=av2.meanPosition();
+	Eigen::Vector3f direction=(av2Mp-av1Mp).normalized();
+	double Rmod=modelDistance(av1,av2);
+	double diff=targetModelDist-Rmod;
+	double prevDiff=diff;
+	for(;std::fabs(diff)>accuracy;Rmod=modelDistance(av1,av2), diff=targetModelDist-Rmod) {
+		if(std::fabs(prevDiff)<std::fabs(diff)) {
+			break;
+		}
+		prevDiff=diff;
+		av2.translate(direction*diff);
+	}
+	/*qDebug()<<"Rmp: "<<av1.Rmp(av2)<<" Rmodel:"<<modelDistance(av1,av2)<<
+		  " Rda:"<<av1.Rda(av2)<<" RdaE: "<<av1.Rdae(av2,52.0);*/
+	return av1.Rmp(av2);
 }
 double Distance::errNeg() const
 {

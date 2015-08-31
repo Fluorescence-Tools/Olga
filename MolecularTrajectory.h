@@ -7,6 +7,7 @@
 
 #include <boost/icl/interval_set.hpp>
 
+#include "FrameDescriptor.h"
 
 class MolecularTrajectory
 {
@@ -34,7 +35,7 @@ public:
 	{
 		(void)trajIndex; (void)frameIndex;
 		//TODO: implement correct frame number determination
-		return 0;
+		return frameIndex;
 	}
 	int totalFrameCount() const
 	{
@@ -57,6 +58,11 @@ public:
 		_trajectories.push_back(frame);
 		return true;
 	}
+	FrameDescriptor descriptor(int trajIdx, int frameIdx) const {
+		return FrameDescriptor(_topFileName,_trajectories[trajIdx].first,
+				       frameNum(trajIdx,frameIdx));
+	}
+
 private:
 	std::string _topFileName;
 	using FrameName_Numbers=std::pair<std::string,boost::icl::interval_set<int>>;//trajectoryFileName,frameNumbers
