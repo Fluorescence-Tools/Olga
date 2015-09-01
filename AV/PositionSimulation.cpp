@@ -111,7 +111,7 @@ PositionSimulation::calculate(const Eigen::Vector3f &attachmentAtomPos,
 			      const std::vector<Eigen::Vector4f> &xyzW)
 {
 	Eigen::Vector4f v(attachmentAtomPos(0),attachmentAtomPos(1),attachmentAtomPos(2),0.0f);
-	int atom_i=0;
+	int atom_i=-1;
 	for(unsigned i=0; i<xyzW.size(); i++)
 	{
 		v[3]=xyzW[i][3];
@@ -120,6 +120,10 @@ PositionSimulation::calculate(const Eigen::Vector3f &attachmentAtomPos,
 			atom_i=i;
 			break;
 		}
+	}
+	if(atom_i<0) {
+		std::cerr<<"error, attachment atom is not found in the stripped molecule\n"<<std::flush;
+		return PositionSimulationResult();
 	}
 	return calculate(atom_i,xyzW);
 }

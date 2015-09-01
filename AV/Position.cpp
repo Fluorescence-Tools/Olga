@@ -1,5 +1,6 @@
 #include "Position.h"
 #include "Distance.h"
+#include "PositionSimulation.h"
 
 #include <map>
 #include <iostream>
@@ -10,8 +11,7 @@
 #include <QJsonDocument>
 #include <QVariant>
 
-#include "PositionSimulation.h"
-#include "Position.h"
+
 
 Position::Position()
 {
@@ -133,7 +133,14 @@ std::vector<Eigen::Vector4f> coordsVdW(const pteros::System &system)
 
 PositionSimulationResult Position::calculate(const pteros::System &system) const
 {
-	std::vector<Eigen::Vector4f> xyzW=coordsVdW(system);
+	std::vector<Eigen::Vector4f> xyzW;
+	if(_stripMask.empty()) {
+		xyzW=coordsVdW(system);
+	} else {
+		pteros::System stripped=system;
+		stripped.remove(_stripMask);
+		xyzW=coordsVdW(stripped);
+	}
 	Eigen::Vector3f refPos=atomXYZ(system);
 	return calculate(refPos,xyzW);
 }
@@ -155,8 +162,10 @@ std::pair<QString,QVariant> Position::setting(int row) const
 		return Setting{"atom_name",QString::fromStdString(_atomName)};
 	case 4:
 		return Setting{"simulation_type",QVariant::fromValue(_simulationType)};
+	case 5:
+		return Setting{"strip_mask",QString::fromStdString(_stripMask)};
 	default:
-		return _simulation->setting(row-5);
+		return _simulation->setting(row-6);
 	}
 	return Setting();
 }
@@ -180,14 +189,17 @@ void Position::setSetting(int row, const QVariant &val)
 	case 4:
 		setSimulationType(val.value<SimulationType>());
 		return;
+	case 5:
+		_stripMask=val.toString().toStdString();
+		return;
 	default:
-		_simulation->setSetting(row-5,val);
+		_simulation->setSetting(row-6,val);
 		return;
 	}
 }
 
 int Position::settingsCount() const {
-	int n=5;
+	int n=6;
 	n+=_simulation?_simulation->settingsCount():0;
 	return n;
 }

@@ -8,7 +8,6 @@
 #include "EvaluatorEulerAngle.h"
 #include "EvaluatorPositionSimulation.h"
 
-#include <QDebug>
 
 TrajectoriesTreeModel::
 TrajectoriesTreeModel(const TaskStorage &storage, QObject *parent) :
@@ -188,12 +187,13 @@ bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
 		beginInsertRows(QModelIndex(),_molTrajs.size(),_molTrajs.size());
 		_molTrajs.push_back(tmpTrj);
 		endInsertRows();
-		std::vector<int> evIds;
-		evIds.reserve(_storage.evalCount());
-		for(int i=0; i<_storage.evalCount(); i++) {
-			evIds.push_back(i);
+		std::set<int> evIds;
+		for(const CalcColumn& cc:_columns) {
+			int evId=cc.first;
+			evIds.emplace(evId);
 		}
-		_storage.evaluate(tmpTrj.descriptor(0,0),evIds);
+		_storage.evaluate(tmpTrj.descriptor(0,0),
+				  std::vector<int>(evIds.begin(),evIds.end()));
 		return true;
 	}
 	return false;
@@ -329,7 +329,9 @@ void TrajectoriesTreeModel::evaluatorAdded(int ev)
 		_columns.emplace_back(ev,i);
 	}
 	endInsertColumns();
-	_evalsPending.push_back(ev);
+	if(colCount>0) {
+		_evalsPending.push_back(ev);
+	}
 	_evaluatePending.start();
 }
 

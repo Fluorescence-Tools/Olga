@@ -79,6 +79,14 @@ public:
 	std::string atomName() const;
 	void setAtomName(const std::string &atomName);
 
+	std::string stripMask() const
+	{
+		return _stripMask;
+	}
+	void setStripMask(const std::string& stripMask) {
+		_stripMask=stripMask;
+	}
+
 	SimulationType simulationType() const;
 	void setSimulationType(const SimulationType &simulationType);
 
@@ -101,6 +109,7 @@ private:
 	unsigned _residueSeqNumber;
 	std::string _residueName;
 	std::string _atomName;
+	std::string _stripMask;
 	SimulationType _simulationType;
 	PositionSimulation* _simulation;
 };

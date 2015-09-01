@@ -9,7 +9,6 @@
 #include <QAction>
 #include <QLineEdit>
 #include <QVector3D>
-#include <QDebug>
 
 #include "CheckBoxList.h"
 

@@ -17,7 +17,6 @@
 #include <cstdint>
 
 #include <QObject>
-
 #include <readerwriterqueue/readerwriterqueue.h>
 
 #include <libcuckoo/cuckoohash_map.hh>

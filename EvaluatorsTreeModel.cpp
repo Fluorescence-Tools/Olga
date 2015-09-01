@@ -6,8 +6,6 @@
 #include "EvaluatorTrasformationMatrix.h"
 #include "EvaluatorEulerAngle.h"
 
-#include <QDebug>
-
 EvaluatorsTreeModel::EvaluatorsTreeModel(TaskStorage &storage, QObject *parent):
 	QAbstractItemModel(parent),_storage(storage)
 {

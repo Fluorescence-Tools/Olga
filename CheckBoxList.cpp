@@ -4,7 +4,6 @@
 #include <QCheckBox>
 #include <QAbstractItemView>
 #include <QStylePainter>
-#include <QDebug>
 
 // internal private delegate
 class CheckBoxListDelegate : public QItemDelegate

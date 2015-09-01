@@ -3,7 +3,7 @@
 #include <QLabel>
 #include <QPainter>
 #include <QEvent>
-#include <QDebug>
+
 #include <QAbstractItemView>
 #include <QLayout>
 #include <QApplication>
@@ -236,7 +236,6 @@ bool EvaluatorDelegate::editorEvent(QEvent *event, QAbstractItemModel *model,
 				    const QStyleOptionViewItem &option,
 				    const QModelIndex &index)
 {
-	//qDebug() << event->type();
 	return QStyledItemDelegate::editorEvent(event,model,option,index);
 }
 
