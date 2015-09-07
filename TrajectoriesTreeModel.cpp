@@ -298,7 +298,6 @@ FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeIte
 /*
 void TrajectoriesTreeModel::updateColumn(int column)
 {
-	//TODO:approach should be reconsidered. A hack.
 	if(column>_columns.size() || column<1) {
 		qDebug()<<"ERROR: wrong column number = "<<column;
 		return;

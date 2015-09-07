@@ -1,6 +1,5 @@
 #include "TaskStorage.h"
 #include "AbstractEvaluator.h"
-#include "EvaluatorPositionSimulation.h"//TODO:remove
 
 TaskStorage::TaskStorage():_tasksRingBuf(_tasksRingBufSize),_sysRingBuf(_sysRingBufSize)
 {
@@ -38,8 +37,6 @@ TaskStorage::getTask(const FrameDescriptor &frame, const EvalPtr &eval,
 			return task;
 		}
 	}
-
-
 	return makeTask(key,persistent);
 }
 //must only run in worker thread

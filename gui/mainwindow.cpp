@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->mainTreeView->setModel(&trajectoriesModel);
 
 	ui->evaluatorsTreeView->setModel(&evalsModel);
+	ui->evaluatorsTreeView->expandAll();
 	ui->evaluatorsTreeView->setItemDelegate(evaluatorsDelegate);
 	ui->evaluatorsTreeView->resizeColumnToContents(1);
 
