@@ -86,6 +86,9 @@ public:
 	void setStripMask(const std::string& stripMask) {
 		_stripMask=stripMask;
 	}
+	std::string anchorAtoms() const {
+		return _anchorAtoms;
+	}
 
 	SimulationType simulationType() const;
 	void setSimulationType(const SimulationType &simulationType);
@@ -96,9 +99,10 @@ public:
 	static std::vector<Position> fromLegacy(const std::string& labelingFileName,
 						const std::string& pdbFileName);
 	static QJsonObject jsonObjects(const std::vector<std::shared_ptr<Position> > &arr);
+	Eigen::Vector3f atomXYZ(const pteros::System &system) const;
 private:
 	//Eigen::Vector3f atomXYZ(BALL::System &system) const;
-	Eigen::Vector3f atomXYZ(const pteros::System &system) const;
+
 	PositionSimulationResult calculate(const Eigen::Vector3f& attachmentAtomPos,
 					   const std::vector<Eigen::Vector4f>& store) const;
 	void setFromLegacy(const std::string& entry,const std::string &pdbFileName);
@@ -110,7 +114,9 @@ private:
 	std::string _residueName;
 	std::string _atomName;
 	std::string _stripMask;
+	std::string _anchorAtoms;
 	SimulationType _simulationType;
+	const int _localSettingCount=7;
 	PositionSimulation* _simulation;
 };
 Q_DECLARE_METATYPE(Position::SimulationType)

@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	qRegisterMetaType<std::shared_ptr<AbstractCalcResult>>("shared_ptr<AbstractCalcResult>");
 	qRegisterMetaType<std::shared_ptr<AbstractEvaluator>>("shared_ptr<AbstractEvaluator>");
 	qRegisterMetaType<FrameDescriptor>("FrameDescriptor");
-	qRegisterMetaType<EvalPtr>("EvalPtr");
+	qRegisterMetaType<EvalId>("EvalId");
 	qRegisterMetaType<Position::SimulationType>("SimulationType");
 
 	ui->setupUi(this);

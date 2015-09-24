@@ -8,16 +8,20 @@
 class EvaluatorDistance : public AbstractEvaluator
 {
 	friend class EvaluatorChi2;
+	static EvaluatorPositionSimulation _avStub;
 private:
-	std::weak_ptr<const EvaluatorPositionSimulation> _av1, _av2;
+	EvalId _av1, _av2;
 	Distance _dist;
 public:
 	EvaluatorDistance(const TaskStorage& storage,
-			   const std::weak_ptr<EvaluatorPositionSimulation>& av1,
-			   const std::weak_ptr<EvaluatorPositionSimulation>& av2,
+			   const EvalId& av1,
+			   const EvalId& av2,
 			   Distance dist);
 	EvaluatorDistance(const TaskStorage& storage, const std::string& name):
-		AbstractEvaluator(storage){_dist.setName(name);}
+		AbstractEvaluator(storage)
+	{
+		_dist.setName(name);
+	}
 	virtual Task makeTask(const FrameDescriptor &frame) const;
 	virtual std::string name() const
 	{
@@ -46,19 +50,13 @@ public:
 			return {"distance_type",QString::fromStdString(_dist.type())};
 		case 1:
 		{
-			EvalPtr av1=_av1.lock();
-			if(!av1){
-				av1=std::make_shared<EvaluatorPositionSimulation>(_storage,"unknown");
-			}
-			return {"position1_name",QVariant::fromValue(av1)};
+			EvalId id=_storage.isValid(_av1)?_av1:_storage.evaluatorPositionSimulation;
+			return {"position1_name",QVariant::fromValue(id)};
 		}
 		case 2:
 		{
-			EvalPtr av2=_av2.lock();
-			if(!av2){
-				av2=std::make_shared<EvaluatorPositionSimulation>(_storage,"unknown");
-			}
-			return {"position2_name",QVariant::fromValue(av2)};
+			EvalId id=_storage.isValid(_av2)?_av2:_storage.evaluatorPositionSimulation;
+			return {"position2_name",QVariant::fromValue(id)};
 		}
 		case 3:
 			return {"distance",_dist.distance()};
@@ -71,6 +69,7 @@ public:
 		}
 		return {"",""};
 	}
+	//std::string str;
 	virtual void setSetting(int row, const QVariant& val)
 	{
 		switch(row)
@@ -79,12 +78,16 @@ public:
 			_dist.setType(val.toString().toStdString());
 			return;
 		case 1:
-			_av1=std::static_pointer_cast<const EvaluatorPositionSimulation>(val.value<std::shared_ptr<const AbstractEvaluator>>());
-			_dist.setPosition1(_av1.lock()->name());
+			_av1=val.value<EvalId>();
+			//str=_storage.eval(_av1).name();
+			//qDebug()<<"av1="<<static_cast<int>(_av1)<<", "<<str;
+			_dist.setPosition1(_storage.eval(_av1).name());
 			return;
 		case 2:
-			_av2=std::static_pointer_cast<const EvaluatorPositionSimulation>(val.value<std::shared_ptr<const AbstractEvaluator>>());
-			_dist.setPosition2(_av2.lock()->name());
+			_av2=val.value<EvalId>();
+			//str=_storage.eval(_av2).name();
+			//qDebug()<<"av2="<<static_cast<int>(_av2)<<", "<<str;
+			_dist.setPosition2(_storage.eval(_av2).name());
 			return;
 		case 3:
 			_dist.setDistance(val.toDouble());
@@ -103,6 +106,10 @@ public:
 	virtual void setName(const std::string& name)
 	{
 		_dist.setName(name);
+	}
+	Distance distance() const
+	{
+		return _dist;
 	}
 
 private:

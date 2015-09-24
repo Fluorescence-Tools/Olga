@@ -51,6 +51,9 @@ public:
 	{
 		return _position.settingsCount();
 	}
+	std::string anchorAtoms() const {
+		return _position.anchorAtoms();
+	}
 	//~EvaluatorPositionSimulation();
 };
 

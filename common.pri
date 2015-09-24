@@ -1,11 +1,14 @@
 QMAKE_CXXFLAGS -= -O
 QMAKE_CXXFLAGS -= -O1
 QMAKE_CXXFLAGS -= -O2
+QMAKE_CXXFLAGS -= -std=c++0x
 QMAKE_CXXFLAGS_RELEASE -= -O
 QMAKE_CXXFLAGS_RELEASE -= -O1
 QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE -= -std=c++0x
 QMAKE_CXXFLAGS_RELEASE *= -O3 -march=native -flto -fwhole-program
 QMAKE_LFLAGS -= -O1
+QMAKE_LFLAGS -= -std=c++0x
 QMAKE_LFLAGS *= -O3 -flto -fwhole-program
 
 COMMIT_BRANCH = $$system(git rev-parse --abbrev-ref HEAD)

@@ -81,13 +81,12 @@ public:
 	~EvaluatorsTreeModel();
 
 	using ButtonFlags=EvaluatorDelegate::ButtonFlags;
-	using EvalPtr=std::shared_ptr<const AbstractEvaluator>;
-	using MutableEvalPtr=std::shared_ptr<AbstractEvaluator>;
+	using MutableEvalPtr=std::unique_ptr<AbstractEvaluator>;
 	std::string evalTypeName(int typeNum) const;
 	QStringList supportedTypes() const;
 	void addEvaluator(int typeNum);
 	void removeEvaluator(const QModelIndex& index);
-	void removeEvaluator(int evRow);
+	MutableEvalPtr removeEvaluator(int evRow);
 	void activateEvaluator(const QModelIndex& index);
 	void activateEvaluator(int evRow);
 	void duplicateEvaluator(const QModelIndex& index);
@@ -96,37 +95,38 @@ public:
 private:
 	//EvalPtr eval(const EvalPtr& oldEval, int newEvalRow);
 	QString uniqueEvalName(const QVariantMap& evalMap, const QString& name) const;
-	void addEvaluator(const std::shared_ptr<AbstractEvaluator>& eval);
+	void addEvaluator(std::unique_ptr<AbstractEvaluator> &eval);
 	MutableEvalPtr makeEvaluator(int typeNum) const;
-	QModelIndex classRowIndex(const EvalPtr& eval) const;
+	QModelIndex classRowIndex(const EvalId &eval) const;
 	std::string className(int classRow) const;
 	std::string evalName(int classRow, int evalRow) const;
-	EvalPtr eval(int classIndex, int evalRow) const;
-	EvalPtr findEval(int classIndex, const QString& evName) const;
+	const AbstractEvaluator &eval(int classIndex, int evalRow) const;
+	EvalId evalId(int classRow, int evalRow) const;
+	EvalId findEval(int classIndex, const QString& evName) const;
 	const AbstractEvaluator& eval(const EvaluatorsTreeItem& item) const;
-	int addClassRow(const EvalPtr& eval);
-	int classRow(const EvalPtr& eval) const;
-	int evalRow(const EvalPtr& eval) const;
-	QStringList evalListByType(const EvalPtr& eval) const;
-	QList<int> evalRowList(const QList<EvalPtr>& list) const;
+	int addClassRow(const EvalId& evId);
+	int classRow(const EvalId& evId) const;
+	int evalRow(const EvalId& eval) const;
+	QStringList evalListByType(const EvalId& eval) const;
+	QList<int> evalRowList(const QList<EvalId>& list) const;
 	QVariantMap propMap(const AbstractEvaluator &eval) const;
 	void setEval(int evNum,const QVariantMap& propMap);
 
 
-	void loadEvaluator(int i);
+	void loadEvaluator(EvalId id);
 	TaskStorage& _storage;
 	size_t lastClassRow=1;
 	std::unordered_map<std::type_index,size_t> classRows;
 	//evals[classIndex][evalNum]==eval;
 	std::vector<
-	std::pair<std::string,std::vector<EvalPtr>>
+	std::pair<std::string,std::vector<EvalId>>
 	> evals;
 
-	std::vector<std::shared_ptr<AbstractEvaluator>> pendingEvals;
+	std::vector<MutableEvalPtr> pendingEvals;
 
-	const int evalType=QVariant::fromValue(EvalPtr()).userType();
+	const int evalType=QVariant::fromValue(EvalId()).userType();
 	const int simulationType=QVariant::fromValue(Position::SimulationType()).userType();
-	const int evalListType=QVariant::fromValue(QList<EvalPtr>()).userType();
+	const int evalListType=QVariant::fromValue(QList<EvalId>()).userType();
 	const int vec3dType=QVariant::fromValue(QVector3D()).userType();
 	const QStringList _simTypes{
 		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::av1)),

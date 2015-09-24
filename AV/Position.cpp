@@ -137,9 +137,16 @@ PositionSimulationResult Position::calculate(const pteros::System &system) const
 	if(_stripMask.empty()) {
 		xyzW=coordsVdW(system);
 	} else {
-		pteros::System stripped=system;
-		stripped.remove(_stripMask);
-		xyzW=coordsVdW(stripped);
+		try {
+			pteros::System stripped=system;
+			stripped.remove(_stripMask);
+			xyzW=coordsVdW(stripped);
+
+		} catch (pteros::Pteros_error err) {
+			std::cerr<<"stripping failed: "+err.what()+"\n"<<std::flush;
+			xyzW=coordsVdW(system);
+		}
+
 	}
 	Eigen::Vector3f refPos=atomXYZ(system);
 	return calculate(refPos,xyzW);
@@ -164,8 +171,10 @@ std::pair<QString,QVariant> Position::setting(int row) const
 		return Setting{"simulation_type",QVariant::fromValue(_simulationType)};
 	case 5:
 		return Setting{"strip_mask",QString::fromStdString(_stripMask)};
+	case 6:
+		return Setting{"anchor_atoms",QString::fromStdString(_anchorAtoms)};
 	default:
-		return _simulation->setting(row-6);
+		return _simulation->setting(row-_localSettingCount);
 	}
 	return Setting();
 }
@@ -192,16 +201,17 @@ void Position::setSetting(int row, const QVariant &val)
 	case 5:
 		_stripMask=val.toString().toStdString();
 		return;
+	case 6:
+		_anchorAtoms=val.toString().toStdString();
+		return;
 	default:
-		_simulation->setSetting(row-6,val);
+		_simulation->setSetting(row-_localSettingCount,val);
 		return;
 	}
 }
 
 int Position::settingsCount() const {
-	int n=6;
-	n+=_simulation?_simulation->settingsCount():0;
-	return n;
+	return _localSettingCount+(_simulation?_simulation->settingsCount():0);
 }
 
 bool Position::load(const QVariantMap &settings, const std::string& name)

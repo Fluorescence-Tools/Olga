@@ -13,10 +13,6 @@ AbstractEvaluator::Task EvaluatorChi2::makeTask(const FrameDescriptor &frame) co
 	std::vector<Task> tasks;
 	for(const auto& calc:_distCalcs)
 	{
-		std::shared_ptr<const EvaluatorDistance> calcRef=calc.lock();
-		if(!calcRef) {
-			std::cerr<<"Error!"<<std::endl;
-		}
 		tasks.push_back(getTask(frame,calc,true));
 	}
 	return async::when_all(tasks).then([this](std::vector<Task> tasks){

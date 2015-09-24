@@ -1,27 +1,39 @@
 #include "TaskStorage.h"
 #include "AbstractEvaluator.h"
+#include "EvaluatorPositionSimulation.h"
+#include "EvaluatorDistance.h"
+#include "EvaluatorChi2.h"
+#include "EvaluatorTrasformationMatrix.h"
+#include "EvaluatorEulerAngle.h"
 
-TaskStorage::TaskStorage():_tasksRingBuf(_tasksRingBufSize),_sysRingBuf(_sysRingBufSize)
+#include "AV/Position.h"
+TaskStorage::TaskStorage():_tasksRingBuf(_tasksRingBufSize),
+	_sysRingBuf(_sysRingBufSize),_currentId(EvalId(0)),
+	simulationType(QVariant::fromValue(Position::SimulationType()).userType())
 {
+	addEvaluator(std::make_unique<const EvaluatorPositionSimulation>(*this,"unknown"));
+	evaluatorPositionSimulation=_currentId;
+	addEvaluator(std::make_unique<const EvaluatorDistance>(*this,"unknown"));
+	evaluatorDistance=_currentId;
+	addEvaluator(std::make_unique<const EvaluatorChi2>(*this,"unknown"));
+	evaluatorChi2=_currentId;
+	addEvaluator(std::make_unique<const EvaluatorTrasformationMatrix>(*this,"unknown"));
+	evaluatorTrasformationMatrix=_currentId;
+	addEvaluator(std::make_unique<const EvaluatorEulerAngle>(*this,"unknown"));
+	evaluatorEulerAngle=_currentId;
+	_maxStubEval=_currentId;
 }
 
 TaskStorage::~TaskStorage()
 {
 }
 
-std::string TaskStorage::getString(const FrameDescriptor &frame, int calcNum, int col, bool persistent) const
-{
-	return getString(frame,evalPtr(calcNum),col,persistent);
-}
-
 //must only run in worker thread
 const TaskStorage::Task &
-TaskStorage::getTask(const FrameDescriptor &frame, const EvalPtr &eval,
-		     bool persistent) const
+TaskStorage::getTask(const CacheKey &key, bool persistent) const
 {
 	static auto tid=std::this_thread::get_id();
 	assert(tid==std::this_thread::get_id());
-	auto key=CacheKey(frame,eval);
 
 	//check in tasks
 	auto it=_tasks.find(key);
@@ -45,7 +57,7 @@ const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key, bool persist
 	static auto tid=std::this_thread::get_id();
 	assert(tid==std::this_thread::get_id());
 	//append a new job
-	Task& task=_tasks.emplace(key,key.second->makeTask(key.first)).first->second;
+	Task& task=_tasks.emplace(key,eval(key.second).makeTask(key.first)).first->second;
 	pushTask(key);
 	_tasksRunning++;
 
@@ -63,6 +75,101 @@ const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key, bool persist
 	});
 	return task;
 }
+
+void TaskStorage::loadEvaluators(const QVariantMap &settings) {
+	static const QStringList classOrder{supportedTypes()};
+	for(int curEvalType=0; curEvalType<classOrder.size(); curEvalType++) {
+		const QString& className=classOrder.at(curEvalType);
+		const QVariantMap& evals=settings[className].toMap();
+		for(auto i=evals.constBegin();i!=evals.constEnd(); ++i) {
+			const QVariantMap& propMap=i.value().toMap();
+			if(propMap["isDraft"]==true) {
+				continue;
+			}
+			auto ev=makeEvaluator(curEvalType);
+			const QString& evName=i.key();
+			ev->setName(evName.toStdString());
+			setEval(ev,propMap);
+			addEvaluator(std::move(ev));
+		}
+	}
+}
+
+TaskStorage::MutableEvalPtr TaskStorage::makeEvaluator(int typeNum) const {
+	switch (typeNum)
+	{
+	case 0:
+		return std::make_unique<EvaluatorPositionSimulation>(*this,"new LP");
+	case 1:
+		return std::make_unique<EvaluatorDistance>(*this,"new dist");
+	case 2:
+		return std::make_unique<EvaluatorChi2>(*this,"new χ²");
+	case 3:
+		return std::make_unique<EvaluatorTrasformationMatrix>(*this,"new coordinate system");
+	case 4:
+		return std::make_unique<EvaluatorEulerAngle>(*this,"new euler angles");
+	default:
+		return MutableEvalPtr();
+	}
+}
+
+QStringList TaskStorage::supportedTypes() const {
+	QStringList vec;
+	int i;
+	std::string typeName;
+	for (i=0, typeName=evalTypeName(i);
+	     !typeName.empty();
+	     ++i,typeName=evalTypeName(i)){
+		vec<<QString::fromStdString(typeName);
+	}
+	return vec;
+}
+
+std::string TaskStorage::evalTypeName(int typeNum) const
+{
+	const MutableEvalPtr& eval=makeEvaluator(typeNum);
+	if(eval) {
+		return eval->className();
+	}
+	return "";
+}
+
+void TaskStorage::setEval(TaskStorage::MutableEvalPtr &ev, const QVariantMap &propMap) {
+	for(int propRow=0; propRow<ev->settingsCount(); ++propRow) {
+		QVariant oldVal=ev->settingValue(propRow);
+		const QString& propName=ev->settingName(propRow);
+		if(!propMap.contains(propName)) {
+			continue;
+		}
+		const QVariant& propVal=propMap[propName];
+		QVariant newVal;
+		if(oldVal.userType()==evalType) {
+			newVal.setValue(evalId(propVal.toString().toStdString()));
+		} else if(oldVal.userType()==simulationType) {
+			auto simName=propVal.toString().toStdString();
+			const auto& simType=Position::simulationType(simName);
+			newVal.setValue(simType);
+		} else if(oldVal.userType()==evalListType) {
+			QList<EvalId> ptrs;
+			QStringList names=propVal.toStringList();
+			for(const QString& name:names) {
+				ptrs.append(evalId(name.toStdString()));
+			}
+			newVal.setValue(ptrs);
+		} else if(oldVal.userType()==vec3dType) {
+			Eigen::Vector3d vec;
+			const QVariantList& list=propVal.toList();
+			for(int i:{0,1,2}) {
+				vec[i]=list[i].toDouble();
+			}
+			newVal.setValue(vec);
+		} else {
+			newVal=propVal;
+		}
+		ev->setSetting(propRow,newVal);
+	}
+}
+
 //must only run in worker thread
 const TaskStorage::PterosSysTask &TaskStorage::getSysTask(const FrameDescriptor &frame) const
 {
@@ -83,24 +190,39 @@ const TaskStorage::PterosSysTask &TaskStorage::getSysTask(const FrameDescriptor 
 	}
 }
 
-std::string TaskStorage::getColumnName(int calcNum, int col) const
+std::string TaskStorage::getColumnName(const EvalId &id, int col) const
 {
-	return eval(calcNum).columnName(col);
+	return eval(id).columnName(col);
 }
 
-int TaskStorage::getColumnCount(int calcNum) const
+int TaskStorage::getColumnCount(const EvalId &id) const
 {
-	return eval(calcNum).columnCount();
+	return eval(id).columnCount();
+}
+
+EvalId TaskStorage::addEvaluator(EvalUPtr evptr)
+{
+	_evals.emplace(++_currentId,std::move(evptr));
+	_evalNames.emplace(eval(_currentId).name(),_currentId);
+	Q_EMIT evaluatorAdded(_currentId);
+	return _currentId;
+}
+
+void TaskStorage::removeEvaluator(const EvalId &evId) {
+	Q_EMIT evaluatorIsGoingToBeRemoved(evId);
+	_evalNames.erase(eval(evId).name());
+	_evals.erase(evId);
+	removeResults(evId);
 }
 
 //must only run in the main thread;
 std::string TaskStorage::getString(const FrameDescriptor &frame,
-				   const EvalPtr &eval, int col,
+				   const EvalId &evId, int col,
 				   bool persistent) const
 {
 	static auto tid=std::this_thread::get_id();
 	assert(tid==std::this_thread::get_id());
-	auto key=CacheKey(frame,eval);
+	auto key=CacheKey(frame,evId);
 	Result result;
 	bool ready=_results.find(key,result);
 	if(ready) {
@@ -115,4 +237,12 @@ std::string TaskStorage::getString(const FrameDescriptor &frame,
 		}
 	}
 	return "...";
+}
+
+TaskStorage::Result TaskStorage::getResult(const FrameDescriptor &frame, const EvalId &evId) const
+{
+	auto key=CacheKey(frame,evId);
+	Result result;
+	_results.find(key,result);
+	return result;
 }

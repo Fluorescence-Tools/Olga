@@ -1,8 +1,6 @@
 #ifndef EVALUATORTRANSORMATIONMATRIX_H
 #define EVALUATORTRANSORMATIONMATRIX_H
 
-#include <QVector3D>
-
 #include "AbstractEvaluator.h"
 
 class EvaluatorTrasformationMatrix : public AbstractEvaluator
@@ -57,8 +55,8 @@ public:
 			} else {
 				const QString& pname=QString("local_position_%1").arg(i);
 				const Eigen::Vector3d& evec=comSellPos[i].second;
-				QVector3D qvec(evec[0],evec[1],evec[2]);
-				return Setting{pname,qvec};
+				Eigen::Vector3d qvec(evec[0],evec[1],evec[2]);
+				return Setting{pname,QVariant::fromValue(qvec)};
 			}
 		}
 	}
@@ -77,7 +75,7 @@ public:
 			if(row%2==1) {
 				comSellPos[i].first=val.toString().toStdString();
 			} else {
-				const QVector3D& qvec=val.value<QVector3D>();
+				const Eigen::Vector3d& qvec=val.value<Eigen::Vector3d>();
 				Eigen::Vector3d& vec=comSellPos[i].second;
 				for(int j:{0,1,2}) {vec[j]=qvec[j];}
 			}

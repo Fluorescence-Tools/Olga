@@ -73,8 +73,8 @@ public Q_SLOTS:
 private Q_SLOTS:
 
 private:
-	void evaluatorAdded(int i);
-	void evaluatorRemove(int i);
+	void evaluatorAdded(const EvalId& id);
+	void evaluatorRemove(const EvalId& id);
 	const TrajectoriesTreeItem* childItem(const TrajectoriesTreeItem* parent,
 					      unsigned row) const;
 
@@ -88,12 +88,12 @@ private:
 private:
 	QVector<MolecularTrajectory> _molTrajs;
 	mutable std::unordered_set<TrajectoriesTreeItem> items;
-	using CalcColumn=std::pair<int,int>;//calcNum,calcCol
+	using CalcColumn=std::pair<EvalId,int>;//EvId,calcCol
 	std::vector<CalcColumn> _columns;
 
 	const TaskStorage& _storage;
 
-	std::vector<int> _evalsPending;
+	std::vector<EvalId> _evalsPending;
 	QTimer _evaluatePending{this};
 
 };

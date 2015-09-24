@@ -7,18 +7,15 @@
 class EvaluatorChi2 : public AbstractEvaluator
 {
 private:
-	std::vector<std::weak_ptr<const EvaluatorDistance>> _distCalcs;
+	std::vector<EvalId> _distCalcs;
 	std::vector<Distance> distances;
 	std::string _name;
 	void updateDistances() {
 		distances.clear();
-		for(const auto& calc:_distCalcs)
+		for(const auto& id:_distCalcs)
 		{
-			std::shared_ptr<const EvaluatorDistance> calcRef=calc.lock();
-			if(!calcRef) {
-				std::cerr<<"Error!"<<std::endl;
-			}
-			distances.push_back(calcRef->_dist);
+			auto eval=static_cast<const EvaluatorDistance&>(_storage.eval(id));
+			distances.push_back(eval._dist);
 		}
 	}
 
@@ -48,15 +45,14 @@ public:
 		if(row!=0) {
 			return {"",""};
 		}
-		QList<EvalPtr> list;
-		for(const auto& wptr:_distCalcs) {
-			const EvalPtr& eval=wptr.lock();
-			if(eval) {
-				list.append(eval);
+		QList<EvalId> list;
+		for(const auto& evid:_distCalcs) {
+			if(_storage.isValid(evid)) {
+				list.append(evid);
 			}
 		}
-		if(list.empty()) {
-			list.append(std::make_shared<EvaluatorDistance>(_storage,"unknown"));
+		if(list.isEmpty()) {
+			list.append(_storage.evaluatorDistance);
 		}
 		return {"distances",QVariant::fromValue(list)};
 	}
@@ -66,10 +62,9 @@ public:
 			return;
 		}
 		_distCalcs.clear();
-		const QList<EvalPtr>& list=val.value<QList<EvalPtr>>();
-		for(const EvalPtr& eval:list) {
-			const auto& ptr=std::static_pointer_cast<const EvaluatorDistance>(eval);
-			_distCalcs.push_back(ptr);
+		const QList<EvalId>& list=val.value<QList<EvalId>>();
+		for(const EvalId& evId:list) {
+			_distCalcs.push_back(evId);
 		}
 		updateDistances();
 	}

@@ -1,12 +1,170 @@
+#include "pteros/pteros.h"
 #include <iostream>
-#include <QApplication>
+#include <fstream>
+#include <iomanip>
+#include <thread>
+
+#include <QCoreApplication>
 #include <QCommandLineParser>
 #include <QJsonDocument>
-#include "EvaluatorsTreeModel.h"
+#include <QFile>
+
 #include "TaskStorage.h"
+#include "AbstractEvaluator.h"
+#include "AV/PositionSimulationResult.h"
+#include "CalcResult.h"
+#include "EvaluatorPositionSimulation.h"
+#include "EvaluatorDistance.h"
+std::ostream& operator<<(std::ostream& os, const EvalId& id)
+{
+	os << static_cast<int>(id);
+	return os;
+}
+struct Restrt {
+	std::vector<Eigen::Vector3d> coords;
+	std::vector<Eigen::Vector3d> velocities;
+	std::string header, footer;
+	void load(const std::string fileName) {
+		std::ifstream f;
+		f.open(fileName);
+		std::getline(f,header);
+		std::string tmp;
+		std::getline(f,tmp);
+		header+="\n"+tmp;
+		int natoms=std::stoi(tmp.substr(0,tmp.find(" ")));
+		coords.clear();
+		coords.reserve(natoms);
+		for(int i=0; i<natoms; i++) {
+			Eigen::Vector3d v;
+			f>>v[0]>>v[1]>>v[2];
+			coords.push_back(v);
+		}
+		for(int i=0; i<natoms; i++) {
+			Eigen::Vector3d v;
+			f>>v[0]>>v[1]>>v[2];
+			velocities.push_back(v);
+		}
+		std::getline(f,footer);
+		std::getline(f,tmp);
+		footer+=tmp+"\n";
+	}
+	void save(const std::string fileName) {
+		std::ofstream f;
+		f.open(fileName);
+		f<<header<<"\n";
+		using std::setw;
+		using std::setprecision;
+		using std::setiosflags;
+		using std::ios;
+		for(const auto& vec:{coords,velocities}) {
+			for(int i=0; i<coords.size(); ++i) {
+				const auto& v=vec[i];
+				for(int k:{0,1,2}) {
+					f<<setiosflags(ios::fixed)
+					<<setw(12)<<setprecision(7)<<v[k];
+				}
+				if(i%2==1) {
+					f<<"\n";
+				}
+			}
+			if(coords.size()%2==1) {
+				f<<"\n";
+			}
+		}
+
+		f<<footer;
+	}
+	int replaceCoords(const Eigen::Vector3d& oldp,const Eigen::Vector3d& newp)
+	{
+		const double epsilon=0.05;
+		double min=999.0;
+		int idx=-1;
+		for(int i=0; i<coords.size(); ++i) {
+			Eigen::Vector3d& v=coords[i];
+			double dist=(oldp-v).norm();
+			if(dist<min) {
+				min=dist;
+				idx=i;
+			}
+			if( dist<epsilon) {
+				v=newp;
+				return i;
+			}
+		}
+		std::cout<<"replaceCoords: atom not found! min_dsit="<<min
+			<<" idx="<<idx<<" oldXYZ="<<oldp.transpose()<<
+		       " newXYZ="<<newp.transpose()<<"\n";
+		return -1;
+	}
+	int atomIndex(const Eigen::Vector3d& pos) const
+	{
+		const double epsilon=0.05;
+		for(int i=0; i<coords.size(); ++i) {
+			const Eigen::Vector3d& v=coords[i];
+			double dist=(pos-v).norm();
+			if( dist<epsilon) {
+				return i;
+			}
+		}
+		return -1;
+	}
+};
+
+struct NmrRestraint {
+	int _iat1, _iat2, _nstep1=1, _nstep2;
+	double r1, r2,r3,r4,rk2,rk3;
+	double r1a,r2a,r3a,r4a,rk2a,rk3a;
+	std::string note;
+	NmrRestraint(const double Fmax1, const double Fmax2,
+		     const int iat1, int iat2, int nstep2,
+		     const Distance& dist)
+	{
+		using std::to_string;
+		_iat1=iat1; _iat2=iat2; _nstep1=1; _nstep2=nstep2;
+		note=dist.position1()+" ("+to_string(_iat1)+") <--> "
+		     +dist.position2()+" ("+to_string(_iat2)+") ";
+		r2=r3=dist.RmpFromModelDistance();
+		r1=r2-dist.errNeg();
+		r4=r3+dist.errPos();
+		r1a=r1; r2a=r2; r3a=r3; r4a=r4;
+
+		//force constants
+		rk2=0.5*Fmax1/dist.errNeg();
+		rk3=0.5*Fmax1/dist.errPos();
+		rk2a=0.5*Fmax2/dist.errNeg();
+		rk3a=0.5*Fmax2/dist.errPos();
+	}
+	std::string toString() const {
+		std::string str="#"+note+"\n";
+		using std::to_string;
+		str+="&rst iat = "+to_string(_iat1)+", "+to_string(_iat2)+
+		     ", nstep1 = "+to_string(_nstep1)+
+		     ", nstep2 = "+to_string(_nstep2)+
+		     ", ifvari = 1"+
+		     ", r1 = "+to_string(r1)+", r2 = "+to_string(r2)+
+		     ", r3 = "+to_string(r3)+", r4 = "+to_string(r4)+
+		     ", rk2 = "+to_string(rk2)+", rk3 = "+to_string(rk3)+
+		     ", r1a = "+to_string(r1a)+", r2a = "+to_string(r2a)+
+		     ", r3a = "+to_string(r3a)+", r4a = "+to_string(r4a)+
+		     ", rk2a = "+to_string(rk2a)+", rk3a = "+to_string(rk3a)+
+		     ",\n/\n";
+		return str;
+	}
+	static void save(const std::vector<NmrRestraint>& vec,
+			 const std::string& fileName)
+	{
+		std::ofstream f;
+		f.open(fileName);
+		for(const auto& r:vec) {
+			f<<r.toString();
+		}
+	}
+};
+const double errAnchor=2.0; //Angstrom
+const double FmaxMultAnchor=2.0; //2 fold
 int main(int argc, char *argv[])
 {
-	QApplication a(argc, argv);
+	QCoreApplication a(argc, argv);
 	a.setApplicationVersion(APP_VERSION);
 	QCoreApplication::setApplicationName("av2restraints");
 	QCommandLineParser parser;
@@ -14,12 +172,15 @@ int main(int argc, char *argv[])
 	parser.addVersionOption();
 	parser.addOptions({
 				  {{"p", "pdb"},
-				   "PDB file to use for AV simulations"},
+				   "PDB file to use for AV simulations","file"},
 				  {{"j","json"},
-				   "setting file describing labelig positions and distances"},
-				  {"ir","Reference restart file, corresponding to the specified PDB"},
-				  {"o","Name for the generated restraints file"},
-				  {"or","Name for the generated restart file"}
+				   "setting file describing labelig positions and distances", "file"},
+				  {"ir","Reference restart file, corresponding to the specified PDB", "file"},
+				  {"o","Name for the generated restraints file", "file"},
+				  {"or","Name for the generated restart file", "file"},
+				  {{"n","nstep2"},"Number of steps in the run", "int"},
+				  {"f1","Max force at the beginning of the run [pN]", "float"},
+				  {"f2","Max force at the end of the run [pN]", "float"}
 			  });
 	parser.process(a);
 	QString settingsFileName=parser.value("j");
@@ -27,18 +188,129 @@ int main(int argc, char *argv[])
 	QString restartInFileName=parser.value("ir");
 	QString restartOutFileName=parser.value("or");
 	QString restraintsFileName=parser.value("o");
+	const int nstep2=parser.value("nstep2").toInt();
+	//convert from pN to kcal/mol Angstrom
+	const double f1=parser.value("f1").toDouble() / 69.4786;
+	const double f2=parser.value("f2").toDouble() / 69.4786;
+
+	using std::ios;
+	using std::setiosflags;
+	using std::setprecision;
+	using std::setw;
+	pteros::System sys(pdbFileName.toStdString());
+	pteros::Selection sel=sys.select("resname DU");
+	auto duXYZf=sel.get_xyz();
+	auto duXYZd=duXYZf.cast<double>()*10.0;
+	std::cout<<"DUsD:\n"<<duXYZd<<"\n";
 
 	TaskStorage storage;
-	EvaluatorsTreeModel evModel(storage);
 
 	QFile settingsFile(settingsFileName);
 	if (!settingsFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-		std::cout<<"Unable to open file. "<<settingsFile.errorString().toStdString();
+		std::cout<<"Unable to open file "<<settingsFileName.toStdString()
+			<<settingsFile.errorString().toStdString()<<std::endl;
 		return 1;
 	}
 	QJsonDocument doc = QJsonDocument::fromJson(settingsFile.readAll());
-	evModel.loadEvaluators(doc.toVariant().toMap());
+	storage.loadEvaluators(doc.toVariant().toMap());
+	using std::vector;
+	vector<EvalId> avs, distances;
 
+	for(const auto& pair:storage.evals()) {
+		if(storage.isStub(pair.first)) {
+			continue;
+		}
+		if(pair.second->className()=="Distances") {
+			distances.push_back(pair.first);
+		}
+		if(pair.second->className()=="Positions") {
+			avs.push_back(pair.first);
+		}
+		//std::cout<<pair.first<<" "<<pair.second->name()<<std::endl;
+	}
+	std::cout<<avs.size()<<" positions and "<<distances.size()<<" distances"<<std::endl;
 
-	return a.exec();
+	FrameDescriptor frame(pdbFileName.toStdString(),pdbFileName.toStdString());
+	storage.evaluate(frame,avs);
+
+	using std::pair;
+	using std::map;
+	map<EvalId,pair<EvalId,EvalId>> dist2lps;
+	map<EvalId,std::string> lpNames;
+	map<EvalId,Distance> distOpt;
+	for(const auto& dist:distances) {
+		EvalId lp1=storage.eval(dist).settingValue(1).value<EvalId>();
+		EvalId lp2=storage.eval(dist).settingValue(2).value<EvalId>();
+		lpNames[lp1]=storage.eval(lp1).name();
+		lpNames[lp2]=storage.eval(lp2).name();
+		dist2lps.emplace(dist,std::make_pair(lp1,lp2));
+		distOpt[dist]=static_cast<const EvaluatorDistance&>(storage.eval(dist)).distance();
+		//std::cout<<dist<<" "<<lp1<<" "<<lp2<<std::endl;
+	}
+	using namespace std::literals;
+	while(!storage.ready()) {
+		std::this_thread::sleep_for(1s);
+		std::cout<<"sleeping..."<<std::endl;
+	}
+
+	Restrt restrt;
+	restrt.load(restartInFileName.toStdString());
+
+	map<EvalId,int> duAtomIndex;
+	map<EvalId,Eigen::Vector3d> duAtomPos;
+	for(const auto& avId:avs) {
+		TaskStorage::Result res=storage.getResult(frame,avId);
+		Eigen::Vector3d oldcoords=duXYZd.col(duAtomIndex.size());
+		duAtomPos[avId]=oldcoords;
+		int idx=restrt.atomIndex(oldcoords);
+		duAtomIndex[avId]=idx;
+		std::cout<<idx<<" ";
+		if(!res) {continue;}
+		std::shared_ptr<CalcResult<PositionSimulationResult>> calcpos;
+		calcpos=std::static_pointer_cast<CalcResult<PositionSimulationResult>>(res);
+		PositionSimulationResult pos=calcpos->get();
+		if(pos.empty()) {continue;}
+		Eigen::Vector3d newcoords=pos.meanPosition().cast<double>();
+		duAtomPos[avId]=newcoords;
+		restrt.replaceCoords(oldcoords,newcoords);
+
+	}
+	std::cout<<std::endl;
+	restrt.save(restartOutFileName.toStdString());
+	std::vector<NmrRestraint> nmrVec;
+	for(const auto& distId:distances) {
+		EvalId lp1=dist2lps.at(distId).first;
+		EvalId lp2=dist2lps.at(distId).second;
+		int iat1=duAtomIndex[lp1]+1;
+		int iat2=duAtomIndex[lp2]+1;
+		const Distance& opt=distOpt.at(distId);
+
+		nmrVec.emplace_back(f1,f2,iat1,iat2,nstep2,opt);
+	}
+	for(const auto& avId:avs) {
+		using std::to_string;
+		std::string anchStr;
+		anchStr=static_cast<const EvaluatorPositionSimulation&>(storage.eval(avId)).anchorAtoms();
+		auto sel=sys.select(anchStr);
+		auto anchXYZf=sel.get_xyz();
+		auto anchXYZd=anchXYZf.cast<double>()*10.0;
+		vector<int> resids=sel.get_resid();
+		vector<std::string> atNames=sel.get_name();
+		for(int c=0; c<anchXYZd.cols(); ++c) {
+			Eigen::Vector3d anchpos=anchXYZd.col(c);
+			int iat1=duAtomIndex.at(avId)+1;
+			int iat2=restrt.atomIndex(anchpos)+1;
+			Distance d;
+			d.setDistance((duAtomPos.at(avId)-anchpos).norm());
+			d.setType("Rmp");
+			d.setErrNeg(errAnchor);
+			d.setErrPos(errAnchor);
+			d.setPosition1(lpNames.at(avId));
+			d.setPosition2(to_string(resids[c])+"@"+atNames[c]);
+			nmrVec.emplace_back(f1*FmaxMultAnchor,f2*FmaxMultAnchor,
+				     iat1,iat2,nstep2,d);
+		}
+	}
+	NmrRestraint::save(nmrVec,restraintsFileName.toStdString());
+	return 0;
 }

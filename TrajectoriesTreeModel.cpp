@@ -14,9 +14,9 @@ TrajectoriesTreeModel(const TaskStorage &storage, QObject *parent) :
 	QAbstractItemModel(parent),_storage(storage)
 {
 	connect(&_storage,&TaskStorage::evaluatorAdded,
-		[this](int i){evaluatorAdded(i);});
+		[this](const EvalId& id){evaluatorAdded(id);});
 	connect(&_storage,&TaskStorage::evaluatorIsGoingToBeRemoved,
-		[this](int i){evaluatorRemove(i);});
+		[this](const EvalId& id){evaluatorRemove(id);});
 
 	_evaluatePending.setSingleShot(true);
 	_evaluatePending.setInterval(1000);
@@ -187,13 +187,13 @@ bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
 		beginInsertRows(QModelIndex(),_molTrajs.size(),_molTrajs.size());
 		_molTrajs.push_back(tmpTrj);
 		endInsertRows();
-		std::set<int> evIds;
+		std::set<EvalId> evIds;
 		for(const CalcColumn& cc:_columns) {
-			int evId=cc.first;
+			EvalId evId=cc.first;
 			evIds.emplace(evId);
 		}
 		_storage.evaluate(tmpTrj.descriptor(0,0),
-				  std::vector<int>(evIds.begin(),evIds.end()));
+				  std::vector<EvalId>(evIds.begin(),evIds.end()));
 		return true;
 	}
 	return false;
@@ -317,40 +317,36 @@ void TrajectoriesTreeModel::updateColumn(int column)
 		//emit dataChanged(idx,idx);
 	}
 }*/
-void TrajectoriesTreeModel::evaluatorAdded(int ev)
+void TrajectoriesTreeModel::evaluatorAdded(const EvalId &id)
 {
-	int colCount=_storage.getColumnCount(ev);
+	int colCount=_storage.getColumnCount(id);
 	if(colCount==0) {
 		return;
 	}
 	beginInsertColumns(QModelIndex(),_columns.size()+1,_columns.size()+colCount);
 	for(int i=0; i<colCount; ++i) {
-		_columns.emplace_back(ev,i);
+		_columns.emplace_back(id,i);
 	}
 	endInsertColumns();
 	if(colCount>0) {
-		_evalsPending.push_back(ev);
+		_evalsPending.push_back(id);
 	}
 	_evaluatePending.start();
 }
 
-void TrajectoriesTreeModel::evaluatorRemove(int ev)
+void TrajectoriesTreeModel::evaluatorRemove(const EvalId &id)
 {
-	int colCount=_storage.getColumnCount(ev);
+	int colCount=_storage.getColumnCount(id);
 	if(colCount==0) {
 		return;
 	}
 	int firstCol;
-	for(firstCol=0; _columns[firstCol].first!=ev; ++firstCol);
+	for(firstCol=0; _columns[firstCol].first!=id; ++firstCol);
 	int lastCol;
-	for(lastCol=firstCol+1; _columns[lastCol].first==ev; ++lastCol);
+	for(lastCol=firstCol+1; _columns[lastCol].first==id; ++lastCol);
 	--lastCol;
 	beginRemoveColumns(QModelIndex(),firstCol+1,lastCol+1);
 	_columns.erase(_columns.begin()+firstCol,_columns.begin()+lastCol+1);
-	for(size_t s=0; s<_columns.size(); s++) {
-		auto& ccev=_columns[s].first;
-		if(ccev>ev) {--ccev;}
-	}
 	endRemoveColumns();
 }
 /*	connect(_domainsModel,&DomainTableModel::rowsInserted,

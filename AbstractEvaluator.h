@@ -1,8 +1,8 @@
 #ifndef ABSTRACTEVALUATOR_H
 #define ABSTRACTEVALUATOR_H
-//#include "TaskStorage.h"
 #include "AbstractCalcResult.h"
 #include "FrameDescriptor.h"
+#include "TaskStorage.h"
 
 #include <pteros/pteros.h>
 
@@ -13,14 +13,12 @@
 #include <vector>
 #include <memory>
 
-class TaskStorage;
 class AbstractEvaluator
 {
 protected:
 	const TaskStorage& _storage;
 public:
 	virtual ~AbstractEvaluator() {}
-	using EvalPtr=std::shared_ptr<const AbstractEvaluator>;
 
 	AbstractEvaluator(const TaskStorage& storage):_storage(storage) {}
 
@@ -50,8 +48,7 @@ public:
 
 
 protected:
-	Task getTask(const FrameDescriptor &desc, const std::weak_ptr<const AbstractEvaluator> eval, bool persistent) const;
+	Task getTask(const FrameDescriptor &desc, const EvalId& evId, bool persistent) const;
 	PterosSysTask getSysTask(const FrameDescriptor &frame) const;
 };
-Q_DECLARE_METATYPE(std::shared_ptr<const AbstractEvaluator>)
 #endif // ABSTRACTEVALUATOR_H

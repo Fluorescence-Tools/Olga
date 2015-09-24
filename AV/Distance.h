@@ -33,6 +33,22 @@ public:
     double RmpFromModelDistance(const PositionSimulationResult& av1,
 				PositionSimulationResult av2, const double targetModelDist,
 				const double accuracy = 0.5) const;
+    double RmpFromModelDistance() const {
+	    //TODO:hack
+	    if(_type=="RDAMean")
+	    {
+		    return _distance*1.047-5.55;
+	    }
+	    else if (_type=="Rmp")
+	    {
+		    return _distance;
+	    }
+	    else if(_type=="RDAMeanE")
+	    {
+		    return _distance;
+	    }
+    }
+
     double errNeg() const;
     double errPos() const;
     double err(double modelDist) const;

@@ -2,11 +2,12 @@
     error( "Couldn't find the common.pri file!" )
 }
 
-QT       += core gui
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core
+QT -= gui
+LIBS   -= -lQtGui
 
 TEMPLATE = app
-CONFIG += static staticlib
+CONFIG += console static
 
 SOURCES += \
     main.cpp
@@ -23,19 +24,13 @@ HEADERS += \
     CalcResult.h \
     FrameDescriptor.h \
     MolecularTrajectory.h \
-    TrajectoriesTreeModel.h \
-    TrajectoriesTreeItem.h \
     AbstractEvaluator.h \
     TaskStorage.h \
     EvaluatorTrasformationMatrix.h \
     EvaluatorEulerAngle.h \
-    PterosSystemLoader.h \
     EvaluatorPositionSimulation.h \
     EvaluatorDistance.h \
-    EvaluatorChi2.h \
-    EvaluatorsTreeModel.h \
-    EvaluatorDelegate.h \
-    CheckBoxList.h
+    EvaluatorChi2.h
 
 SOURCES += \
     AV/av_routines.cpp \
@@ -48,8 +43,6 @@ SOURCES += \
     CalcResult.cpp \
     FrameDescriptor.cpp \
     MolecularTrajectory.cpp \
-    TrajectoriesTreeModel.cpp \
-    TrajectoriesTreeItem.cpp \
     AbstractEvaluator.cpp \
     TaskStorage.cpp \
     EvaluatorTrasformationMatrix.cpp \
@@ -57,8 +50,4 @@ SOURCES += \
     PterosSystemLoader.cpp \
     EvaluatorPositionSimulation.cpp \
     EvaluatorDistance.cpp \
-    EvaluatorChi2.cpp \
-    EvaluatorsTreeModel.cpp \
-    EvaluatorDelegate.cpp \
-    CheckBoxList.cpp
-
+    EvaluatorChi2.cpp

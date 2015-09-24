@@ -7,7 +7,8 @@
 class EvaluatorEulerAngle : public AbstractEvaluator
 {
 private:
-	std::weak_ptr<const EvaluatorTrasformationMatrix> _refCalc, _bodyCalc;
+	//std::weak_ptr<const EvaluatorTrasformationMatrix> _refCalc, _bodyCalc;
+	EvalId _refCalc, _bodyCalc;
 	std::string _name;
 public:
 	EvaluatorEulerAngle(const TaskStorage& storage, const std::string& name):
@@ -51,19 +52,11 @@ public:
 		{
 		case 0:
 		{
-			EvalPtr ref=_refCalc.lock();
-			if(!ref) {
-				ref=std::make_shared<EvaluatorTrasformationMatrix>(_storage,"unknown");
-			}
-			return {"reference_body",QVariant::fromValue(ref)};
+			return {"reference_body",QVariant::fromValue(_refCalc)};
 		}
 		case 1:
 		{
-			EvalPtr body=_bodyCalc.lock();
-			if(!body) {
-				body=std::make_shared<EvaluatorTrasformationMatrix>(_storage,"unknown");
-			}
-			return {"target_body",QVariant::fromValue(body)};
+			return {"target_body",QVariant::fromValue(_bodyCalc)};
 		}
 		}
 		return {"",""};
@@ -73,10 +66,10 @@ public:
 		switch(row)
 		{
 		case 0:
-			_refCalc=std::static_pointer_cast<const EvaluatorTrasformationMatrix>(val.value<std::shared_ptr<const AbstractEvaluator>>());
+			_refCalc=val.value<EvalId>();
 			return;
 		case 1:
-			_bodyCalc=std::static_pointer_cast<const EvaluatorTrasformationMatrix>(val.value<std::shared_ptr<const AbstractEvaluator>>());
+			_bodyCalc=val.value<EvalId>();
 			return;
 		}
 	}

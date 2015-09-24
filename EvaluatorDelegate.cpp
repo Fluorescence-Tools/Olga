@@ -7,7 +7,6 @@
 #include <QAbstractItemView>
 #include <QLayout>
 #include <QApplication>
-#include <QVector3D>
 
 EvaluatorDelegate::EvaluatorDelegate(QAbstractItemView *parent) :
 	QStyledItemDelegate(parent),_view(parent)//,_evalModel(evalModel)
@@ -74,7 +73,7 @@ QWidget *EvaluatorDelegate::createEditor(QWidget *parent, const QStyleOptionView
 			return &checkBoxList;
 		}
 	} else if (data.userType()==vec3dType) {
-		const QVector3D& vec=data.value<QVector3D>();
+		const Eigen::Vector3d& vec=data.value<Eigen::Vector3d>();
 		QString str=QString("%1 %2 %3").arg(vec[0]).arg(vec[1])
 				.arg(vec[2]);
 		vec3dedit.setText(str);
@@ -117,7 +116,7 @@ void EvaluatorDelegate::setEditorData(QWidget *editor, const QModelIndex &index)
 			checkBoxList.setChecked(displayData.value<QList<int>>());
 			return;
 		} else if(data.userType()==vec3dType) {
-			const QVector3D& vec=data.value<QVector3D>();
+			const Eigen::Vector3d& vec=data.value<Eigen::Vector3d>();
 			QString str=QString("%1 %2 %3").arg(vec[0]).arg(vec[1])
 					.arg(vec[2]);
 			vec3dedit.setText(str);
