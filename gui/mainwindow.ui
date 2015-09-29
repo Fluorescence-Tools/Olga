@@ -89,6 +89,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionLoadStructures"/>
+   <addaction name="actionLoadStructuresFolder"/>
    <addaction name="actionExportStructures"/>
    <addaction name="actionLoadSettings"/>
    <addaction name="actionSaveSettings"/>
@@ -293,7 +294,7 @@
   <action name="actionLoadStructures">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/svn-update.svgz</normaloff>:/icons/svn-update.svgz</iconset>
+     <normaloff>:/icons/molecule_add.svg</normaloff>:/icons/molecule_add.svg</iconset>
    </property>
    <property name="text">
     <string>&amp;Import structure(s)</string>
@@ -396,6 +397,18 @@
    </property>
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionLoadStructuresFolder">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/molecule_add_fldr.svg</normaloff>:/icons/molecule_add_fldr.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Import structure(s) from folder</string>
+   </property>
+   <property name="toolTip">
+    <string>Import all structure(s) from a selected folder</string>
    </property>
   </action>
  </widget>
@@ -560,6 +573,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionLoadStructuresFolder</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>loadStructuresFolder()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>28</x>
+     <y>102</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>356</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>loadJson()</slot>
@@ -570,5 +599,6 @@
   <slot>exportCylinders()</slot>
   <slot>showAbout()</slot>
   <slot>addEvaluator()</slot>
+  <slot>loadStructuresFolder()</slot>
  </slots>
 </ui>

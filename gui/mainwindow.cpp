@@ -14,7 +14,10 @@
 #include <QMimeData>
 #include <QTimer>
 #include <QTime>
+#include <QProgressDialog>
 #include "Q_DebugStream.h"
+
+
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -217,6 +220,26 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
 	return selectedText;
 }
 
+void MainWindow::loadMolecules(const QStringList &fileNames)
+{
+	using namespace std;
+	QProgressDialog progress("Opening files...","Cancel",0,fileNames.size(),this);
+	progress.setWindowModality(Qt::WindowModal);
+	int i=0;
+	for (const QString & fileName : fileNames) {
+		if (!fileName.isEmpty()) {
+			//statusBar()->showMessage(tr("Loading %1...").arg(fileName), 2000);
+			trajectoriesModel.loadSystem(fileName);
+		}
+		progress.setValue(++i);
+		if(progress.wasCanceled()) {
+			break;
+		}
+	}
+	progress.setValue(fileNames.size());
+	statusBar()->showMessage(tr("Loaded %1 frames").arg(i), 5000);
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	/*if (maybeSave()) {
@@ -231,17 +254,22 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::loadStructures()
 {
-	QStringList fileNames = QFileDialog::getOpenFileNames(this,
-							      tr("Load strcutures from files or folders"), "",
-							      tr("Molecular Structure Files (*.pdb *.mol2 *.mol *.hin *.xyz *.kcf *.sd *.ac)"));
-
-	for (const QString & fileName : fileNames) {
-		if (!fileName.isEmpty()) {
-			statusBar()->showMessage(tr("Loading %1...").arg(fileName), 2000);
-			trajectoriesModel.loadSystem(fileName);
-		}
-	}
+	QStringList fileNames =
+			QFileDialog::getOpenFileNames(this,
+						      tr("Load strcutures from files"), "",
+						      tr("Molecular Structure Files (*.pdb *.nc)"));
+	loadMolecules(fileNames);
 	//ui->mainTreeView->resizeColumnsToContents();
+}
+
+void MainWindow::loadStructuresFolder()
+{
+	QString path = QFileDialog::getExistingDirectory(this,
+								  tr("Load strcutures from a folder"), "");
+	QDir dir(path);
+	QStringList fileNames=dir.entryList({"*.pdb"});
+
+	loadMolecules(fileNames);
 }
 
 void MainWindow::metropolisSampling()

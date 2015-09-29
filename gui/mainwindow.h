@@ -29,6 +29,7 @@ protected:
 
 private Q_SLOTS:
 	void loadStructures();
+	void loadStructuresFolder();
 	void metropolisSampling();
 	void loadJson();
 	bool saveJson();
@@ -61,7 +62,7 @@ private:
 	bool eventFilter(QObject* object, QEvent* event);
 
 	QString tabSeparatedData(const QItemSelectionModel *selectionModel) const;
-
+	void loadMolecules(const QStringList& fileNames);
 private:
 	Ui::MainWindow *ui;
 

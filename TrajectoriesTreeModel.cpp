@@ -32,20 +32,6 @@ TrajectoriesTreeModel(const TaskStorage &storage, QObject *parent) :
 		}
 		_evalsPending.clear();
 	});
-
-	/*connect(this,&TrajectoriesTreeModel::columnsInserted,
-		[this](const QModelIndex& , int first, int last){
-		qDebug()<<"columns inserted: "<<first<<" - "<<last;
-		for(int i=first; i<=last; i++) {
-			updateColumn(i);
-		}
-	});
-	connect(this,&TrajectoriesTreeModel::rowsInserted,
-		[this](const QModelIndex & parent, int first, int last) {
-		for(int r=first; r<=last; ++r) {
-			updateRow(parent,r);
-		}
-	});*/
 }
 
 QVariant TrajectoriesTreeModel::data(const QModelIndex &index, int role) const
@@ -319,7 +305,7 @@ void TrajectoriesTreeModel::updateColumn(int column)
 }*/
 void TrajectoriesTreeModel::evaluatorAdded(const EvalId &id)
 {
-	int colCount=_storage.getColumnCount(id);
+	int colCount=_storage.eval(id).columnCount();
 	if(colCount==0) {
 		return;
 	}
@@ -336,14 +322,14 @@ void TrajectoriesTreeModel::evaluatorAdded(const EvalId &id)
 
 void TrajectoriesTreeModel::evaluatorRemove(const EvalId &id)
 {
-	int colCount=_storage.getColumnCount(id);
+	int colCount=_storage.eval(id).columnCount();
 	if(colCount==0) {
 		return;
 	}
 	int firstCol;
 	for(firstCol=0; _columns[firstCol].first!=id; ++firstCol);
 	int lastCol;
-	for(lastCol=firstCol+1; _columns[lastCol].first==id; ++lastCol);
+	for(lastCol=firstCol+1; _columns[lastCol].first==id && lastCol<_columns.size(); ++lastCol);
 	--lastCol;
 	beginRemoveColumns(QModelIndex(),firstCol+1,lastCol+1);
 	_columns.erase(_columns.begin()+firstCol,_columns.begin()+lastCol+1);

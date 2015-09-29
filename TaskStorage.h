@@ -77,7 +77,6 @@ public:
 	Result getResult(const FrameDescriptor &frame, const EvalId& evId) const;
 	const PterosSysTask& getSysTask(const FrameDescriptor &frame) const;
 	std::string getColumnName(const EvalId& id, int col) const;
-	int getColumnCount(const EvalId& id) const;
 	const AbstractEvaluator& eval(EvalId id) const
 	{
 		return *_evals.at(id);

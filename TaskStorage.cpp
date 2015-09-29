@@ -195,11 +195,6 @@ std::string TaskStorage::getColumnName(const EvalId &id, int col) const
 	return eval(id).columnName(col);
 }
 
-int TaskStorage::getColumnCount(const EvalId &id) const
-{
-	return eval(id).columnCount();
-}
-
 EvalId TaskStorage::addEvaluator(EvalUPtr evptr)
 {
 	_evals.emplace(++_currentId,std::move(evptr));
