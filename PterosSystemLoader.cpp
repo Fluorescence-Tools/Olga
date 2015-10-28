@@ -16,7 +16,11 @@ PterosSystemLoader::~PterosSystemLoader()
 
 pteros::System PterosSystemLoader::load(const FrameDescriptor &frame) const
 {
-	return pteros::System(frame.topologyFileName());
-
+	try {
+		return pteros::System(frame.topologyFileName());
+	}
+	catch (...) {
+		std::cerr<<"ERROR! Can not load "+frame.fullName()<<std::flush;
+		return pteros::System();
+	}
 }
-

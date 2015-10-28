@@ -20,6 +20,13 @@
 #include <readerwriterqueue/readerwriterqueue.h>
 
 #include <libcuckoo/cuckoohash_map.hh>
+namespace std {
+	template<typename T, typename... Args>
+	std::unique_ptr<T> make_unique(Args&&... args) {
+		return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+	}
+}
+
 template<typename K, typename V> using CuckooMap=cuckoohash_map<K, V, std::hash<K>>;
 class AbstractEvaluator;
 class EvaluatorPositionSimulation;
@@ -83,10 +90,14 @@ public:
 	}
 	const AbstractEvaluator& eval(const std::string& name) const
 	{
+		static auto tid=std::this_thread::get_id();
+		assert(tid==std::this_thread::get_id());
 		return eval(_evalNames.at(name));
 	}
 	EvalId evalId(const std::string& name) const
 	{
+		static auto tid=std::this_thread::get_id();
+		assert(tid==std::this_thread::get_id());
 		return _evalNames.at(name);
 	}
 	int sysTaskCount() const
@@ -107,10 +118,12 @@ public:
 	}
 	void evaluate(const FrameDescriptor& frame, const std::vector<EvalId>& evIds) const {
 		for(const auto& evId:evIds) {
-			getString(frame,evId,0);
+			getString(frame,evId,true);
 		}
 	}
 	const std::unordered_map<EvalId,EvalUPtr>& evals() const {
+		static auto tid=std::this_thread::get_id();
+		assert(tid==std::this_thread::get_id());
 		return _evals;
 	}
 	bool isStub(const EvalId& id) const {
@@ -119,7 +132,11 @@ public:
 	bool isValid(const EvalId& id) const {
 		return _evals.find(id)!=_evals.end();
 	}
-	void loadEvaluators(const QVariantMap& settings);
+	using MutableEvalPtr=std::unique_ptr<AbstractEvaluator>;
+	std::string evalTypeName(int typeNum) const;
+	MutableEvalPtr makeEvaluator(int typeNum) const;
+	QStringList supportedTypes() const;
+	std::vector<MutableEvalPtr> loadEvaluators(const QVariantMap& settings);
 	bool ready() const {
 		return _requests.empty();
 	}
@@ -167,19 +184,15 @@ private:
 	}
 
 private:
-	const int evalType=QVariant::fromValue(EvalId()).userType();
-	const int simulationType;
-	const int evalListType=QVariant::fromValue(QList<EvalId>()).userType();
+	static const int evalType;
+	static const int simulationType;
+	static const int evalListType;
 	using Vector3d=Eigen::Vector3d;
-	const int vec3dType=QVariant::fromValue(Vector3d()).userType();
+	static const int vec3dType;
 
-	using MutableEvalPtr=std::unique_ptr<AbstractEvaluator>;
-	MutableEvalPtr makeEvaluator(int typeNum) const;
-	QStringList supportedTypes() const;
-	std::string evalTypeName(int typeNum) const;
-	void setEval(MutableEvalPtr & ev, const QVariantMap &propMap);
-
-
+	QVariantMap propMap(const AbstractEvaluator &ev) const;
+	void setEval(MutableEvalPtr & ev, const QVariantMap &propMap) const;
+	QVariantMap evalSettings(const AbstractEvaluator &eval) const;
 
 	mutable CuckooMap<CacheKey,bool> _requests;
 	using RWQueue=moodycamel::ReaderWriterQueue<CacheKey>;
@@ -202,10 +215,14 @@ private:
 	mutable size_t sysRingBufIndex=0;
 	PterosSystemLoader _systemLoader;
 
-	std::unordered_map<std::string,EvalId> _evalNames;
-	std::unordered_map<EvalId,EvalUPtr> _evals;
-	EvalId _currentId;
-	EvalId _maxStubEval;
+	std::unordered_map<std::string,EvalId> _evalNames;//main thread
+	std::unordered_map<EvalId,EvalUPtr> _evals;//main thread
+	EvalId _currentId;//main thread
+	EvalId _maxStubEval;//main thread
+
+	std::thread::id tid_main;
+	std::thread::id tid_worker;
+
 public:
 	//TODO: make theese const
 	EvalId evaluatorPositionSimulation;

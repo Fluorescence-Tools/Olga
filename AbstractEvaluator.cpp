@@ -1,7 +1,6 @@
 #include "AbstractEvaluator.h"
 #include "TaskStorage.h"
 
-
 AbstractEvaluator::Task
 AbstractEvaluator::getTask(const FrameDescriptor &desc,
 			   const EvalId& evId,bool persistent) const

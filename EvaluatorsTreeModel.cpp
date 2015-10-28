@@ -10,6 +10,9 @@
 EvaluatorsTreeModel::EvaluatorsTreeModel(TaskStorage &storage, QObject *parent):
 	QAbstractItemModel(parent),_storage(storage)
 {
+	connect(&_storage,&TaskStorage::evaluatorAdded,[this](const EvalId& id){
+		loadEvaluator(id);
+	});
 }
 
 QVariant EvaluatorsTreeModel::data(const QModelIndex &index, int role) const
@@ -271,32 +274,12 @@ EvaluatorsTreeModel::~EvaluatorsTreeModel()
 
 }
 
-std::string EvaluatorsTreeModel::evalTypeName(int typeNum) const
-{
-	const MutableEvalPtr& eval=makeEvaluator(typeNum);
-	if(eval) {
-		return eval->className();
-	}
-	return "";
-}
-
-QStringList EvaluatorsTreeModel::supportedTypes() const {
-	QStringList vec;
-	int i;
-	std::string typeName;
-	for (i=0, typeName=evalTypeName(i);
-	     !typeName.empty();
-	     ++i,typeName=evalTypeName(i)){
-		vec<<QString::fromStdString(typeName);
-	}
-	return vec;
-}
 
 void EvaluatorsTreeModel::addEvaluator(int typeNum)
 {
-	MutableEvalPtr eval=makeEvaluator(typeNum);
+	MutableEvalPtr eval=_storage.makeEvaluator(typeNum);
 	if(eval) {
-		addEvaluator(eval);
+		addEvaluator(std::move(eval));
 	}
 }
 /*
@@ -322,25 +305,7 @@ EvaluatorsTreeModel::EvalPtr EvaluatorsTreeModel::eval(const EvaluatorsTreeModel
 	}
 }*/
 
-EvaluatorsTreeModel::MutableEvalPtr EvaluatorsTreeModel::makeEvaluator(int typeNum) const {
-	switch (typeNum)
-	{
-	case 0:
-		return std::make_unique<EvaluatorPositionSimulation>(_storage,"new LP");
-	case 1:
-		return std::make_unique<EvaluatorDistance>(_storage,"new dist");
-	case 2:
-		return std::make_unique<EvaluatorChi2>(_storage,"new χ²");
-	case 3:
-		return std::make_unique<EvaluatorTrasformationMatrix>(_storage,"new coordinate system");
-	case 4:
-		return std::make_unique<EvaluatorEulerAngle>(_storage,"new euler angles");
-	default:
-		return MutableEvalPtr();
-	}
-}
-
-void EvaluatorsTreeModel::addEvaluator(std::unique_ptr<AbstractEvaluator> &eval) {
+void EvaluatorsTreeModel::addEvaluator(std::unique_ptr<AbstractEvaluator> eval) {
 	int pendingCount=pendingEvals.size();
 	beginInsertRows(index(0,0,QModelIndex()),pendingCount,pendingCount);
 	pendingEvals.push_back(std::move(eval));
@@ -385,29 +350,33 @@ void EvaluatorsTreeModel::activateEvaluator(const QModelIndex &index)
 		loadEvaluator(evId);
 	}
 }
-
+/*
 void EvaluatorsTreeModel::activateEvaluator(int evRow)
 {
 	loadEvaluator(_storage.addEvaluator(removeEvaluator(evRow)));
-}
+}*/
 
 void EvaluatorsTreeModel::duplicateEvaluator(const QModelIndex &index)
 {
 	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
 	if(item.isEvaluatorsClass()) {
 		const auto& origEval=eval(item.classRow(),index.row());
-		QVariantMap properties=propMap(origEval);
-		QStringList types=supportedTypes();
+		QVariantMap properties=_storage.propMap(origEval);
+		QStringList types=_storage.supportedTypes();
 		int origEvalType=types.indexOf(QString::fromStdString(origEval.className()));
 		addEvaluator(origEvalType);
 		MutableEvalPtr& ev=pendingEvals.back();
 		ev->setName(origEval.name()+" copy");
-		setEval(pendingEvals.size()-1,properties);
+		_storage.setEval(ev,properties);
 	}
 }
 
 void EvaluatorsTreeModel::loadEvaluators(const QVariantMap& settings)
 {
+	std::vector<MutableEvalPtr> evs=_storage.loadEvaluators(settings);
+	for(auto& ev:evs) {
+		addEvaluator(std::move(ev));
+	}/*
 	//TODO:split between here and TaskStorage
 	static const QStringList classOrder{supportedTypes()};
 
@@ -425,7 +394,7 @@ void EvaluatorsTreeModel::loadEvaluators(const QVariantMap& settings)
 				activateEvaluator(pendingEvals.size()-1);
 			}
 		}
-	}
+	}*/
 }
 
 QVariantMap EvaluatorsTreeModel::evaluators() const
@@ -438,15 +407,15 @@ QVariantMap EvaluatorsTreeModel::evaluators() const
 		const auto& eval=*(pair.second);
 		const QString& className=QString::fromStdString(eval.className());
 		const QString& evName=QString::fromStdString(eval.name());
-		classMap[className][evName]=propMap(eval);
+		classMap[className][evName]=_storage.propMap(eval);
 	}
 	for(unsigned i=0; i<pendingEvals.size(); ++i) {
 		const MutableEvalPtr& eval=pendingEvals[i];
 		const QString& evName=QString::fromStdString(eval->name());
 		const QString& className=QString::fromStdString(eval->className());
-		QVariantMap props=propMap(*eval);
+		QVariantMap props=_storage.propMap(*eval);
 		props["isDraft"]=true;
-		classMap[className][evName]=propMap(*eval);
+		classMap[className][evName]=_storage.propMap(*eval);
 	}
 	QVariantMap settings;
 	QMap<QString,QVariantMap>::const_iterator i = classMap.constBegin();
@@ -606,7 +575,7 @@ evalRowList(const QList<EvalId> &selected) const
 	}
 	return list;
 }
-
+/*
 QVariantMap EvaluatorsTreeModel::propMap(const AbstractEvaluator &eval) const
 {
 	QVariantMap propMap;
@@ -682,4 +651,4 @@ void EvaluatorsTreeModel::setEval(int evNum, const QVariantMap &propMap) {
 		ev->setSetting(propRow,newVal);
 	}
 }
-
+*/

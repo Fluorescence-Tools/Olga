@@ -7,9 +7,15 @@
 #include "EvaluatorEulerAngle.h"
 
 #include "AV/Position.h"
+
+const int TaskStorage::evalType=QVariant::fromValue(EvalId()).userType();
+const int TaskStorage::simulationType=QVariant::fromValue(Position::SimulationType()).userType();
+const int TaskStorage::evalListType=QVariant::fromValue(QList<EvalId>()).userType();
+const int TaskStorage::vec3dType=QVariant::fromValue(TaskStorage::Vector3d()).userType();
+
+
 TaskStorage::TaskStorage():_tasksRingBuf(_tasksRingBufSize),
-	_sysRingBuf(_sysRingBufSize),_currentId(EvalId(0)),
-	simulationType(QVariant::fromValue(Position::SimulationType()).userType())
+	_sysRingBuf(_sysRingBufSize),_currentId(EvalId(0))
 {
 	addEvaluator(std::make_unique<const EvaluatorPositionSimulation>(*this,"unknown"));
 	evaluatorPositionSimulation=_currentId;
@@ -62,8 +68,16 @@ const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key, bool persist
 	_tasksRunning++;
 
 	task.then([this,key,persistent](Task tres){
+		assert(tres.valid());
 		if(persistent) {
-			_results.insert(key,tres.get());
+			try{
+				_results.insert(key,tres.get());
+			}
+			catch (...) {
+				std::cerr<<"ERROR! Task is invalid: "
+					   +key.first.fullName()+" "
+					   +eval(key.second).name()<<std::flush;
+			}
 		}
 		_requests.erase(key);
 		_tasksRunning--;
@@ -76,23 +90,64 @@ const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key, bool persist
 	return task;
 }
 
-void TaskStorage::loadEvaluators(const QVariantMap &settings) {
+QVariantMap TaskStorage::propMap(const AbstractEvaluator &ev) const
+{
+	QVariantMap propMap;
+	for(int p=0; p<ev.settingsCount(); ++p) {
+		AbstractEvaluator::Setting opt=ev.setting(p);
+		const QString& optName=opt.first;
+		QVariant val;
+		if(opt.second.userType()==evalType) {
+			auto evid=opt.second.value<EvalId>();
+			val=QString::fromStdString(eval(evid).name());
+
+		} else if(opt.second.userType()==simulationType) {
+			const auto& type=opt.second.value<Position::SimulationType>();
+			val=QString::fromStdString(Position::simulationTypeName(type));
+		} else if(opt.second.userType()==evalListType) {
+			const auto& list=opt.second.value<QList<EvalId>>();
+			QStringList evnames;
+			for(const EvalId& evid:list) {
+				const auto& ev=eval(evid);
+				evnames<<QString::fromStdString(ev.name());
+			}
+			val=evnames;
+		} else if(opt.second.userType()==vec3dType) {
+			const Vector3d& vec=opt.second.value<Vector3d>();
+			QVariantList list;
+			for(int i:{0,1,2}) {
+				list.push_back(vec[i]);
+			}
+			val=list;
+		} else {
+			val=opt.second;
+		}
+		propMap[optName]=val;
+	}
+	return propMap;
+}
+
+std::vector<TaskStorage::MutableEvalPtr>
+TaskStorage::loadEvaluators(const QVariantMap &settings) {
 	static const QStringList classOrder{supportedTypes()};
+	std::vector<MutableEvalPtr> drafts;
 	for(int curEvalType=0; curEvalType<classOrder.size(); curEvalType++) {
 		const QString& className=classOrder.at(curEvalType);
 		const QVariantMap& evals=settings[className].toMap();
 		for(auto i=evals.constBegin();i!=evals.constEnd(); ++i) {
 			const QVariantMap& propMap=i.value().toMap();
-			if(propMap["isDraft"]==true) {
-				continue;
-			}
 			auto ev=makeEvaluator(curEvalType);
 			const QString& evName=i.key();
 			ev->setName(evName.toStdString());
 			setEval(ev,propMap);
-			addEvaluator(std::move(ev));
+			if(propMap["isDraft"]==true) {
+				drafts.push_back(std::move(ev));
+			} else {
+				addEvaluator(std::move(ev));
+			}
 		}
 	}
+	return drafts;
 }
 
 TaskStorage::MutableEvalPtr TaskStorage::makeEvaluator(int typeNum) const {
@@ -114,13 +169,15 @@ TaskStorage::MutableEvalPtr TaskStorage::makeEvaluator(int typeNum) const {
 }
 
 QStringList TaskStorage::supportedTypes() const {
-	QStringList vec;
-	int i;
-	std::string typeName;
-	for (i=0, typeName=evalTypeName(i);
-	     !typeName.empty();
-	     ++i,typeName=evalTypeName(i)){
-		vec<<QString::fromStdString(typeName);
+	static QStringList vec;
+	if (vec.size()==0) {
+		int i;
+		std::string typeName;
+		for (i=0, typeName=evalTypeName(i);
+		     !typeName.empty();
+		     ++i,typeName=evalTypeName(i)){
+			vec<<QString::fromStdString(typeName);
+		}
 	}
 	return vec;
 }
@@ -134,7 +191,7 @@ std::string TaskStorage::evalTypeName(int typeNum) const
 	return "";
 }
 
-void TaskStorage::setEval(TaskStorage::MutableEvalPtr &ev, const QVariantMap &propMap) {
+void TaskStorage::setEval(TaskStorage::MutableEvalPtr &ev, const QVariantMap &propMap) const {
 	for(int propRow=0; propRow<ev->settingsCount(); ++propRow) {
 		QVariant oldVal=ev->settingValue(propRow);
 		const QString& propName=ev->settingName(propRow);

@@ -1,4 +1,7 @@
 #include "pteros/pteros.h"
+#ifndef _GLIBCXX_USE_NANOSLEEP
+#define _GLIBCXX_USE_NANOSLEEP
+#endif
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -93,7 +96,7 @@ struct Restrt {
 		}
 		std::cout<<"replaceCoords: atom not found! min_dsit="<<min
 			<<" idx="<<idx<<" oldXYZ="<<oldp.transpose()<<
-		       " newXYZ="<<newp.transpose()<<"\n";
+			  " newXYZ="<<newp.transpose()<<"\n";
 		return -1;
 	}
 	int atomIndex(const Eigen::Vector3d& pos) const
@@ -134,6 +137,23 @@ struct NmrRestraint {
 		rk2a=0.5*Fmax2/dist.errNeg();
 		rk3a=0.5*Fmax2/dist.errPos();
 	}
+	double force(double currentDistance, bool atstep1) const
+	{
+		double k2=atstep1?rk2:rk2a;
+		double k3=atstep1?rk3:rk3a;
+		if(currentDistance<r1) {
+			return -2.0*k2*(r1-r2);
+		} else if (currentDistance<r2) {
+			return -2.0*k2*(currentDistance-r2);
+		} else if(currentDistance<r3) {
+			return 0.0;
+		} else if(currentDistance<r4) {
+			return -2.0*k3*(currentDistance-r3);
+		} else {
+			return -2.0*k3*(r4-r3);
+		}
+	}
+
 	std::string toString() const {
 		std::string str="#"+note+"\n";
 		using std::to_string;
@@ -159,6 +179,88 @@ struct NmrRestraint {
 			f<<r.toString();
 		}
 	}
+	static std::map<int,Eigen::Vector3d>
+	totalForce(const std::vector<NmrRestraint>& vec,
+		   const std::map<int,Eigen::Vector3d>& duIdPos, bool atstep1)
+	{
+		std::map<int,Eigen::Vector3d> totalForce;
+		for(const auto& pair:duIdPos) {
+			totalForce[pair.first]={0.0,0.0,0.0};
+		}
+		for(const NmrRestraint& rst:vec) {
+			Eigen::Vector3d r=duIdPos.at(rst._iat1)-duIdPos.at(rst._iat2);
+			//std::cout<<rst._iat1<<"-"<<rst._iat2<<": "<<rst.force(r.norm())*69.4786<<" ";
+			totalForce[rst._iat1]+=rst.force(r.norm(),atstep1)*r.normalized();
+			totalForce[rst._iat2]-=totalForce[rst._iat1];
+		}
+		return totalForce;
+	}
+	static std::vector<NmrRestraint>
+	capForce(const std::vector<NmrRestraint>& vec,
+		 const std::map<int,Eigen::Vector3d>& duIdPos)
+	{
+		std::vector<NmrRestraint> caped=vec;
+		using std::pair;
+
+		bool atstep1=true;
+		const double inf=std::numeric_limits<double>::infinity();
+		double Fcap=vec.front().force(inf,atstep1);
+		Fcap=std::fabs(Fcap);
+		std::cout<<"Fcap1:"<<Fcap*69.4786<<std::endl;
+		auto totalF=totalForce(caped,duIdPos,atstep1);
+		auto pr = std::max_element(totalF.begin(), totalF.end(),
+					   [](const pair<int,Eigen::Vector3d>& p1,
+					   const pair<int,Eigen::Vector3d>& p2) {
+			return p1.second.norm() < p2.second.norm(); });
+
+		while(pr->second.norm() > Fcap) {
+			for(auto& p:caped) {
+				if(p._iat1==pr->first || p._iat2==pr->first) {
+					p.rk2*=Fcap/pr->second.norm();
+					p.rk3*=Fcap/pr->second.norm();
+				}
+			}
+			totalF=totalForce(caped,duIdPos,atstep1);
+			pr = std::max_element(totalF.begin(), totalF.end(),
+					      [](const pair<int,Eigen::Vector3d>& p1,
+					      const pair<int,Eigen::Vector3d>& p2) {
+				return p1.second.norm() < p2.second.norm(); });
+		}
+
+		atstep1=false;
+		Fcap=vec.front().force(inf,atstep1);
+		Fcap=std::fabs(Fcap);
+		std::cout<<"Fcap2:"<<Fcap*69.4786<<std::endl;
+		totalF=totalForce(caped,duIdPos,atstep1);
+		pr = std::max_element(totalF.begin(), totalF.end(),
+					   [](const pair<int,Eigen::Vector3d>& p1,
+					   const pair<int,Eigen::Vector3d>& p2) {
+			return p1.second.norm() < p2.second.norm(); });
+
+		while(pr->second.norm() > Fcap) {
+			for(auto& p:caped) {
+				if(p._iat1==pr->first || p._iat2==pr->first) {
+					p.rk2a*=Fcap/pr->second.norm();
+					p.rk3a*=Fcap/pr->second.norm();
+				}
+			}
+			totalF=totalForce(caped,duIdPos,atstep1);
+			pr = std::max_element(totalF.begin(), totalF.end(),
+					      [](const pair<int,Eigen::Vector3d>& p1,
+					      const pair<int,Eigen::Vector3d>& p2) {
+				return p1.second.norm() < p2.second.norm(); });
+		}
+
+		return caped;
+	}
+
+	static void print(const std::map<int,Eigen::Vector3d>& map)
+	{
+		for(const auto& pair:map)
+		{
+			std::cout<<pair.first<<": "<<pair.second.norm()*69.4786<<std::endl;
+		}
+	}
 };
 const double errAnchor=2.0; //Angstrom
 const double FmaxMultAnchor=2.0; //2 fold
@@ -180,7 +282,8 @@ int main(int argc, char *argv[])
 				  {"or","Name for the generated restart file", "file"},
 				  {{"n","nstep2"},"Number of steps in the run", "int"},
 				  {"f1","Max force at the beginning of the run [pN]", "float"},
-				  {"f2","Max force at the end of the run [pN]", "float"}
+				  {"f2","Max force at the end of the run [pN]", "float"},
+				  {"nocap","Do not limit the per-dummy total Force,only per-distance"}
 			  });
 	parser.process(a);
 	QString settingsFileName=parser.value("j");
@@ -192,13 +295,16 @@ int main(int argc, char *argv[])
 	//convert from pN to kcal/mol Angstrom
 	const double f1=parser.value("f1").toDouble() / 69.4786;
 	const double f2=parser.value("f2").toDouble() / 69.4786;
+	const bool nocap=parser.isSet("nocap");
+
+	std::cout<<"Nocap:"<<nocap<<std::endl;
 
 	using std::ios;
 	using std::setiosflags;
 	using std::setprecision;
 	using std::setw;
 	pteros::System sys(pdbFileName.toStdString());
-	pteros::Selection sel=sys.select("resname DU");
+	pteros::Selection sel=sys.select(std::string("resname DU"));
 	auto duXYZf=sel.get_xyz();
 	auto duXYZd=duXYZf.cast<double>()*10.0;
 	std::cout<<"DUsD:\n"<<duXYZd<<"\n";
@@ -214,8 +320,9 @@ int main(int argc, char *argv[])
 	QJsonDocument doc = QJsonDocument::fromJson(settingsFile.readAll());
 	storage.loadEvaluators(doc.toVariant().toMap());
 	using std::vector;
-	vector<EvalId> avs, distances;
 
+	//get all the AV and Distance Evaluator ids.
+	vector<EvalId> avs, distances;
 	for(const auto& pair:storage.evals()) {
 		if(storage.isStub(pair.first)) {
 			continue;
@@ -235,7 +342,7 @@ int main(int argc, char *argv[])
 
 	using std::pair;
 	using std::map;
-	map<EvalId,pair<EvalId,EvalId>> dist2lps;
+	map<EvalId,pair<EvalId,EvalId>> dist2lps; //match distances to AVs
 	map<EvalId,std::string> lpNames;
 	map<EvalId,Distance> distOpt;
 	for(const auto& dist:distances) {
@@ -243,21 +350,20 @@ int main(int argc, char *argv[])
 		EvalId lp2=storage.eval(dist).settingValue(2).value<EvalId>();
 		lpNames[lp1]=storage.eval(lp1).name();
 		lpNames[lp2]=storage.eval(lp2).name();
-		dist2lps.emplace(dist,std::make_pair(lp1,lp2));
+		dist2lps.insert({dist,std::make_pair(lp1,lp2)});
 		distOpt[dist]=static_cast<const EvaluatorDistance&>(storage.eval(dist)).distance();
 		//std::cout<<dist<<" "<<lp1<<" "<<lp2<<std::endl;
 	}
-	using namespace std::literals;
 	while(!storage.ready()) {
-		std::this_thread::sleep_for(1s);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 		std::cout<<"sleeping..."<<std::endl;
 	}
 
 	Restrt restrt;
 	restrt.load(restartInFileName.toStdString());
 
-	map<EvalId,int> duAtomIndex;
-	map<EvalId,Eigen::Vector3d> duAtomPos;
+	map<EvalId,int> duAtomIndex; //match AV_MPs to atomIDs
+	map<EvalId,Eigen::Vector3d> duAtomPos; //match  AV_MPs to atom position
 	for(const auto& avId:avs) {
 		TaskStorage::Result res=storage.getResult(frame,avId);
 		Eigen::Vector3d oldcoords=duXYZd.col(duAtomIndex.size());
@@ -277,7 +383,15 @@ int main(int argc, char *argv[])
 	}
 	std::cout<<std::endl;
 	restrt.save(restartOutFileName.toStdString());
+	map<int,Eigen::Vector3d> duIatPos; //match atomIDs to atom position
+	for(const auto& pair:duAtomIndex) {
+		const EvalId& eid=pair.first;
+		int atomIndex=pair.second;
+		duIatPos[atomIndex+1]=duAtomPos[eid];
+	}
+
 	std::vector<NmrRestraint> nmrVec;
+	//add restraints between pseudoatoms
 	for(const auto& distId:distances) {
 		EvalId lp1=dist2lps.at(distId).first;
 		EvalId lp2=dist2lps.at(distId).second;
@@ -287,6 +401,11 @@ int main(int argc, char *argv[])
 
 		nmrVec.emplace_back(f1,f2,iat1,iat2,nstep2,opt);
 	}
+	if(!nocap) {
+		nmrVec=NmrRestraint::capForce(nmrVec,duIatPos);
+	}
+
+	//add restraints from pseudoatoms to the molecule
 	for(const auto& avId:avs) {
 		using std::to_string;
 		std::string anchStr;
@@ -308,7 +427,7 @@ int main(int argc, char *argv[])
 			d.setPosition1(lpNames.at(avId));
 			d.setPosition2(to_string(resids[c])+"@"+atNames[c]);
 			nmrVec.emplace_back(f1*FmaxMultAnchor,f2*FmaxMultAnchor,
-				     iat1,iat2,nstep2,d);
+					    iat1,iat2,nstep2,d);
 		}
 	}
 	NmrRestraint::save(nmrVec,restraintsFileName.toStdString());

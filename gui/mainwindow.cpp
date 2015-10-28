@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->setupUi(this);
 
-	ui->evalTypeAddComboBox->addItems(evalsModel.supportedTypes());
+	ui->evalTypeAddComboBox->addItems(_storage.supportedTypes());
 
 	evaluatorsDelegate = new EvaluatorDelegate(ui->evaluatorsTreeView);
 	//tabifyDockWidget();
@@ -268,6 +268,9 @@ void MainWindow::loadStructuresFolder()
 								  tr("Load strcutures from a folder"), "");
 	QDir dir(path);
 	QStringList fileNames=dir.entryList({"*.pdb"});
+	for(auto& s:fileNames) {
+		s.prepend(dir.absolutePath()+"/");
+	}
 
 	loadMolecules(fileNames);
 }
@@ -557,10 +560,10 @@ QString MainWindow::timespan(unsigned seconds)
 		return QString::number(seconds) + "s";
 
 	} else if (seconds < 3600) {
-		return QString::number(seconds / 60) + "m";
+		return QString::number(seconds / 60.0,'f',2) + "m";
 
 	} else if (seconds < 86400) {
-		return QString::number(seconds / 3600) + "h";
+		return QString::number(seconds / 3600.0,'f',2) + "h";
 	}
 
 	return QString::number(seconds / 86400) + "d "

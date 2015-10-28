@@ -45,9 +45,9 @@ public:
 	unsigned frame() const;
     std::string fullName() const
     {
-	/*if(_topologyFileName!=_trajFileName) {
+	if(_topologyFileName!=_trajFileName) {
 	    return _topologyFileName+","+_trajFileName+"#"+std::to_string(_frame);
-	}*/
+	}
 	return _trajFileName+"#"+std::to_string(_frame);
     }
 

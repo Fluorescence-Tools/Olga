@@ -4,8 +4,7 @@
 #include <string>
 #include <vector>
 #include <utility>
-
-#include <boost/icl/interval_set.hpp>
+#include <pteros/pteros.h>
 
 #include "FrameDescriptor.h"
 
@@ -13,60 +12,74 @@ class MolecularTrajectory
 {
 public:
 	MolecularTrajectory();
-	int frameCount(unsigned trajIndex) const
+	int frameCount(unsigned chunkIndex) const
 	{
-		assert(trajIndex<_trajectories.size());
-		return _trajectories[trajIndex].second.size();
+		assert(chunkIndex<_chunks.size());
+		return _chunks[chunkIndex].frameCount();
 	}
-	int trajCount() const
+	int chunkCount() const
 	{
-		return _trajectories.size();
+		return _chunks.size();
 	}
-	const std::string& topologyFileName() const
+	std::string topologyFileName() const
 	{
-		return _topFileName;
+		return *_topFileName;
 	}
-	const std::string& trajectoryFileName(unsigned traj) const
+	std::string trajectoryFileName(unsigned chunkIndex) const
 	{
-		assert(traj<_trajectories.size());
-		return _trajectories[traj].first;
+		assert(chunkIndex<_chunks.size());
+		return *(_chunks[chunkIndex].fileName);
 	}
-	int frameNum(int trajIndex,int frameIndex) const
+	int frameNum(int chunkIndex,int frameIndex) const
 	{
-		(void)trajIndex; (void)frameIndex;
-		//TODO: implement correct frame number determination
-		return frameIndex;
+		return _chunks[chunkIndex].frameNum(frameIndex);
 	}
 	int totalFrameCount() const
 	{
 		int total=0;
-		for(const auto& pair:_trajectories)
+		for(const auto& chunk:_chunks)
 		{
-			total+=pair.second.size();
+			total+=chunk.frameCount();
 		}
 		return total;
 	}
-	bool setTopology(const std::string& fileName)
+	void setTopology(const std::string& fileName)
 	{
-		_topFileName=fileName;
+		_topFileName=std::make_shared<std::string>(fileName);
+	}
+	bool addPdbChunk(const std::string& fileName)
+	{
+		_chunks.reserve(_chunks.size()+1);
+		Chunk c;
+		c.fileName=std::make_shared<std::string>(fileName);
+		_chunks.push_back(std::move(c));
 		return true;
 	}
-	bool loadFrame(const std::string& fileName)
-	{
-		using boost::icl::interval_set;
-		auto frame=std::make_pair(fileName,interval_set<int>().insert(0));
-		_trajectories.push_back(frame);
-		return true;
+	FrameDescriptor descriptor(int chunkIdx, int frameIdx) const {
+		const Chunk& chunk=_chunks[chunkIdx];
+		return FrameDescriptor(*_topFileName,*(chunk.fileName),
+				       chunk.frameNum(frameIdx));
 	}
-	FrameDescriptor descriptor(int trajIdx, int frameIdx) const {
-		return FrameDescriptor(_topFileName,_trajectories[trajIdx].first,
-				       frameNum(trajIdx,frameIdx));
-	}
+	struct Chunk {
+		std::shared_ptr<std::string> fileName;
+		int start=0,end=0,stride=1;
+		int frameCount() const
+		{
+			return (end-start)/stride+1;
+		}
+		int frameNum(int frameIndex) const
+		{
+			return start+frameIndex*stride;
+		}
+	};
 
 private:
-	std::string _topFileName;
-	using FrameName_Numbers=std::pair<std::string,boost::icl::interval_set<int>>;//trajectoryFileName,frameNumbers
-	std::vector<FrameName_Numbers> _trajectories;
+	std::shared_ptr<std::string> _topFileName;
+	std::vector<Chunk> _chunks;
+
+	//TODO: remove, deprecated
+	//using FrameName_Numbers=std::pair<std::string,boost::icl::interval_set<int>>;//trajectoryFileName,frameNumbers
+	//std::vector<FrameName_Numbers> _trajectories;
 };
 
 #endif // MOLECULARTRAJECTORY_H

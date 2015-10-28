@@ -82,8 +82,7 @@ public:
 
 	using ButtonFlags=EvaluatorDelegate::ButtonFlags;
 	using MutableEvalPtr=std::unique_ptr<AbstractEvaluator>;
-	std::string evalTypeName(int typeNum) const;
-	QStringList supportedTypes() const;
+
 	void addEvaluator(int typeNum);
 	void removeEvaluator(const QModelIndex& index);
 	MutableEvalPtr removeEvaluator(int evRow);
@@ -95,8 +94,7 @@ public:
 private:
 	//EvalPtr eval(const EvalPtr& oldEval, int newEvalRow);
 	QString uniqueEvalName(const QVariantMap& evalMap, const QString& name) const;
-	void addEvaluator(std::unique_ptr<AbstractEvaluator> &eval);
-	MutableEvalPtr makeEvaluator(int typeNum) const;
+	void addEvaluator(std::unique_ptr<AbstractEvaluator> eval);
 	QModelIndex classRowIndex(const EvalId &eval) const;
 	std::string className(int classRow) const;
 	std::string evalName(int classRow, int evalRow) const;
@@ -109,10 +107,8 @@ private:
 	int evalRow(const EvalId& eval) const;
 	QStringList evalListByType(const EvalId& eval) const;
 	QList<int> evalRowList(const QList<EvalId>& list) const;
-	QVariantMap propMap(const AbstractEvaluator &eval) const;
-	void setEval(int evNum,const QVariantMap& propMap);
-
-
+	//QVariantMap propMap(const AbstractEvaluator &eval) const;
+	//void setEval(int evNum,const QVariantMap& propMap);
 	void loadEvaluator(EvalId id);
 	TaskStorage& _storage;
 	size_t lastClassRow=1;

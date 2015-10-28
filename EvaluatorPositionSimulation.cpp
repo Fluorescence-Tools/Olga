@@ -1,5 +1,6 @@
 #include "EvaluatorPositionSimulation.h"
 #include "CalcResult.h"
+
 std::shared_ptr<AbstractCalcResult> EvaluatorPositionSimulation::calculate(const pteros::System &system,const FrameDescriptor &frame) const
 {
 	PositionSimulationResult res=_position.calculate(system);

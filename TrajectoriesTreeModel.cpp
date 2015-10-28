@@ -1,4 +1,5 @@
 #include <cassert>
+#include <set>
 
 #include <QFileInfo>
 #include <QTimer>
@@ -23,7 +24,7 @@ TrajectoriesTreeModel(const TaskStorage &storage, QObject *parent) :
 	connect(&_evaluatePending,&QTimer::timeout,[this]{
 		for(const MolecularTrajectory& mt:_molTrajs)//iterate over all frames in trajectories
 		{
-			for(int trajIdx=0; trajIdx<mt.trajCount(); ++trajIdx) {
+			for(int trajIdx=0; trajIdx<mt.chunkCount(); ++trajIdx) {
 				for(int frIdx=0; frIdx<mt.frameCount(trajIdx); ++frIdx) {
 					auto desc=mt.descriptor(trajIdx,frIdx);
 					_storage.evaluate(desc,_evalsPending);
@@ -146,7 +147,7 @@ int TrajectoriesTreeModel::rowCount(const QModelIndex &parent) const
 	if(parentParentNesting==0)
 	{
 		unsigned moltrajIndex=parent.row();
-		return _molTrajs[moltrajIndex].trajCount();
+		return _molTrajs[moltrajIndex].chunkCount();
 	}
 	if(parentParentNesting==1){
 		unsigned moltrajIndex=parentParentItem->moltrajIndex;
@@ -168,7 +169,7 @@ bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
 {
 	MolecularTrajectory tmpTrj;
 	tmpTrj.setTopology(fileName.toStdString());
-	if(tmpTrj.loadFrame(fileName.toStdString()))
+	if(tmpTrj.addPdbChunk(fileName.toStdString()))
 	{
 		beginInsertRows(QModelIndex(),_molTrajs.size(),_molTrajs.size());
 		_molTrajs.push_back(tmpTrj);
@@ -281,28 +282,7 @@ FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeIte
 	}
 	return FrameDescriptor(top,traj,frame);
 }
-/*
-void TrajectoriesTreeModel::updateColumn(int column)
-{
-	if(column>_columns.size() || column<1) {
-		qDebug()<<"ERROR: wrong column number = "<<column;
-		return;
-	}
-	const auto& calccol=_columns[column-1];
-	QModelIndex start=index(0,0);
-	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1, Qt::MatchWildcard|Qt::MatchRecursive);
-	for(const auto& idx:indexes) {
-		const TrajectoriesTreeItem *parentItem =
-				static_cast<TrajectoriesTreeItem*>(idx.internalPointer());
-		if(parentItem->nesting()!=2) {
-			continue;
-		}
-		auto frame=frameDescriptor(parentItem,idx.row());
-		//qDebug()<<"data: <"<<idx.data()<<"> row:"<<idx.row()<<"nesting: "<<parentItem->nesting()<<" col:"<<column<<" frame:"<<QString::fromStdString(frame.trajFileName());
-		_storage.getString(frame,calccol.first,calccol.second);
-		//emit dataChanged(idx,idx);
-	}
-}*/
+
 void TrajectoriesTreeModel::evaluatorAdded(const EvalId &id)
 {
 	int colCount=_storage.eval(id).columnCount();
@@ -335,6 +315,28 @@ void TrajectoriesTreeModel::evaluatorRemove(const EvalId &id)
 	_columns.erase(_columns.begin()+firstCol,_columns.begin()+lastCol+1);
 	endRemoveColumns();
 }
+/*
+void TrajectoriesTreeModel::updateColumn(int column)
+{
+	if(column>_columns.size() || column<1) {
+		qDebug()<<"ERROR: wrong column number = "<<column;
+		return;
+	}
+	const auto& calccol=_columns[column-1];
+	QModelIndex start=index(0,0);
+	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1, Qt::MatchWildcard|Qt::MatchRecursive);
+	for(const auto& idx:indexes) {
+		const TrajectoriesTreeItem *parentItem =
+				static_cast<TrajectoriesTreeItem*>(idx.internalPointer());
+		if(parentItem->nesting()!=2) {
+			continue;
+		}
+		auto frame=frameDescriptor(parentItem,idx.row());
+		//qDebug()<<"data: <"<<idx.data()<<"> row:"<<idx.row()<<"nesting: "<<parentItem->nesting()<<" col:"<<column<<" frame:"<<QString::fromStdString(frame.trajFileName());
+		_storage.getString(frame,calccol.first,calccol.second);
+		//emit dataChanged(idx,idx);
+	}
+}*/
 /*	connect(_domainsModel,&DomainTableModel::rowsInserted,
 		[&](const QModelIndex &,int from,int to) {
 		domainsInserted(from, to);
