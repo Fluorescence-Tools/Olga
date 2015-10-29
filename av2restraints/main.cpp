@@ -29,23 +29,37 @@ struct Restrt {
 	std::string header, footer;
 	void load(const std::string fileName) {
 		std::ifstream f;
+		f.open(fileName,std::ios::binary);
+		int fsize=-f.tellg();
+		f.seekg(0,std::ios::end);
+		fsize+=f.tellg();
+		f.close();
 		f.open(fileName);
 		std::getline(f,header);
 		std::string tmp;
 		std::getline(f,tmp);
 		header+="\n"+tmp;
+		//trim
+		tmp.erase(tmp.begin(), std::find_if(tmp.begin(), tmp.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
 		int natoms=std::stoi(tmp.substr(0,tmp.find(" ")));
 		coords.clear();
 		coords.reserve(natoms);
+		velocities.clear();
+		velocities.reserve(natoms);
 		for(int i=0; i<natoms; i++) {
 			Eigen::Vector3d v;
 			f>>v[0]>>v[1]>>v[2];
 			coords.push_back(v);
 		}
-		for(int i=0; i<natoms; i++) {
-			Eigen::Vector3d v;
-			f>>v[0]>>v[1]>>v[2];
-			velocities.push_back(v);
+		std::cout<<"fsize:"<<fsize<<std::endl;
+		if(fsize-2.0*f.tellg()>0) {
+			for(int i=0; i<natoms; i++) {
+				Eigen::Vector3d v;
+				f>>v[0]>>v[1]>>v[2];
+				velocities.push_back(v);
+			}
+		} else {
+			velocities.resize(natoms);
 		}
 		std::getline(f,footer);
 		std::getline(f,tmp);
@@ -110,6 +124,10 @@ struct Restrt {
 			}
 		}
 		return -1;
+	}
+	void appendAtom(const Eigen::Vector3d c) {
+		coords.push_back(c);
+		velocities.push_back(Eigen::Vector3d(0.0f,0.0f,0.0f));
 	}
 };
 
@@ -275,6 +293,7 @@ int main(int argc, char *argv[])
 	parser.addOptions({
 				  {{"p", "pdb"},
 				   "PDB file to use for AV simulations","file"},
+				  {"savepdb", "save PDB file with updated DUs","file"},
 				  {{"j","json"},
 				   "setting file describing labelig positions and distances", "file"},
 				  {"ir","Reference restart file, corresponding to the specified PDB", "file"},
@@ -297,17 +316,19 @@ int main(int argc, char *argv[])
 	const double f2=parser.value("f2").toDouble() / 69.4786;
 	const bool nocap=parser.isSet("nocap");
 
-	std::cout<<"Nocap:"<<nocap<<std::endl;
-
 	using std::ios;
 	using std::setiosflags;
 	using std::setprecision;
 	using std::setw;
 	pteros::System sys(pdbFileName.toStdString());
 	pteros::Selection sel=sys.select(std::string("resname DU"));
-	auto duXYZf=sel.get_xyz();
-	auto duXYZd=duXYZf.cast<double>()*10.0;
-	std::cout<<"DUsD:\n"<<duXYZd<<"\n";
+
+	Restrt restrt;
+	restrt.load(restartInFileName.toStdString());
+	if(restrt.coords.size() != sys.num_atoms()) {
+		std::cerr<<"FATAL error: number of atoms in pdb and restrt do not match"<<std::endl;
+		return 1;
+	}
 
 	TaskStorage storage;
 
@@ -315,7 +336,7 @@ int main(int argc, char *argv[])
 	if (!settingsFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
 		std::cout<<"Unable to open file "<<settingsFileName.toStdString()
 			<<settingsFile.errorString().toStdString()<<std::endl;
-		return 1;
+		return 2;
 	}
 	QJsonDocument doc = QJsonDocument::fromJson(settingsFile.readAll());
 	storage.loadEvaluators(doc.toVariant().toMap());
@@ -335,7 +356,42 @@ int main(int argc, char *argv[])
 		}
 		//std::cout<<pair.first<<" "<<pair.second->name()<<std::endl;
 	}
-	std::cout<<avs.size()<<" positions and "<<distances.size()<<" distances"<<std::endl;
+	const int numDUAtoms=sel.size();
+	std::cout<<numDUAtoms<<" DU atoms, "<<avs.size()<<" positions and "<<distances.size()<<" distances"<<std::endl;
+
+	if(numDUAtoms!=avs.size() && numDUAtoms!=0) {
+		std::cerr<<"FATAL error: Could not mathch Labelling Positions to Pseudoatoms!"<<std::endl;
+		return 1;
+	}
+
+	//insert Pseudoatoms
+	if(numDUAtoms == 0) {
+		pteros::Atom atom;
+		atom.name="DU";
+		atom.resname="DU";
+		atom.mass=100.0f;
+		atom.charge=0.0f;
+		auto resids=sys.select("all").get_unique_resid();
+		auto it=std::max_element(resids.begin(),resids.end());
+		atom.resid=*it+1;
+		auto chains=sys.select("all").get_unique_chain ();
+		atom.chain=*std::max_element(chains.begin(),chains.end())+1;
+		atom.chain=atom.chain=='!'?'B':atom.chain;
+		for(int i=0; i<avs.size(); i++) {
+			auto c=Eigen::Vector3f(i,3.14f,3.14f);
+			restrt.appendAtom(c.cast<double>());
+			pteros::System tmpSys;
+			tmpSys.append(atom,c*0.1f);
+			sys.append(tmpSys);
+			++atom.resid;
+			++atom.chain;
+		}
+	}
+
+	sel.update();//apply()?
+	auto duXYZf=sel.get_xyz();
+	auto duXYZd=duXYZf.cast<double>()*10.0;
+	std::cout<<"DUsD:\n"<<duXYZd<<"\n";
 
 	FrameDescriptor frame(pdbFileName.toStdString(),pdbFileName.toStdString());
 	storage.evaluate(frame,avs);
@@ -359,14 +415,12 @@ int main(int argc, char *argv[])
 		std::cout<<"sleeping..."<<std::endl;
 	}
 
-	Restrt restrt;
-	restrt.load(restartInFileName.toStdString());
-
 	map<EvalId,int> duAtomIndex; //match AV_MPs to atomIDs
 	map<EvalId,Eigen::Vector3d> duAtomPos; //match  AV_MPs to atom position
 	for(const auto& avId:avs) {
 		TaskStorage::Result res=storage.getResult(frame,avId);
-		Eigen::Vector3d oldcoords=duXYZd.col(duAtomIndex.size());
+		int curXYZind=duAtomIndex.size();
+		Eigen::Vector3d oldcoords=duXYZd.col(curXYZind);
 		duAtomPos[avId]=oldcoords;
 		int idx=restrt.atomIndex(oldcoords);
 		duAtomIndex[avId]=idx;
@@ -379,10 +433,15 @@ int main(int argc, char *argv[])
 		Eigen::Vector3d newcoords=pos.meanPosition().cast<double>();
 		duAtomPos[avId]=newcoords;
 		restrt.replaceCoords(oldcoords,newcoords);
-
+		duXYZf.col(curXYZind)=newcoords.cast<float>()*0.1f;
 	}
 	std::cout<<std::endl;
 	restrt.save(restartOutFileName.toStdString());
+	if(parser.isSet("savepdb")) {
+		sel.set_xyz(duXYZf);
+		sys.select("all").write(parser.value("savepdb").toStdString());
+	}
+
 	map<int,Eigen::Vector3d> duIatPos; //match atomIDs to atom position
 	for(const auto& pair:duAtomIndex) {
 		const EvalId& eid=pair.first;
