@@ -53,13 +53,15 @@ struct Restrt {
 			coords.push_back(v);
 		}
 
-		if(fsize-2.0*f.tellg()>0) {
+		if(fsize-2.0*(size_t(f.tellg())-header.size())>0) {
 			for(int i=0; i<natoms; i++) {
 				Eigen::Vector3d v;
 				f>>v[0]>>v[1]>>v[2];
 				velocities.push_back(v);
 			}
 		} else {
+			std::cout<<"WARNING: velocities are not read from restart file"<<std::endl;
+			std::cout<<"fsize="<<fsize<<", tellg="<<f.tellg()<<", header="<<header.size()<<std::endl;
 			velocities.resize(natoms);
 		}
 		std::getline(f,footer);
@@ -92,28 +94,6 @@ struct Restrt {
 
 		f<<footer;
 	}
-	/*void replaceCoords(const Eigen::Vector3d& oldp,const Eigen::Vector3d& newp)
-	{
-		const double epsilon=0.05;
-		double min=999.0;
-		int idx=-1;
-		for(int i=0; i<coords.size(); ++i) {
-			Eigen::Vector3d& v=coords[i];
-			double dist=(oldp-v).norm();
-			if(dist<min) {
-				min=dist;
-				idx=i;
-			}
-			if( dist<epsilon) {
-				v=newp;
-				return ;
-			}
-		}
-		std::cout<<"replaceCoords: atom not found! min_dsit="<<min
-			<<" idx="<<idx<<" oldXYZ="<<oldp.transpose()<<
-			  " newXYZ="<<newp.transpose()<<"\n";
-		return ;
-	}*/
 	void setCoords(int atomId, const Eigen::Vector3d& c) {
 		coords[atomId-1]=c;
 	}
