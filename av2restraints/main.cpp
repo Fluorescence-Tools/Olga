@@ -28,7 +28,7 @@ struct Restrt {
 	std::vector<Eigen::Vector3d> coords;
 	std::vector<Eigen::Vector3d> velocities;
 	std::string header, footer;
-	void load(const std::string fileName) {
+	bool load(const std::string fileName) {
 		std::ifstream f;
 		f.open(fileName,std::ios::binary);
 		int fsize=-f.tellg();
@@ -36,6 +36,9 @@ struct Restrt {
 		fsize+=f.tellg();
 		f.close();
 		f.open(fileName);
+		if(!f.is_open()) {
+			return false;
+		}
 		std::getline(f,header);
 		std::string tmp;
 		std::getline(f,tmp);
@@ -67,6 +70,7 @@ struct Restrt {
 		std::getline(f,footer);
 		std::getline(f,tmp);
 		footer+=tmp+"\n";
+		return true;
 	}
 	void save(const std::string fileName) {
 		std::ofstream f;
@@ -316,28 +320,51 @@ int main(int argc, char *argv[])
 	const double f2=parser.value("f2").toDouble() / 69.4786;
 	const bool nocap=parser.isSet("nocap");
 
-	using std::ios;
-	using std::setiosflags;
-	using std::setprecision;
-	using std::setw;
-	pteros::System sys(pdbFileName.toStdString());
-	pteros::Selection selDU=sys.select(std::string("resname DU"));
-
-	Restrt restrt;
-	restrt.load(restartInFileName.toStdString());
-	if(restrt.coords.size() != sys.num_atoms()) {
-		std::cerr<<"FATAL error: number of atoms in pdb and restrt do not match"<<std::endl;
+	//check inputs
+	if(nstep2<=0) {
+		std::cout<<"nstep2 must be a positive integer"<<std::endl;
 		return 1;
 	}
-
-	TaskStorage storage;
+	if(f1 <0.0 || f2<0.0) {
+		std::cout<<"f1 and f2 must be non-negative"<<std::endl;
+		return 2;
+	}
 
 	QFile settingsFile(settingsFileName);
 	if (!settingsFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
 		std::cout<<"Unable to open file "<<settingsFileName.toStdString()
 			<<settingsFile.errorString().toStdString()<<std::endl;
-		return 2;
+		return 3;
 	}
+	pteros::System sys;
+	try {
+		sys.load(pdbFileName.toStdString());
+	} catch (...) {
+		std::cout<<"Unable to open file "<<pdbFileName.toStdString()<<std::endl;
+		return 4;
+	}
+	Restrt restrt;
+	if(!restrt.load(restartInFileName.toStdString())) {
+		std::cout<<"Unable to load file "<<restartInFileName.toStdString()<<std::endl;
+		return 5;
+	}
+
+
+	using std::ios;
+	using std::setiosflags;
+	using std::setprecision;
+	using std::setw;
+
+	pteros::Selection selDU=sys.select(std::string("resname DU"));
+
+	if(restrt.coords.size() != sys.num_atoms()) {
+		std::cerr<<"FATAL error: number of atoms in pdb and restrt do not match"<<std::endl;
+		return 6;
+	}
+
+	TaskStorage storage;
+
+
 	QJsonDocument doc = QJsonDocument::fromJson(settingsFile.readAll());
 	storage.loadEvaluators(doc.toVariant().toMap());
 	using std::vector;
@@ -394,6 +421,11 @@ int main(int argc, char *argv[])
 
 	FrameDescriptor frame(pdbFileName.toStdString(),pdbFileName.toStdString());
 	storage.evaluate(frame,avs);
+	std::cout<<"Evaluation started, waiting..."<<std::endl;
+	while(!storage.ready()) {
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::cout<<"waiting..."<<std::endl;
+	}
 
 	using std::pair;
 	using std::map;
@@ -407,11 +439,7 @@ int main(int argc, char *argv[])
 		lpNames[lp2]=storage.eval(lp2).name();
 		dist2lps.insert({dist,std::make_pair(lp1,lp2)});
 		distInfo[dist]=static_cast<const EvaluatorDistance&>(storage.eval(dist)).distance();
-		//std::cout<<dist<<" "<<lp1<<" "<<lp2<<std::endl;
-	}
-	while(!storage.ready()) {
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-		std::cout<<"sleeping..."<<std::endl;
+		std::cout<<dist<<" "<<lp1<<" "<<lp2<<std::endl;
 	}
 
 	map<EvalId,int> av2atomId; //match AV_MPs to atomIDs

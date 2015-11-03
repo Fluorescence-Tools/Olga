@@ -45,6 +45,7 @@ public:
 	    }
 	    else if(_type=="RDAMeanE")
 	    {
+		    std::cerr<<"conversion <Rda>E->Rmp is not supported!\n"<<std::flush;
 		    return _distance;
 	    }
     }
