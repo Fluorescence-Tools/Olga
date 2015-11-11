@@ -35,7 +35,7 @@ public:
 	using PterosSysTask=async::shared_task<pteros::System>;
 	using Setting=std::pair<QString,QVariant>;
 //pure virtual:
-	virtual Task makeTask(const FrameDescriptor &frame) const=0;
+	virtual Task makeTask(const FrameDescriptor &frame) const noexcept=0;
 	virtual std::string columnName(int i) const = 0;
 	virtual int columnCount() const = 0;
 	virtual std::string className() const = 0;

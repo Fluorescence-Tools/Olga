@@ -20,7 +20,7 @@ EvaluatorPositionSimulation(const TaskStorage& storage,
 {
 }
 
-AbstractEvaluator::Task EvaluatorPositionSimulation::makeTask(const FrameDescriptor &frame) const
+AbstractEvaluator::Task EvaluatorPositionSimulation::makeTask(const FrameDescriptor &frame) const noexcept
 {
 	auto sysTask=getSysTask(frame);
 	return sysTask.then([this,frame](pteros::System system) {

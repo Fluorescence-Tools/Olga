@@ -8,7 +8,7 @@ EvaluatorChi2::EvaluatorChi2(const TaskStorage &storage,
 {
 }
 */
-AbstractEvaluator::Task EvaluatorChi2::makeTask(const FrameDescriptor &frame) const
+AbstractEvaluator::Task EvaluatorChi2::makeTask(const FrameDescriptor &frame) const noexcept
 {
 	std::vector<Task> tasks;
 	for(const auto& calc:_distCalcs)
@@ -29,5 +29,4 @@ AbstractEvaluator::Task EvaluatorChi2::makeTask(const FrameDescriptor &frame) co
 		auto result=std::make_shared<CalcResult<double>>(chi2);
 		return std::shared_ptr<AbstractCalcResult>(result);
 	}).share();
-
 }

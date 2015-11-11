@@ -15,7 +15,7 @@ EvaluatorTrasformationMatrix(const TaskStorage& storage, const std::string &name
 }
 
 AbstractEvaluator::Task
-EvaluatorTrasformationMatrix::makeTask(const FrameDescriptor &frame) const
+EvaluatorTrasformationMatrix::makeTask(const FrameDescriptor &frame) const noexcept
 {
 	auto sysTask=getSysTask(frame);
 	return sysTask.then([this](pteros::System system) {

@@ -16,7 +16,7 @@ public:
 	EvaluatorTrasformationMatrix(const TaskStorage& storage,
 				     const std::string& name);
 	virtual Task
-		makeTask(const FrameDescriptor &frame) const;
+		makeTask(const FrameDescriptor &frame) const noexcept;
 
 	virtual std::string name() const
 	{

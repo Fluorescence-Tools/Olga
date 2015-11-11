@@ -130,7 +130,7 @@ void CheckBoxList::paintEvent(QPaintEvent *)
 
 	// if no display text been set , use "" as default
 	if(m_DisplayText.isNull())
-		opt.currentText = "";
+		opt.currentText = "none (click to select)";
 	else
 		opt.currentText = m_DisplayText;
 	painter.drawComplexControl(QStyle::CC_ComboBox, opt);

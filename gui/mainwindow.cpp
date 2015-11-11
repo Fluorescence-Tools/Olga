@@ -70,8 +70,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	timer->start(timerInterval);
 
 	auto degugStream = new QDebugStream(std::cerr); //Capture stderr
+	auto infoStream = new QDebugStream(std::cout); //Capture stderr
 	connect(degugStream, SIGNAL(errorPrinted(QString)),
 		ui->logTextEdit, SLOT(append(const QString &)));
+	connect(infoStream, SIGNAL(errorPrinted(QString)),
+		ui->infoTextEdit, SLOT(append(const QString &)));
 
 	connect(&trajectoriesModel, SIGNAL(rowsInserted(QModelIndex, int, int)),
 		this, SLOT(expand(const QModelIndex &, int, int)));
@@ -223,7 +226,8 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
 void MainWindow::loadMolecules(const QStringList &fileNames)
 {
 	using namespace std;
-	QProgressDialog progress("Opening files...","Cancel",0,fileNames.size(),this);
+	const int size=fileNames.size();
+	QProgressDialog progress("Opening files...","Cancel",0,size,this);
 	progress.setWindowModality(Qt::WindowModal);
 	int i=0;
 	for (const QString & fileName : fileNames) {
@@ -231,12 +235,12 @@ void MainWindow::loadMolecules(const QStringList &fileNames)
 			//statusBar()->showMessage(tr("Loading %1...").arg(fileName), 2000);
 			trajectoriesModel.loadSystem(fileName);
 		}
-		progress.setValue(++i);
+		if(++i%(size/20)==0) { progress.setValue(i); }
 		if(progress.wasCanceled()) {
 			break;
 		}
 	}
-	progress.setValue(fileNames.size());
+	progress.setValue(size);
 	statusBar()->showMessage(tr("Loaded %1 frames").arg(i), 5000);
 }
 

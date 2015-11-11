@@ -4,7 +4,7 @@
 #include <async++.h>
 
 
-AbstractEvaluator::Task EvaluatorEulerAngle::makeTask(const FrameDescriptor &frame) const
+AbstractEvaluator::Task EvaluatorEulerAngle::makeTask(const FrameDescriptor &frame) const noexcept
 {
 	//get tasks for ref and body;
 	Task refTask=getTask(frame,_refCalc,false);

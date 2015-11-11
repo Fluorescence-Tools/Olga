@@ -10,7 +10,7 @@ EvaluatorDistance(const TaskStorage& storage,
 {
 }
 
-AbstractEvaluator::Task EvaluatorDistance::makeTask(const FrameDescriptor &frame) const
+AbstractEvaluator::Task EvaluatorDistance::makeTask(const FrameDescriptor &frame) const noexcept
 {
 	Task av1=getTask(frame,_av1,false);
 	Task av2=getTask(frame,_av2,false);

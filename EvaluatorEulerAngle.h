@@ -14,7 +14,7 @@ public:
 	EvaluatorEulerAngle(const TaskStorage& storage, const std::string& name):
 		AbstractEvaluator(storage),_name(name)
 	{	}
-	virtual Task makeTask(const FrameDescriptor &frame) const;
+	virtual Task makeTask(const FrameDescriptor &frame) const noexcept;
 	virtual std::string name() const
 	{
 		return _name;

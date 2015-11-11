@@ -22,7 +22,7 @@ public:
 	{
 		_dist.setName(name);
 	}
-	virtual Task makeTask(const FrameDescriptor &frame) const;
+	virtual Task makeTask(const FrameDescriptor &frame) const noexcept;
 	virtual std::string name() const
 	{
 		return _dist.name();

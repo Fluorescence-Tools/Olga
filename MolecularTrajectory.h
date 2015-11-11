@@ -23,12 +23,12 @@ public:
 	}
 	std::string topologyFileName() const
 	{
-		return *_topFileName;
+		return _topFileName;
 	}
 	std::string trajectoryFileName(unsigned chunkIndex) const
 	{
 		assert(chunkIndex<_chunks.size());
-		return *(_chunks[chunkIndex].fileName);
+		return (_chunks[chunkIndex].fileName);
 	}
 	int frameNum(int chunkIndex,int frameIndex) const
 	{
@@ -45,23 +45,28 @@ public:
 	}
 	void setTopology(const std::string& fileName)
 	{
-		_topFileName=std::make_shared<std::string>(fileName);
+		//_topFileName=std::make_shared<std::string>(fileName);
+		_topFileName=fileName;
 	}
 	bool addPdbChunk(const std::string& fileName)
 	{
 		_chunks.reserve(_chunks.size()+1);
 		Chunk c;
-		c.fileName=std::make_shared<std::string>(fileName);
+		//c.fileName=std::make_shared<std::string>(fileName);
+		c.fileName=fileName;
 		_chunks.push_back(std::move(c));
 		return true;
 	}
 	FrameDescriptor descriptor(int chunkIdx, int frameIdx) const {
 		const Chunk& chunk=_chunks[chunkIdx];
-		return FrameDescriptor(*_topFileName,*(chunk.fileName),
+		/*return FrameDescriptor(*_topFileName,*(chunk.fileName),
+				       chunk.frameNum(frameIdx));*/
+		return FrameDescriptor(_topFileName,chunk.fileName,
 				       chunk.frameNum(frameIdx));
 	}
 	struct Chunk {
-		std::shared_ptr<std::string> fileName;
+		//std::shared_ptr<std::string> fileName;
+		std::string fileName;
 		int start=0,end=0,stride=1;
 		int frameCount() const
 		{
@@ -74,7 +79,8 @@ public:
 	};
 
 private:
-	std::shared_ptr<std::string> _topFileName;
+	//std::shared_ptr<std::string> _topFileName;
+	std::string _topFileName;
 	std::vector<Chunk> _chunks;
 
 	//TODO: remove, deprecated

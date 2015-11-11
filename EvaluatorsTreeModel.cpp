@@ -347,7 +347,6 @@ void EvaluatorsTreeModel::activateEvaluator(const QModelIndex &index)
 	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
 	if(item.isEvaluatorsClass() && item.classRow()==0) {
 		auto evId=_storage.addEvaluator(removeEvaluator(index.row()));
-		loadEvaluator(evId);
 	}
 }
 /*
@@ -441,6 +440,7 @@ QString EvaluatorsTreeModel::uniqueEvalName(const QVariantMap &evalMap, const QS
 
 void EvaluatorsTreeModel::loadEvaluator(EvalId id)
 {
+	//TODO:check if id is already loaded
 	const auto& eval=_storage.eval(id);
 	std::type_index classId=std::type_index(typeid(eval));
 	auto it=classRows.find(classId);

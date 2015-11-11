@@ -18,7 +18,7 @@ public:
 				    const std::string& name):EvaluatorPositionSimulation(storage,QVariantMap(),name) {}
 
 	virtual Task
-	makeTask(const FrameDescriptor &frame) const;
+	makeTask(const FrameDescriptor &frame) const noexcept;
 	virtual std::string name() const
 	{
 		return _position.name();

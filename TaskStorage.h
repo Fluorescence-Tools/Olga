@@ -72,6 +72,16 @@ class TaskStorage:public QObject
 	friend class AbstractEvaluator;
 	friend class EvaluatorsTreeModel;
 	//TODO: specify functions instead;
+
+	mutable std::atomic<int> _pauseCount{0};
+	class Pause {
+		friend class TaskStorage;
+	private:
+		const TaskStorage& _storage;
+		Pause(const TaskStorage& storage):_storage(storage){++_storage._pauseCount;}
+	public:
+		~Pause(){--_storage._pauseCount;}
+	};
 public:
 	TaskStorage();
 	~TaskStorage();
@@ -140,6 +150,10 @@ public:
 	bool ready() const {
 		return _requests.empty();
 	}
+	Pause pause() const {
+		return Pause(*this);
+	}
+
 Q_SIGNALS:
 	void evaluatorAdded(EvalId evId);
 	void evaluatorIsGoingToBeRemoved(EvalId evId);
@@ -171,6 +185,9 @@ private:
 	{
 		static auto tid=std::this_thread::get_id();
 		assert(tid==std::this_thread::get_id());
+		while(_pauseCount) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}
 		CacheKey key;
 		while(_tasksRunning<_maxRunningCount)//consume
 		{
@@ -178,6 +195,17 @@ private:
 				getTask(key,true);
 			} else {
 				_requests.reserve(0);
+				auto locked=_requests.lock_table();
+				std::string str;
+				for(auto pair:locked) {
+					const CacheKey &k=pair.first;
+					str+=k.first.fullName()+", "
+					     +std::to_string(int(k.second))+"\n";
+				}
+				if(str.size()) {
+					std::cout<<"Residual requests: \n"+str
+						<<std::flush;
+				}
 				return;
 			}
 		}

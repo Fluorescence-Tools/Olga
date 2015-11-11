@@ -422,10 +422,10 @@ int main(int argc, char *argv[])
 	FrameDescriptor frame(pdbFileName.toStdString(),pdbFileName.toStdString());
 	storage.evaluate(frame,avs);
 	std::cout<<"Evaluation started, waiting..."<<std::endl;
-	while(!storage.ready()) {
+	do {
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		std::cout<<"waiting..."<<std::endl;
-	}
+	} while(!storage.ready());
 
 	using std::pair;
 	using std::map;

@@ -24,7 +24,7 @@ public:
 		       const std::vector<std::weak_ptr<EvaluatorDistance>> distCalcs);*/
 	EvaluatorChi2(const TaskStorage& storage,const std::string& name):
 		AbstractEvaluator(storage),_name(name){}
-	virtual Task makeTask(const FrameDescriptor &frame) const;
+	virtual Task makeTask(const FrameDescriptor &frame) const noexcept;
 	virtual std::string columnName(int) const
 	{
 		return name();
