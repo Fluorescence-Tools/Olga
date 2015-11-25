@@ -76,7 +76,7 @@ public:
 	{
 		return 1;
 	}
-	virtual bool inline operator==(AbstractEvaluator& o) const
+	/*virtual bool inline operator==(AbstractEvaluator& o) const
 	{
 		if(this==&o) {
 			return true;
@@ -90,7 +90,7 @@ public:
 			return true;
 		}
 		return false;
-	}
+	}*/
 };
 
 #endif // EVALUATORCHI2_H

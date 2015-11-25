@@ -230,12 +230,13 @@ void MainWindow::loadMolecules(const QStringList &fileNames)
 	QProgressDialog progress("Opening files...","Cancel",0,size,this);
 	progress.setWindowModality(Qt::WindowModal);
 	int i=0;
+	const unsigned frac5p=size/20>0?size/20:5;
 	for (const QString & fileName : fileNames) {
 		if (!fileName.isEmpty()) {
 			//statusBar()->showMessage(tr("Loading %1...").arg(fileName), 2000);
 			trajectoriesModel.loadSystem(fileName);
 		}
-		if(++i%(size/20)==0) { progress.setValue(i); }
+		if(++i%(frac5p)==0) { progress.setValue(i); }
 		if(progress.wasCanceled()) {
 			break;
 		}

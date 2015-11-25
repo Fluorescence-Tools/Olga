@@ -15,11 +15,13 @@ FORMS += \
 
 HEADERS += \
     mainwindow.h \
-    Q_DebugStream.h
+    Q_DebugStream.h \
+    EvaluatorChi2Contribution.h
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    EvaluatorChi2Contribution.cpp
 
 HEADERS += \
     AV/av_routines.h \

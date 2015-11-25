@@ -122,8 +122,13 @@ bool EvaluatorsTreeModel::setData(const QModelIndex &index, const QVariant &valu
 			if(cr<=0) {
 				data=oldData;
 			} else if(value.type()==QVariant::Int) {
-				newEv=evalId(cr,value.toInt());
-				data.setValue(newEv);
+				int evalRow=value.toInt();
+				if(evalRow>=0) {
+					newEv=evalId(cr,value.toInt());
+					data.setValue(newEv);
+				} else {
+					data=oldData;
+				}
 			} else if(value.type()==QVariant::String) {
 				newEv=findEval(cr,value.toString());
 				data.setValue(newEv);
