@@ -21,7 +21,7 @@ class MainWindow : public QMainWindow
 	Q_OBJECT
 
 public:
-	explicit MainWindow(QWidget *parent = 0);
+	explicit MainWindow(const QString json, const QString pdbsDir, const QString ha4Out, QWidget *parent = 0);
 	~MainWindow();
 
 protected:
@@ -63,6 +63,12 @@ private:
 
 	QString tabSeparatedData(const QItemSelectionModel *selectionModel) const;
 	void loadMolecules(const QStringList& fileNames);
+
+	void loadStructuresFolder(const QString& path);
+	void loadJson(const QString& fileName);
+	bool exportData(const QString& fileName)
+;
+
 private:
 	Ui::MainWindow *ui;
 

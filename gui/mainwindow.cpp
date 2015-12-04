@@ -19,7 +19,7 @@
 
 
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString ha4Out, QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
 {
@@ -78,6 +78,21 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	connect(&trajectoriesModel, SIGNAL(rowsInserted(QModelIndex, int, int)),
 		this, SLOT(expand(const QModelIndex &, int, int)));
+	if(json.size()>0 && pdbsDir.size()>0 && ha4Out.size() >0) {
+	    loadJson(json);
+	    loadStructuresFolder(pdbsDir);
+	    QTimer* timer=new QTimer(this);
+	    timer->setSingleShot(false);
+	    connect(timer, &QTimer::timeout, [=](){
+		if(!_storage.ready()) {
+		    return;
+		}
+		timer->stop();
+		exportData(ha4Out);
+		close();
+	    });
+	    timer->start(1000);
+	}
 }
 
 MainWindow::~MainWindow()
@@ -245,39 +260,110 @@ void MainWindow::loadMolecules(const QStringList &fileNames)
 	statusBar()->showMessage(tr("Loaded %1 frames").arg(i), 5000);
 }
 
+void MainWindow::loadStructuresFolder(const QString &path)
+{
+    QDir dir(path);
+    QStringList fileNames=dir.entryList({"*.pdb"});
+    for(auto& s:fileNames) {
+	s.prepend(dir.absolutePath()+"/");
+    }
+
+    loadMolecules(fileNames);
+}
+
+void MainWindow::loadJson(const QString &fileName)
+{
+    if (fileName.isEmpty()) {
+	return;
+    }
+
+    QFile file(fileName);
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+	QMessageBox::information(this, tr("Unable to open JSON file"),
+				 file.errorString()+":\n"+fileName);
+	return;
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+
+    if (doc.isNull()) {
+	QMessageBox::information(this, tr("Unable to parse JSON file"),
+				 tr("Could not open the file. "
+				    "There is a syntax error in the provided JSON file."));
+	return;
+    }
+    evalsModel.loadEvaluators(doc.toVariant().toMap());
+
+    /*QJsonObject positionsListObj=docObj.value("Positions").toObject();
+		   positionsModel.load(positionsListObj);
+		   ui->labellingPositionsTableView->resizeColumnsToContents();
+
+		   QJsonObject distancesListObj=docObj.value("Distances").toObject();
+		   distancesModel.load(distancesListObj);
+		   ui->distancesTableView->resizeColumnsToContents();
+
+		   QJsonArray domainsArr=docObj.value("Domains").toArray();
+		   domainsModel.load(domainsArr);
+		   ui->domainsTableView->resizeColumnsToContents();*/
+
+    //ui->mainTreeView->resizeColumnsToContents();
+}
+
+bool MainWindow::exportData(const QString &fileName)
+{
+    if (fileName.isEmpty()) {
+	return false;
+    }
+
+    /*QFileInfo fileInfo( fileName );
+		   if (fileInfo.suffix().isEmpty())
+		   {
+		   fileName += ".csv";
+		   }*/
+
+    QFile file(fileName);
+
+    if (!file.open(QFile::WriteOnly | QFile::Text)) {
+	QMessageBox::warning(this, tr("Application"),
+			     tr("Cannot write file %1:\n%2.")
+			     .arg(fileName)
+			     .arg(file.errorString()));
+	return false;
+    }
+
+    file.write(trajectoriesModel.tabSeparatedData());
+    statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
+    return true;
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-	/*if (maybeSave()) {
+    /*if (maybeSave()) {
 	   writeSettings();
 	   event->accept();
 	   } else {
 	   event->ignore();
 	   }*/
-	writeSettings();
-	event->accept();
+    writeSettings();
+    event->accept();
 }
 
 void MainWindow::loadStructures()
 {
-	QStringList fileNames =
-			QFileDialog::getOpenFileNames(this,
-						      tr("Load strcutures from files"), "",
-						      tr("Molecular Structure Files (*.pdb *.nc)"));
-	loadMolecules(fileNames);
-	//ui->mainTreeView->resizeColumnsToContents();
+    QStringList fileNames =
+	    QFileDialog::getOpenFileNames(this,
+					  tr("Load strcutures from files"), "",
+					  tr("Molecular Structure Files (*.pdb *.nc)"));
+    loadMolecules(fileNames);
+    //ui->mainTreeView->resizeColumnsToContents();
 }
 
 void MainWindow::loadStructuresFolder()
 {
-	QString path = QFileDialog::getExistingDirectory(this,
-								  tr("Load strcutures from a folder"), "");
-	QDir dir(path);
-	QStringList fileNames=dir.entryList({"*.pdb"});
-	for(auto& s:fileNames) {
-		s.prepend(dir.absolutePath()+"/");
-	}
-
-	loadMolecules(fileNames);
+    QString path = QFileDialog::getExistingDirectory(this,
+						     tr("Load strcutures from a folder"), "");
+    loadStructuresFolder(path);
 }
 
 void MainWindow::metropolisSampling()
@@ -287,57 +373,23 @@ void MainWindow::metropolisSampling()
 
 void MainWindow::loadJson()
 {
-	QString fileName = QFileDialog::getOpenFileName(this,
-							tr("Open Settings File"), "",
-							tr("FPS settings (*.fps.json);;All Files (*)"));
+    QString fileName = QFileDialog::getOpenFileName(this,
+						    tr("Open Settings File"), "",
+						    tr("FPS settings (*.fps.json);;All Files (*)"));
+    loadJson(fileName);
 
-	if (fileName.isEmpty()) {
-		return;
-	}
-
-	QFile file(fileName);
-
-	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-		QMessageBox::information(this, tr("Unable to open file"),
-					 file.errorString());
-		return;
-	}
-
-	QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-
-	if (doc.isNull()) {
-		QMessageBox::information(this, tr("Unable to parse JSON file"),
-					 tr("Could not open the file. "
-					    "There is a syntax error in the provided JSON file."));
-		return;
-	}
-	evalsModel.loadEvaluators(doc.toVariant().toMap());
-
-	/*QJsonObject positionsListObj=docObj.value("Positions").toObject();
-	   positionsModel.load(positionsListObj);
-	   ui->labellingPositionsTableView->resizeColumnsToContents();
-
-	   QJsonObject distancesListObj=docObj.value("Distances").toObject();
-	   distancesModel.load(distancesListObj);
-	   ui->distancesTableView->resizeColumnsToContents();
-
-	   QJsonArray domainsArr=docObj.value("Domains").toArray();
-	   domainsModel.load(domainsArr);
-	   ui->domainsTableView->resizeColumnsToContents();*/
-
-	//ui->mainTreeView->resizeColumnsToContents();
 }
 
 bool MainWindow::saveJson()
 {
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Settings"), "untitled.fps.json",
-							tr("FPS settings (*.fps.json);;Any file (*)"));
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Settings"), "untitled.fps.json",
+						    tr("FPS settings (*.fps.json);;Any file (*)"));
 
-	if (fileName.isEmpty()) {
-		return false;
-	}
+    if (fileName.isEmpty()) {
+	return false;
+    }
 
-	/*QFileInfo fileInfo( fileName );
+    /*QFileInfo fileInfo( fileName );
 	if (fileInfo.suffix().isEmpty())
 	{
 		fileName += ".fps.json";
@@ -366,29 +418,7 @@ bool MainWindow::exportData()
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Export data"), "",
 							tr("Tab-separated values (*.ha4);;Any file (*)"));
 
-	if (fileName.isEmpty()) {
-		return false;
-	}
-
-	/*QFileInfo fileInfo( fileName );
-	   if (fileInfo.suffix().isEmpty())
-	   {
-	   fileName += ".csv";
-	   }*/
-
-	QFile file(fileName);
-
-	if (!file.open(QFile::WriteOnly | QFile::Text)) {
-		QMessageBox::warning(this, tr("Application"),
-				     tr("Cannot write file %1:\n%2.")
-				     .arg(fileName)
-				     .arg(file.errorString()));
-		return false;
-	}
-
-	file.write(trajectoriesModel.tabSeparatedData());
-	statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
-	return true;
+	return exportData(fileName);
 }
 
 bool MainWindow::exportCylinders()
