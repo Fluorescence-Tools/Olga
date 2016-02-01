@@ -108,7 +108,11 @@ public:
 	{
 		static auto tid=std::this_thread::get_id();
 		assert(tid==std::this_thread::get_id());
-		return _evalNames.at(name);
+		if(_evalNames.count(name)==0) {
+			return EvalId(-1);
+		} else {
+			return _evalNames.at(name);
+		}
 	}
 	int sysTaskCount() const
 	{

@@ -216,7 +216,14 @@ void TaskStorage::setEval(TaskStorage::MutableEvalPtr &ev, const QVariantMap &pr
 			QList<EvalId> ptrs;
 			QStringList names=propVal.toStringList();
 			for(const QString& name:names) {
-				ptrs.append(evalId(name.toStdString()));
+				auto id=evalId(name.toStdString());
+				if(isValid(id)) {
+					ptrs.append(id);
+				} else {
+					std::cerr<<"Error in JSON file! "
+						   "Can not find evaluator "
+						   +name.toStdString()+"\n"<<std::flush;
+				}
 			}
 			newVal.setValue(ptrs);
 		} else if(oldVal.userType()==vec3dType) {
