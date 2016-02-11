@@ -190,7 +190,7 @@ void Position::setSetting(int row, const QVariant &val)
 		_residueSeqNumber=val.toInt();
 		return;
 	case 2:
-		_residueName=val.toString().toStdString();
+		_residueName=val.toString().toUpper().toStdString();
 		return;
 	case 3:
 		_atomName=val.toString().toStdString();
