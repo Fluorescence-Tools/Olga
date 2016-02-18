@@ -100,12 +100,13 @@ public:
 						const std::string& pdbFileName);
 	static QJsonObject jsonObjects(const std::vector<std::shared_ptr<Position> > &arr);
 	Eigen::Vector3f atomXYZ(const pteros::System &system) const;
+
+	void setFromLegacy(const std::string& entry,const std::string &pdbFileName);
 private:
 	//Eigen::Vector3f atomXYZ(BALL::System &system) const;
 
 	PositionSimulationResult calculate(const Eigen::Vector3f& attachmentAtomPos,
 					   const std::vector<Eigen::Vector4f>& store) const;
-	void setFromLegacy(const std::string& entry,const std::string &pdbFileName);
 
 private:
 	std::string _name;

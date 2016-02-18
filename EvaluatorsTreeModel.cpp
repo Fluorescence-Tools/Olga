@@ -6,7 +6,10 @@
 #include "EvaluatorTrasformationMatrix.h"
 #include "EvaluatorEulerAngle.h"
 
+#include <QFileDialog>
+
 #include <memory>
+
 EvaluatorsTreeModel::EvaluatorsTreeModel(TaskStorage &storage, QObject *parent):
 	QAbstractItemModel(parent),_storage(storage)
 {
@@ -399,6 +402,45 @@ void EvaluatorsTreeModel::loadEvaluators(const QVariantMap& settings)
 			}
 		}
 	}*/
+}
+
+QVariantMap EvaluatorsTreeModel::evaluatorsFromLegacy(QTextStream &in) const
+{
+	QVariantMap evals;
+
+	QStringList lines=in.readAll().split('\n');
+	if (lines[0]=="Rmp" || lines[0]=="RDAMean" || lines[0]=="RDAMeanE") {
+		QVariantMap propMap;
+		QString type=lines.takeFirst();
+		for( const QString& line:lines) {
+			auto eval=EvaluatorDistance(_storage,line,type);
+			const QString& evName=QString::fromStdString(eval.name());
+			if(!evName.isEmpty()) {
+				propMap[evName]=_storage.propMap(eval);
+			}
+		}
+		const QString& className=QString::fromStdString(EvaluatorDistance(_storage,"").className());
+		evals[className]=propMap;
+	}
+	else {//Labelling Postions
+		QString pdb=QFileDialog::getOpenFileName(0,
+					     tr("Open PDB file, corresponding to the Labelling file"), "",
+					     tr("Protein Data Bank (*.pdb);;All Files (*)"));
+		if(pdb.isEmpty()) {
+			return evals;
+		}
+		QVariantMap propMap;
+		for( const QString& line:lines) {
+			auto eval=EvaluatorPositionSimulation(_storage,line,pdb);
+			const QString& evName=QString::fromStdString(eval.name());
+			if(!evName.isEmpty()) {
+				propMap[evName]=_storage.propMap(eval);
+			}
+		}
+		const QString& className=QString::fromStdString(EvaluatorPositionSimulation(_storage,"").className());
+		evals[className]=propMap;
+	}
+	return evals;
 }
 
 QVariantMap EvaluatorsTreeModel::evaluators() const

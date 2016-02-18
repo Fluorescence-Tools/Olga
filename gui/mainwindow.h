@@ -31,7 +31,7 @@ private Q_SLOTS:
 	void loadStructures();
 	void loadStructuresFolder();
 	void metropolisSampling();
-	void loadJson();
+	void loadEvaluators();
 	bool saveJson();
 	bool exportData();
 	bool exportCylinders();
@@ -65,7 +65,7 @@ private:
 	void loadMolecules(const QStringList& fileNames);
 
 	void loadStructuresFolder(const QString& path);
-	void loadJson(const QString& fileName);
+	void loadEvaluators(const QString& fileName);
 	bool exportData(const QString& fileName)
 ;
 

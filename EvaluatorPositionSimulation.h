@@ -16,6 +16,12 @@ public:
 				    const std::string& name);
 	EvaluatorPositionSimulation(const TaskStorage& storage,
 				    const std::string& name):EvaluatorPositionSimulation(storage,QVariantMap(),name) {}
+	EvaluatorPositionSimulation(const TaskStorage& storage,
+				    const QString &line,
+				    const QString &pdbFileName):
+		EvaluatorPositionSimulation(storage,QVariantMap(),"") {
+		_position.setFromLegacy(line.toStdString(),pdbFileName.toStdString());
+	}
 
 	virtual Task
 	makeTask(const FrameDescriptor &frame) const noexcept;

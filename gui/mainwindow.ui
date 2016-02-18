@@ -358,7 +358,7 @@
     <string>&amp;Open settings</string>
    </property>
    <property name="toolTip">
-    <string>Load labelling positions, distances or body descriptions</string>
+    <string>Load labelling positions, distances, body descriptions or other evaluators</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -480,7 +480,7 @@
    <sender>actionLoadSettings</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
-   <slot>loadJson()</slot>
+   <slot>loadEvaluators()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -622,7 +622,7 @@
   </connection>
  </connections>
  <slots>
-  <slot>loadJson()</slot>
+  <slot>loadEvaluators()</slot>
   <slot>saveJson()</slot>
   <slot>metropolisSampling()</slot>
   <slot>exportData()</slot>

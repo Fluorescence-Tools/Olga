@@ -23,6 +23,14 @@ public:
 	{
 		_dist.setName(name);
 	}
+	EvaluatorDistance(const TaskStorage& storage, const QString &line,
+			  const QString &type):
+		AbstractEvaluator(storage)
+	{
+		_dist.setFromLegacy(line.toStdString(),type.toStdString());
+		_av1=_storage.evalId(_dist.position1());
+		_av2=_storage.evalId(_dist.position2());
+	}
 	virtual Task makeTask(const FrameDescriptor &frame) const noexcept;
 	virtual std::string name() const
 	{

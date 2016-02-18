@@ -70,7 +70,6 @@ public:
     static std::vector<Distance> fromLegacy(const std::string& distanceFileName);
     static QJsonObject jsonObjects(const std::vector<std::shared_ptr<Distance> > &arr);
 
-private:
     void setFromLegacy(const std::string &entry, const std::string &type);
 private:
     std::string _name="new dist";

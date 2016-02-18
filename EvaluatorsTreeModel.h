@@ -91,6 +91,7 @@ public:
 	void duplicateEvaluator(const QModelIndex& index);
 	QVariantMap evaluators() const;
 	void loadEvaluators(const QVariantMap &settings);
+	QVariantMap evaluatorsFromLegacy(QTextStream& in) const;
 private:
 	//EvalPtr eval(const EvalPtr& oldEval, int newEvalRow);
 	QString uniqueEvalName(const QVariantMap& evalMap, const QString& name) const;

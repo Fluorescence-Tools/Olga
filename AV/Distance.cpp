@@ -146,7 +146,7 @@ void Distance::setFromLegacy(const std::string &entry, const std::string &type)
     std::istringstream iss(entry);
     std::string buf;
     iss >> _position1 >> _position2 >> _distance >> _errPos >> _errNeg;
-
+    _name=_position1+"_"+_position2;
 }
 std::string Distance::name() const
 {
