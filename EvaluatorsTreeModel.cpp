@@ -409,10 +409,14 @@ QVariantMap EvaluatorsTreeModel::evaluatorsFromLegacy(QTextStream &in) const
 	QVariantMap evals;
 
 	QStringList lines=in.readAll().split('\n');
+	lines[0]=lines[0].trimmed();
 	if (lines[0]=="Rmp" || lines[0]=="RDAMean" || lines[0]=="RDAMeanE") {
 		QVariantMap propMap;
 		QString type=lines.takeFirst();
 		for( const QString& line:lines) {
+			if(line.trimmed().isEmpty()) {
+				continue;
+			}
 			auto eval=EvaluatorDistance(_storage,line,type);
 			const QString& evName=QString::fromStdString(eval.name());
 			if(!evName.isEmpty()) {
@@ -431,6 +435,9 @@ QVariantMap EvaluatorsTreeModel::evaluatorsFromLegacy(QTextStream &in) const
 		}
 		QVariantMap propMap;
 		for( const QString& line:lines) {
+			if(line.trimmed().isEmpty()) {
+				continue;
+			}
 			auto eval=EvaluatorPositionSimulation(_storage,line,pdb);
 			const QString& evName=QString::fromStdString(eval.name());
 			if(!evName.isEmpty()) {

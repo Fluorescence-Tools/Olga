@@ -20,4 +20,3 @@ AbstractEvaluator::Task EvaluatorChi2Contribution::makeTask(const FrameDescripto
 		return std::shared_ptr<AbstractCalcResult>(result);
 	}).share();
 }
-

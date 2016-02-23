@@ -19,25 +19,26 @@ class PositionSimulation;
 class Position
 {
 public:
-	enum class SimulationType {av1, av3, atom};
+	enum class SimulationType {AV1, AV3, ATOM, NONE };
 	static SimulationType simulationType(const std::string& str)
 	{
 		if(str=="AV1") {
-			return SimulationType::av1;
+			return SimulationType::AV1;
 		} else if (str=="AV3") {
-			return SimulationType::av3;
+			return SimulationType::AV3;
 		} else if (str=="ATOM") {
-			return SimulationType::atom;
+			return SimulationType::ATOM;
 		}
-		return SimulationType::av1;
+		std::cerr<<"simulation type is not supported: "+str+"\n"<<std::flush;
+		return SimulationType::NONE;
 	}
 	static std::string simulationTypeName(const SimulationType& type) {
 		switch (type) {
-		case SimulationType::av1:
+		case SimulationType::AV1:
 			return "AV1";
-		case SimulationType::av3:
+		case SimulationType::AV3:
 			return "AV3";
-		case SimulationType::atom:
+		case SimulationType::ATOM:
 			return "ATOM";
 		default:
 			return "AV1";

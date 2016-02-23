@@ -126,9 +126,9 @@ private:
 	const int evalListType=QVariant::fromValue(QList<EvalId>()).userType();
 	const int vec3dType=QVariant::fromValue(QVector3D()).userType();
 	const QStringList _simTypes{
-		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::av1)),
-		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::av3)),
-		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::atom))
+		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::AV1)),
+		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::AV3)),
+		QString::fromStdString(Position::simulationTypeName(Position::SimulationType::ATOM))
 	};
 };
 
