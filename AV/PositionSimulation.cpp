@@ -151,7 +151,7 @@ getAllowedSphereRadius(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW
 			      radius[1],radius[2], atom_i,gridResolution, vdWRMax,
 				allowedSphereRadius, linknodes, xyzW));
 	}
-	if(res.size()>0) {
+	if(res.size()>0 || allowedSphereRadius>=allowedSphereRadiusMax) {
 		return allowedSphereRadius;
 	}
 
@@ -268,7 +268,7 @@ getAllowedSphereRadius(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW
 					  atom_i,gridResolution, vdWRMax,
 					  allowedSphereRadius, linknodes, xyzW));
 	}
-	if(res.size()>0) {
+	if(res.size()>0 || allowedSphereRadiusMax<=allowedSphereRadius) {
 		return allowedSphereRadius;
 	}
 

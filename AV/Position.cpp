@@ -349,11 +349,11 @@ Eigen::Vector3f Position::atomXYZ(const pteros::System &system) const
 
 	if(selectedCount!=1)
 	{
-		std::cerr <<"Position \""<< _name <<
-			    "\". Attachment atom could not be selected. Specified selection defines "<<
-			    std::to_string(selectedCount)<<
-			    " atoms instead of one: " <<
-			    selectionExpression << std::endl;
+		std::cerr <<"Position \""+ _name +
+			    "\". Attachment atom could not be selected. Specified selection defines "+
+			    std::to_string(selectedCount)+
+			    " atoms instead of one: " +
+			    selectionExpression +'\n'<< std::flush;
 		const double nan=std::numeric_limits<float>::quiet_NaN();
 		return Eigen::Vector3f(nan,nan,nan);
 	}
@@ -375,8 +375,7 @@ void Position::setFromLegacy(const std::string &entry, const std::string &pdbFil
 	_simulationType=simulationType(simtypeStr);
 	delete _simulation;
 	_simulation=PositionSimulation::create(_simulationType);
-	if(!_simulation)
-	{
+	if(!_simulation) {
 		return;
 	}
 	int pdbId=_simulation->loadLegacy(iss);
