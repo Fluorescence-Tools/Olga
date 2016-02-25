@@ -23,8 +23,8 @@ public:
 	}
 
 	Eigen::Vector3f meanPosition() const;
-	double Rda(const PositionSimulationResult& other, unsigned nsamples=100000) const;
-	double Rdae(const PositionSimulationResult& other, double R0, unsigned nsamples=100000) const;
+	double Rda(const PositionSimulationResult& other, unsigned nsamples=200000) const;
+	double Rdae(const PositionSimulationResult& other, double R0, unsigned nsamples=200000) const;
 	double Rmp(const PositionSimulationResult& other) const;
 	double modelDistance(const PositionSimulationResult& other, const std::string& type, double R0=0) const;
 	std::ostream& dump_xyz(std::ostream& os) const;

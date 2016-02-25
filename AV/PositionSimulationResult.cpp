@@ -22,11 +22,11 @@ Eigen::Vector3f PositionSimulationResult::meanPosition() const
 double PositionSimulationResult::Rda(const PositionSimulationResult &other, unsigned nsamples) const
 {
 	using std::min;
-	unsigned av1length=_points.size();
-	unsigned av2length=other._points.size();
+	unsigned  long av1length=_points.size();
+	unsigned  long av2length=other._points.size();
 	const unsigned long rndLim=(av1length-1)*(av2length-1);
 	double mean=0.0;
-	if(nsamples<static_cast<unsigned long>(av1length*av2length) && nsamples!=0)//MC sampling
+	if(nsamples<(av1length*av2length) && nsamples!=0)//MC sampling
 	{
 		std::random_device rd;
 		std::mt19937 engine(rd());
@@ -65,11 +65,11 @@ double PositionSimulationResult::Rda(const PositionSimulationResult &other, unsi
 double PositionSimulationResult::Rdae(const PositionSimulationResult &other, double R0, unsigned nsamples) const
 {
 	using std::min;
-	unsigned av1length=_points.size();
-	unsigned av2length=other._points.size();
+	unsigned long av1length=_points.size();
+	unsigned long av2length=other._points.size();
 	const unsigned long rndLim=(av1length-1)*(av2length-1);
 	double r2, e = 0., R0r6 = 1./(R0*R0*R0*R0*R0*R0);
-	if(nsamples<static_cast<unsigned long>(av1length*av2length) && nsamples!=0)//MC sampling
+	if(nsamples<av1length*av2length && nsamples!=0)//MC sampling
 	{
 		std::random_device rd;
 		std::mt19937 engine(rd());
