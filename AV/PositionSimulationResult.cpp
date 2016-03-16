@@ -22,8 +22,8 @@ Eigen::Vector3f PositionSimulationResult::meanPosition() const
 double PositionSimulationResult::Rda(const PositionSimulationResult &other, unsigned nsamples) const
 {
 	using std::min;
-	unsigned  long av1length=_points.size();
-	unsigned  long av2length=other._points.size();
+	unsigned long av1length=_points.size();
+	unsigned long av2length=other._points.size();
 	const unsigned long rndLim=(av1length-1)*(av2length-1);
 	double mean=0.0;
 	if(nsamples<(av1length*av2length) && nsamples!=0)//MC sampling
