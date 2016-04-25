@@ -4,6 +4,7 @@
 #include "EvaluatorDistance.h"
 #include "EvaluatorChi2.h"
 #include "EvaluatorChi2Contribution.h"
+#include "EvaluatorWeightedResidual.h"
 #include "EvaluatorTrasformationMatrix.h"
 #include "EvaluatorEulerAngle.h"
 
@@ -24,6 +25,8 @@ TaskStorage::TaskStorage():_tasksRingBuf(_tasksRingBufSize),
 	evaluatorDistance=_currentId;
 	addEvaluator(std::make_unique<const EvaluatorChi2>(*this,"unknown"));
 	evaluatorChi2=_currentId;
+	addEvaluator(std::make_unique<const EvaluatorWeightedResidual>(*this,"unknown"));
+	evaluatorWeightedResidual=_currentId;
 	addEvaluator(std::make_unique<const EvaluatorChi2Contribution>(*this,"unknown"));
 	evaluatorChi2Conribution=_currentId;
 	addEvaluator(std::make_unique<const EvaluatorTrasformationMatrix>(*this,"unknown"));
@@ -164,10 +167,12 @@ TaskStorage::MutableEvalPtr TaskStorage::makeEvaluator(int typeNum) const {
 	case 2:
 		return std::make_unique<EvaluatorChi2>(*this,"new χ²");
 	case 3:
-		return std::make_unique<EvaluatorChi2Contribution>(*this,"new χ² contribution");
+		return std::make_unique<EvaluatorWeightedResidual>(*this,"new χ² contribution");
 	case 4:
-		return std::make_unique<EvaluatorTrasformationMatrix>(*this,"new coordinate system");
+		return std::make_unique<EvaluatorChi2Contribution>(*this,"new χ² contribution");
 	case 5:
+		return std::make_unique<EvaluatorTrasformationMatrix>(*this,"new coordinate system");
+	case 6:
 		return std::make_unique<EvaluatorEulerAngle>(*this,"new euler angles");
 	default:
 		return MutableEvalPtr();

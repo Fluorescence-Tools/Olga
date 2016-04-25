@@ -38,7 +38,3 @@ DISTFILES += \
     .gitignore \
     vdWRadii.json
 
-HEADERS +=
-
-SOURCES +=
-

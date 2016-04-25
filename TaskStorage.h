@@ -261,6 +261,7 @@ public:
 	EvalId evaluatorDistance;
 	EvalId evaluatorChi2;
 	EvalId evaluatorChi2Conribution;
+	EvalId evaluatorWeightedResidual;
 	EvalId evaluatorTrasformationMatrix;
 	EvalId evaluatorEulerAngle;
 };

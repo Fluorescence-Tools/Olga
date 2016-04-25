@@ -9,6 +9,7 @@ class EvaluatorDistance : public AbstractEvaluator
 {
 	friend class EvaluatorChi2;
 	friend class EvaluatorChi2Contribution;
+	friend class EvaluatorWeightedResidual;
 	static EvaluatorPositionSimulation _avStub;
 private:
 	EvalId _av1, _av2;

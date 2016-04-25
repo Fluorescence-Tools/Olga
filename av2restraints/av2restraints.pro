@@ -31,7 +31,8 @@ HEADERS += \
     EvaluatorPositionSimulation.h \
     EvaluatorDistance.h \
     EvaluatorChi2.h \
-    EvaluatorChi2Contribution.h
+    EvaluatorChi2Contribution.h \
+    EvaluatorWeightedResidual.h
 
 SOURCES += \
     AV/av_routines.cpp \
@@ -52,4 +53,5 @@ SOURCES += \
     EvaluatorPositionSimulation.cpp \
     EvaluatorDistance.cpp \
     EvaluatorChi2.cpp \
-    EvaluatorChi2Contribution.cpp
+    EvaluatorChi2Contribution.cpp \
+    EvaluatorWeightedResidual.cpp
