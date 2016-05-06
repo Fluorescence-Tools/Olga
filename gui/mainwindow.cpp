@@ -265,10 +265,16 @@ void MainWindow::loadStructuresFolder(const QString &path)
 {
 	QDir dir(path);
 	QStringList fileNames=dir.entryList({"*.pdb"});
+	const int size=fileNames.size();
+	QProgressDialog progress("Listing files...","",0,size,this);
+	progress.setWindowModality(Qt::WindowModal);
+	int i=0;
+	const unsigned frac5p=size/20>0?size/20:5;
 	for(auto& s:fileNames) {
 		s.prepend(dir.absolutePath()+"/");
+		if(++i%(frac5p)==0) { progress.setValue(i); }
 	}
-
+	progress.setValue(size);
 	loadMolecules(fileNames);
 }
 

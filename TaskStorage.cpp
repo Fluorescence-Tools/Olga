@@ -35,10 +35,13 @@ TaskStorage::TaskStorage():_tasksRingBuf(_tasksRingBufSize),
 	evaluatorEulerAngle=_currentId;
 
 	_maxStubEval=_currentId;
+	_runRequestsThread=std::thread([this]{runRequests();});
 }
 
 TaskStorage::~TaskStorage()
 {
+	_runRequests.clear();
+	_runRequestsThread.join();
 }
 
 //must only run in worker thread
@@ -88,11 +91,6 @@ const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key, bool persist
 		}
 		_requests.erase(key);
 		_tasksRunning--;
-		if(_tasksRunning<_minRunningCount) {
-			async::spawn(workerPool,[this]{
-				runRequests();
-			});
-		}
 	});
 	return task;
 }
@@ -165,11 +163,11 @@ TaskStorage::MutableEvalPtr TaskStorage::makeEvaluator(int typeNum) const {
 	case 1:
 		return std::make_unique<EvaluatorDistance>(*this,"new dist");
 	case 2:
-		return std::make_unique<EvaluatorChi2>(*this,"new χ²");
-	case 3:
 		return std::make_unique<EvaluatorWeightedResidual>(*this,"new χ² contribution");
-	case 4:
+	case 3:
 		return std::make_unique<EvaluatorChi2Contribution>(*this,"new χ² contribution");
+	case 4:
+		return std::make_unique<EvaluatorChi2>(*this,"new χ²");
 	case 5:
 		return std::make_unique<EvaluatorTrasformationMatrix>(*this,"new coordinate system");
 	case 6:
@@ -300,11 +298,9 @@ std::string TaskStorage::getString(const FrameDescriptor &frame,
 	} else {
 		_requestQueue.enqueue(key);//produce
 		_requests.insert(key,persistent);
-		if(_requestQueue.size_approx()==1) {
-			async::spawn(workerPool,[this]{
-				runRequests();
-			});
-		}
+		/*if(_requestQueue.size_approx()==1) {
+			spawnRunRequests();
+		}*/
 	}
 	return "...";
 }

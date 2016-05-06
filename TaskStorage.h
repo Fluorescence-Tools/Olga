@@ -14,6 +14,7 @@
 #include <atomic>
 #include <unordered_set>
 #include <cstdint>
+#include <algorithm>
 
 #include <QObject>
 #include <QVariant>
@@ -187,35 +188,50 @@ private:
 	//must only run in worker thread
 	void runRequests() const
 	{
-		static auto tid=std::this_thread::get_id();
-		assert(tid==std::this_thread::get_id());
-		while(_pauseCount) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
-		CacheKey key;
-		while(_tasksRunning<_maxRunningCount)//consume
+		_runRequests.test_and_set();
+		unsigned waitms=1000;
+		while(_runRequests.test_and_set())
 		{
-			if(_requestQueue.try_dequeue(key)) {
-				getTask(key,true);
-			} else {
-				_requests.reserve(0);
-				auto locked=_requests.lock_table();
-				std::string str;
-				for(auto pair:locked) {
-					const CacheKey &k=pair.first;
-					str+=k.first.fullName()+", "
-					     +std::to_string(int(k.second))+"\n";
-				}
-				if(str.size()) {
-					std::cout<<"Residual requests: \n"+str
-						<<std::flush;
-				}
-				return;
+			static auto tid=std::this_thread::get_id();
+			assert(tid==std::this_thread::get_id());
+			while(_pauseCount) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
+			if(_tasksRunning<_minRunningCount) {
+				waitms/=2;
+			} else {
+				waitms=std::min(2000u,waitms*2);
+			}
+			CacheKey key;
+			while(_tasksRunning<_maxRunningCount)//consume
+			{
+				if(_requestQueue.try_dequeue(key)) {
+					getTask(key,true);
+				} else {
+					_requests.reserve(0);
+					auto locked=_requests.lock_table();
+					std::string str;
+					for(auto pair:locked) {
+						const CacheKey &k=pair.first;
+						str+=k.first.fullName()+", "
+						     +std::to_string(int(k.second))+"\n";
+					}
+					if(str.size()) {
+						std::cout<<"Residual requests: \n"+str
+							<<std::flush;
+					}
+					break;
+				}
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(waitms));
 		}
 	}
 
+
 private:
+	mutable std::atomic_flag _runRequests = ATOMIC_FLAG_INIT;
+	std::thread _runRequestsThread;
+
 	static const int evalType;
 	static const int simulationType;
 	static const int evalListType;
@@ -239,7 +255,6 @@ private:
 	const size_t _tasksRingBufSize=_maxRunningCount*3;
 	mutable std::vector<CacheKey> _tasksRingBuf;
 	mutable size_t _tasksRBpos=0;
-	mutable async::threadpool_scheduler workerPool{1};
 
 	mutable std::unordered_map<FrameDescriptor,PterosSysTask> _sysCache;
 	const size_t _sysRingBufSize=_maxRunningCount;
