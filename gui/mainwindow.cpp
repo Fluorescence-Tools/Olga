@@ -16,6 +16,7 @@
 #include <QTime>
 #include <QProgressDialog>
 #include <QTextStream>
+#include <QScrollBar>
 #include "Q_DebugStream.h"
 
 
@@ -257,24 +258,33 @@ void MainWindow::loadMolecules(const QStringList &fileNames)
 			break;
 		}
 	}
+
+	//TODO: This is a hack. It prevents from lags when scrolling
+	int vPos=ui->mainTreeView->verticalScrollBar()->value();
+	ui->mainTreeView->scrollToBottom();
+	QCoreApplication::processEvents();
+	ui->mainTreeView->scrollToTop();
+	QCoreApplication::processEvents();
+	ui->mainTreeView->verticalScrollBar()->setValue(vPos);
+
 	progress.setValue(size);
 	statusBar()->showMessage(tr("Loaded %1 frames").arg(i), 5000);
 }
 
 void MainWindow::loadStructuresFolder(const QString &path)
 {
+	QProgressDialog progress("Listing files...",QString(),0,100,this);
+	progress.setWindowModality(Qt::WindowModal);
 	QDir dir(path);
 	QStringList fileNames=dir.entryList({"*.pdb"});
 	const int size=fileNames.size();
-	QProgressDialog progress("Listing files...","",0,size,this);
-	progress.setWindowModality(Qt::WindowModal);
 	int i=0;
 	const unsigned frac5p=size/20>0?size/20:5;
 	for(auto& s:fileNames) {
 		s.prepend(dir.absolutePath()+"/");
-		if(++i%(frac5p)==0) { progress.setValue(i); }
+		if(++i%(frac5p)==0) { progress.setValue(i*100/size); }
 	}
-	progress.setValue(size);
+	progress.setValue(100);
 	loadMolecules(fileNames);
 }
 
