@@ -198,9 +198,9 @@ private:
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
 			if(_tasksRunning<_minRunningCount) {
-				waitms/=2;
+				waitms=waitms/2+1;
 			} else {
-				waitms=std::min(2000u,waitms*2);
+				waitms=std::min(5000u,waitms*2);
 			}
 			CacheKey key;
 			while(_tasksRunning<_maxRunningCount)//consume
@@ -220,6 +220,7 @@ private:
 						std::cout<<"Residual requests: \n"+str
 							<<std::flush;
 					}
+					waitms=1000u;
 					break;
 				}
 			}

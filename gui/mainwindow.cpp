@@ -81,8 +81,8 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 	connect(&trajectoriesModel, SIGNAL(rowsInserted(QModelIndex, int, int)),
 		this, SLOT(expand(const QModelIndex &, int, int)));
 	if(json.size()>0 && pdbsDir.size()>0 && ha4Out.size() >0) {
-		loadEvaluators(json);
 		loadStructuresFolder(pdbsDir);
+		loadEvaluators(json);
 		QTimer* timer=new QTimer(this);
 		timer->setSingleShot(false);
 		connect(timer, &QTimer::timeout, [=](){
