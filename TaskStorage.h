@@ -186,47 +186,7 @@ private:
 		_tasksRBpos=(_tasksRBpos+1)%_tasksRingBufSize;
 	}
 	//must only run in worker thread
-	void runRequests() const
-	{
-		_runRequests.test_and_set();
-		unsigned waitms=1000;
-		while(_runRequests.test_and_set())
-		{
-			static auto tid=std::this_thread::get_id();
-			assert(tid==std::this_thread::get_id());
-			while(_pauseCount) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			}
-			if(_tasksRunning<_minRunningCount) {
-				waitms=waitms/2+1;
-			} else {
-				waitms=std::min(5000u,waitms*2);
-			}
-			CacheKey key;
-			while(_tasksRunning<_maxRunningCount)//consume
-			{
-				if(_requestQueue.try_dequeue(key)) {
-					getTask(key,true);
-				} else {
-					_requests.reserve(0);
-					auto locked=_requests.lock_table();
-					std::string str;
-					for(auto pair:locked) {
-						const CacheKey &k=pair.first;
-						str+=k.first.fullName()+", "
-						     +std::to_string(int(k.second))+"\n";
-					}
-					if(str.size()) {
-						std::cout<<"Residual requests: \n"+str
-							<<std::flush;
-					}
-					waitms=1000u;
-					break;
-				}
-			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(waitms));
-		}
-	}
+	void runRequests() const;
 
 
 private:
@@ -249,7 +209,7 @@ private:
 
 	mutable CuckooMap<CacheKey,Result> _results;
 
-	const int _minRunningCount=(std::thread::hardware_concurrency()+1)*2;
+	const int _minRunningCount=(std::thread::hardware_concurrency()+1)*4;
 	const int _maxRunningCount=_minRunningCount*2;
 	mutable std::unordered_map<CacheKey,Task> _tasks;
 	mutable std::atomic<int> _tasksRunning{0};

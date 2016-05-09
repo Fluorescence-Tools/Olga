@@ -95,6 +95,59 @@ const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key, bool persist
 	return task;
 }
 
+void TaskStorage::runRequests() const
+{
+	_runRequests.test_and_set();
+	unsigned waitms=1000;
+	while(_runRequests.test_and_set())
+	{
+		static auto tid=std::this_thread::get_id();
+		assert(tid==std::this_thread::get_id());
+		while(_pauseCount) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}
+		if(_tasksRunning<_minRunningCount) {
+			waitms=waitms/2;
+			if (_tasksRunning<_minRunningCount/2) {
+				if (_requestQueue.size_approx()>1) {
+					std::cout<<"Number of tasks running is "
+						   "too low, this might lead to "
+						   "performance decrease. "
+						   "(waitms="
+						   +std::to_string(waitms)
+						   +")\n"<<std::flush;
+				}
+			}
+		} else {
+			waitms=1+waitms*1.5;
+			waitms=std::min(2000u,waitms);
+		}
+		CacheKey key;
+		while(_tasksRunning<_maxRunningCount)//consume
+		{
+			if(_requestQueue.try_dequeue(key)) {
+				getTask(key,true);
+			} else {
+				_requests.reserve(0);
+				auto locked=_requests.lock_table();
+				std::string str;
+				for(auto pair:locked) {
+					const CacheKey &k=pair.first;
+					str+=k.first.fullName()+", "
+					     +std::to_string(int(k.second))+"\n";
+				}
+				if(str.size()) {
+					std::cout<<"Residual requests: \n"+str
+						<<std::flush;
+				}
+				waitms=1000u;
+				break;
+			}
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(waitms));
+	}
+}
+
 QVariantMap TaskStorage::propMap(const AbstractEvaluator &ev) const
 {
 	QVariantMap propMap;
@@ -298,9 +351,6 @@ std::string TaskStorage::getString(const FrameDescriptor &frame,
 	} else {
 		_requestQueue.enqueue(key);//produce
 		_requests.insert(key,persistent);
-		/*if(_requestQueue.size_approx()==1) {
-			spawnRunRequests();
-		}*/
 	}
 	return "...";
 }
