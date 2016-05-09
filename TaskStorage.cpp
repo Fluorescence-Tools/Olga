@@ -110,7 +110,7 @@ void TaskStorage::runRequests() const
 			waitms=waitms/4;
 			if (_tasksRunning<_minRunningCount/2) {
 				if (_requestQueue.size_approx()>1) {
-					std::cout<<"Number of tasks running ("<<
+					std::cout<<"Number of tasks running ("
 						   +std::to_string(_tasksRunning)+") is "
 						   "too low, this might lead to "
 						   "performance decrease. "
