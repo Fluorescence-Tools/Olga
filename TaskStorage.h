@@ -209,7 +209,7 @@ private:
 
 	mutable CuckooMap<CacheKey,Result> _results;
 
-	const int _minRunningCount=(std::thread::hardware_concurrency()+1)*4;
+	const int _minRunningCount=(std::thread::hardware_concurrency()+1)*10;
 	const int _maxRunningCount=_minRunningCount*2;
 	mutable std::unordered_map<CacheKey,Task> _tasks;
 	mutable std::atomic<int> _tasksRunning{0};

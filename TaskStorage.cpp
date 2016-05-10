@@ -98,7 +98,7 @@ const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key, bool persist
 void TaskStorage::runRequests() const
 {
 	_runRequests.test_and_set();
-	unsigned waitms=1000;
+	unsigned waitms=200;
 	while(_runRequests.test_and_set())
 	{
 		static auto tid=std::this_thread::get_id();
@@ -111,9 +111,9 @@ void TaskStorage::runRequests() const
 			if (_tasksRunning<_minRunningCount/2) {
 				if (_requestQueue.size_approx()>1) {
 					std::cout<<"Number of tasks running ("
-						   +std::to_string(_tasksRunning)+") is "
-						   "too low, this might lead to "
-						   "performance decrease. "
+						   +std::to_string(_tasksRunning)+
+						   ") is too low, this might "
+						   "lead to performance decrease. "
 						   "(waitms="
 						   +std::to_string(waitms)
 						   +")\n"<<std::flush;
@@ -121,8 +121,8 @@ void TaskStorage::runRequests() const
 				waitms=0;
 			}
 		} else {
-			waitms=1+waitms*1.5;
-			waitms=std::min(2000u,waitms);
+			waitms=1+waitms*1.2;
+			waitms=std::min(200u,waitms);
 		}
 		CacheKey key;
 		while(_tasksRunning<_maxRunningCount)//consume
