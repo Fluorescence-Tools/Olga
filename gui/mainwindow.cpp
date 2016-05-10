@@ -260,12 +260,12 @@ void MainWindow::loadMolecules(const QStringList &fileNames)
 	}
 
 	//TODO: This is a hack. It prevents from lags when scrolling
-	int vPos=ui->mainTreeView->verticalScrollBar()->value();
+	/*int vPos=ui->mainTreeView->verticalScrollBar()->value();
 	ui->mainTreeView->scrollToBottom();
 	QCoreApplication::processEvents();
 	ui->mainTreeView->scrollToTop();
 	QCoreApplication::processEvents();
-	ui->mainTreeView->verticalScrollBar()->setValue(vPos);
+	ui->mainTreeView->verticalScrollBar()->setValue(vPos);*/
 
 	progress.setValue(size);
 	statusBar()->showMessage(tr("Loaded %1 frames").arg(i), 5000);
