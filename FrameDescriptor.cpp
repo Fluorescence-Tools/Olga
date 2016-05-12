@@ -2,16 +2,22 @@
 #include <string>
 std::string FrameDescriptor::topologyFileName() const
 {
-    return _topologyFileName;
+	if (_topologyFileName) {
+		return *_topologyFileName;
+	}
+	return "";
 }
-
-void FrameDescriptor::setTopologyFileName(const std::string &topologyFileName)
+/*
+void FrameDescriptor::setTopologyFileName(std::shared_ptr<const std::string> topologyFileName)
 {
-    _topologyFileName = topologyFileName;
-}
+	_topologyFileName = topologyFileName;
+}*/
 std::string FrameDescriptor::trajFileName() const
 {
-	return _trajFileName;
+	if(_trajFileName) {
+		return *_trajFileName;
+	}
+	return "";
 }
 
 

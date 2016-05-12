@@ -4,17 +4,18 @@
 #include <string>
 #include <iostream>
 #include <QMetaType>
+#include <memory>
 
 class FrameDescriptor
 {
 public:
 
-	FrameDescriptor(std::string top, std::string traj,
-			unsigned frame=0):_topologyFileName(std::move(top)),
-		_trajFileName(std::move(traj)),_frame(frame)
+	FrameDescriptor(std::shared_ptr<const std::string> top, std::shared_ptr<const std::string> traj,
+			unsigned frame=0):_topologyFileName(top),
+		_trajFileName(traj),_frame(frame)
 	{
 	}
-	FrameDescriptor() {}
+	FrameDescriptor():_topologyFileName(nullptr),_trajFileName(nullptr) {}
 	FrameDescriptor ( FrameDescriptor && o):
 		_topologyFileName(std::move(o._topologyFileName)),
 		_trajFileName(std::move(o._trajFileName)),
@@ -30,29 +31,29 @@ public:
 	FrameDescriptor & operator= ( FrameDescriptor && ) = default;
 	bool trajNameEmpty() const
 	{
-		return _trajFileName.empty();
+		return _trajFileName->empty();
 	}
 	bool inline operator==(const FrameDescriptor& rhs) const
 	{
-		return  _topologyFileName == rhs._topologyFileName &&
-				_trajFileName == rhs._trajFileName &&
+		return  *_topologyFileName == *(rhs._topologyFileName) &&
+				*_trajFileName == *(rhs._trajFileName) &&
 				_frame == rhs._frame;
 	}
 	friend struct std::hash<FrameDescriptor>;
 	std::string topologyFileName() const;
-	void setTopologyFileName(const std::string &topologyFileName);
+	//void setTopologyFileName(std::shared_ptr<const std::string> topologyFileName);
 	std::string trajFileName() const;
 	unsigned frame() const;
     std::string fullName() const
     {
 	if(_topologyFileName!=_trajFileName) {
-	    return _topologyFileName+","+_trajFileName+"#"+std::to_string(_frame);
+	    return *_topologyFileName+","+*_trajFileName+"#"+std::to_string(_frame);
 	}
-	return _trajFileName+"#"+std::to_string(_frame);
+	return *_trajFileName+"#"+std::to_string(_frame);
     }
 
 private:
-	std::string _topologyFileName, _trajFileName;
+	std::shared_ptr<const std::string> _topologyFileName, _trajFileName;
 	unsigned _frame=0;
 
 };
@@ -66,8 +67,16 @@ namespace std {
 template <>
 struct hash<FrameDescriptor> {
 	size_t operator()(const FrameDescriptor& desc) const {
-		size_t seed=hash<string>()(desc._topologyFileName);
-		hash_combine(seed,desc._trajFileName);
+
+		size_t seed;
+		if (desc._topologyFileName) {
+			seed=hash<std::string>()(*(desc._topologyFileName));
+		} else {
+			seed=hash<std::string>()("");
+		}
+		if (desc._trajFileName) {
+			hash_combine(seed,*(desc._trajFileName));
+		}
 		hash_combine(seed,desc._frame);
 		return seed;
 	}

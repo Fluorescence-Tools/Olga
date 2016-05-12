@@ -1,5 +1,6 @@
 #include <cassert>
 #include <set>
+#include <memory>
 
 #include <QFileInfo>
 #include <QTimer>
@@ -168,8 +169,9 @@ int TrajectoriesTreeModel::columnCount(const QModelIndex &/*parent*/) const
 bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
 {
 	MolecularTrajectory tmpTrj;
-	tmpTrj.setTopology(fileName.toStdString());
-	if(tmpTrj.addPdbChunk(fileName.toStdString()))
+	auto fileNamePtr=std::make_shared<std::string>(fileName.toStdString());
+	tmpTrj.setTopology(fileNamePtr);
+	if(tmpTrj.addPdbChunk(fileNamePtr))
 	{
 		beginInsertRows(QModelIndex(),_molTrajs.size(),_molTrajs.size());
 		_molTrajs.push_back(tmpTrj);
@@ -233,14 +235,14 @@ QString TrajectoriesTreeModel::frameName(const TrajectoriesTreeItem *parent, int
 	QString name;
 	switch (parent->nesting()){
 	case 0:
-		name=QString::fromStdString(_molTrajs[row].topologyFileName());
+		name=QString::fromStdString(*(_molTrajs[row].topologyFileName()));
 		name=QFileInfo(name).fileName();
 		break;
 	case 2:
 		return QString("#%1").arg(row);
 		break;
 	case 1:
-		name=QString::fromStdString(_molTrajs[parent->moltrajIndex].trajectoryFileName(row));
+		name=QString::fromStdString(*(_molTrajs[parent->moltrajIndex].trajectoryFileName(row)));
 		name=QFileInfo(name).fileName();
 		break;
 	default:
@@ -257,7 +259,7 @@ QString TrajectoriesTreeModel::colName(int section) const
 
 FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeItem *parent, int row) const
 {
-	std::string top,traj;
+	std::shared_ptr<const std::string> top,traj;
 	unsigned frame=-100;
 	switch (parent->nesting()){
 	case 0:
@@ -276,8 +278,8 @@ FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeIte
 		frame=row;
 		break;
 	default:
-		top="?";
-		traj="??";
+		top=std::make_shared<const std::string>("?");
+		traj=std::make_shared<const std::string>("??");
 		frame=-1;
 	}
 	return FrameDescriptor(top,traj,frame);

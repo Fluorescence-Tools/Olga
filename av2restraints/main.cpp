@@ -419,7 +419,8 @@ int main(int argc, char *argv[])
 	auto duXYZd=duXYZf.cast<double>()*10.0;
 	std::cout<<"DU coordinates read:\n"<<duXYZd<<"\n";
 
-	FrameDescriptor frame(pdbFileName.toStdString(),pdbFileName.toStdString());
+	auto pdbFnamePtr=std::make_shared<const std::string>(pdbFileName.toStdString());
+	FrameDescriptor frame(pdbFnamePtr,pdbFnamePtr);
 	storage.evaluate(frame,avs);
 	std::cout<<"Evaluation started, waiting..."<<std::endl;
 	do {
