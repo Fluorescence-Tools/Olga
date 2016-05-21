@@ -19,11 +19,14 @@ int main(int argc, char *argv[])
 				  {{"o","out"},
 				   "results .ha4 filename", "file"}
 			  });
+	QCommandLineOption quietOption("quiet", "quiet");
+	parser.addOption(quietOption);
 	parser.process(a);
 	QString settingsFileName=parser.value("j");
 	QString pdbsDirPath=parser.value("dir");
 	QString resultsFileName=parser.value("o");
+	bool quiet=parser.isSet(quietOption);
 	MainWindow w(settingsFileName,pdbsDirPath,resultsFileName);
-	w.show();
+	if(!quiet) {w.show();}
 	return a.exec();
 }

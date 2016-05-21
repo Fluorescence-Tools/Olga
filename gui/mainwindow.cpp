@@ -392,7 +392,9 @@ void MainWindow::loadStructuresFolder()
 {
 	QString path = QFileDialog::getExistingDirectory(this,
 							 tr("Load strcutures from a folder"), "");
-	loadStructuresFolder(path);
+	if(!path.isEmpty()) {
+		loadStructuresFolder(path);
+	}
 }
 
 void MainWindow::metropolisSampling()
