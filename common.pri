@@ -37,4 +37,3 @@ SRC_DIR = $$PWD
 DISTFILES += \
     .gitignore \
     vdWRadii.json
-

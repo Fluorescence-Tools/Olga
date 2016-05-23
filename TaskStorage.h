@@ -236,6 +236,7 @@ public:
 	EvalId evaluatorPositionSimulation;
 	EvalId evaluatorDistance;
 	EvalId evaluatorChi2;
+	EvalId evaluatorChi2r;
 	EvalId evaluatorChi2Conribution;
 	EvalId evaluatorWeightedResidual;
 	EvalId evaluatorTrasformationMatrix;

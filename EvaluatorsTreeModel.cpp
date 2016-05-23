@@ -3,6 +3,7 @@
 #include "EvaluatorPositionSimulation.h"
 #include "EvaluatorDistance.h"
 #include "EvaluatorChi2.h"
+#include "EvaluatorChi2r.h"
 #include "EvaluatorTrasformationMatrix.h"
 #include "EvaluatorEulerAngle.h"
 

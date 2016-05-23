@@ -48,7 +48,8 @@ HEADERS += \
     EvaluatorsTreeModel.h \
     EvaluatorDelegate.h \
     CheckBoxList.h \
-    EvaluatorWeightedResidual.h
+    EvaluatorWeightedResidual.h \
+    EvaluatorChi2r.h
 
 SOURCES += \
     AV/av_routines.cpp \
@@ -74,4 +75,5 @@ SOURCES += \
     EvaluatorsTreeModel.cpp \
     EvaluatorDelegate.cpp \
     CheckBoxList.cpp \
-    EvaluatorWeightedResidual.cpp
+    EvaluatorWeightedResidual.cpp \
+    EvaluatorChi2r.cpp
