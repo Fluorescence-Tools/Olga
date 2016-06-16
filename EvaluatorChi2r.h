@@ -18,6 +18,7 @@ private:
 		}
 	}
 	int fitParamCount=0;
+	bool ignoreNan=false;
 
 public:
 	EvaluatorChi2r(const TaskStorage& storage,const std::string& name):
@@ -53,13 +54,14 @@ public:
 			return {"distances",QVariant::fromValue(list)};
 		} else if(row==1) {
 			return {"number of fit parameters",fitParamCount};
+		} else if(row==2) {
+			return {"ignore_nan",ignoreNan};
 		}
 		return {"",""};
 	}
 	virtual void setSetting(int row, const QVariant& val)
 	{
-		if(row>1) {
-		} else if(row==1) {
+		if(row==1) {
 			fitParamCount=val.toInt();
 			if (fitParamCount<0) {
 				fitParamCount=0;
@@ -71,6 +73,8 @@ public:
 				_distCalcs.push_back(evId);
 			}
 			updateDistances();
+		} else if(row==2) {
+			ignoreNan=val.toBool();
 		}
 	}
 	virtual void setName(const std::string& name)
@@ -79,7 +83,7 @@ public:
 	}
 	virtual int settingsCount() const
 	{
-		return 2;
+		return 3;
 	}
 };
 
