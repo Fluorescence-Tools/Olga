@@ -325,7 +325,7 @@
   <action name="actionLoadStructures">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/molecule_add.svg</normaloff>:/icons/molecule_add.svg</iconset>
+     <normaloff>:/icons/molecule_add.svgz</normaloff>:/icons/molecule_add.svgz</iconset>
    </property>
    <property name="text">
     <string>&amp;Import structure(s)</string>
@@ -433,7 +433,7 @@
   <action name="actionLoadStructuresFolder">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/molecule_add_fldr.svg</normaloff>:/icons/molecule_add_fldr.svg</iconset>
+     <normaloff>:/icons/molecule_add_fldr.svgz</normaloff>:/icons/molecule_add_fldr.svgz</iconset>
    </property>
    <property name="text">
     <string>Import structure(s) from folder</string>

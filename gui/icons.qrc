@@ -21,7 +21,7 @@
         <file>icons/list-add.svgz</file>
         <file>icons/edit-delete.svgz</file>
         <file>icons/edit-copy.svgz</file>
-        <file>icons/molecule_add.svg</file>
-        <file>icons/molecule_add_fldr.svg</file>
+        <file>icons/molecule_add.svgz</file>
+        <file>icons/molecule_add_fldr.svgz</file>
     </qresource>
 </RCC>
