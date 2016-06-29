@@ -112,7 +112,7 @@ void TaskStorage::runRequests() const
 		if(_tasksRunning<_minRunningCount) {
 			waitms=waitms/4;
 			if (_tasksRunning<_minRunningCount/2) {
-				if (_requestQueue.size_approx()>1) {
+				/*if (_requestQueue.size_approx()>1) {
 					std::cout<<"Number of tasks running ("
 						   +std::to_string(_tasksRunning)+
 						   ") is too low, this might "
@@ -120,7 +120,7 @@ void TaskStorage::runRequests() const
 						   "(waitms="
 						   +std::to_string(waitms)
 						   +")\n"<<std::flush;
-				}
+				}*/
 				waitms=0;
 			}
 		} else {
@@ -134,7 +134,7 @@ void TaskStorage::runRequests() const
 				getTask(key,true);
 			} else {
 				_requests.reserve(0);
-				auto locked=_requests.lock_table();
+				/*auto locked=_requests.lock_table();
 				std::string str;
 				for(auto pair:locked) {
 					const CacheKey &k=pair.first;
@@ -144,7 +144,7 @@ void TaskStorage::runRequests() const
 				if(str.size()) {
 					std::cout<<"Residual requests: \n"+str
 						<<std::flush;
-				}
+				}*/
 				waitms=1000u;
 				break;
 			}

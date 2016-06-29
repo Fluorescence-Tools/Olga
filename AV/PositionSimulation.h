@@ -64,14 +64,10 @@ public:
 	calculate(unsigned atom_i,const std::vector<Eigen::Vector4f>& xyzW);
 
 private:
-	double getAllowedSphereRadius(unsigned atom_i,
-				      const std::vector<Eigen::Vector4f> &xyzW,
-				      std::vector<Eigen::Vector3f> &res) const;
-private:
 	double gridResolution=0.4;
 	double linkerLength=0.0;
 	double linkerWidth=0.0;
-	double radius[3]={0.0,0.0,0.0};
+	float radius[3]={0.0,0.0,0.0};
 	double allowedSphereRadius=0.5;
 	double allowedSphereRadiusMin=0.5;
 	double allowedSphereRadiusMax=2.0;
@@ -104,10 +100,6 @@ public:
 	using PositionSimulation::calculate;
 	virtual PositionSimulationResult calculate(unsigned atom_i, const std::vector<Eigen::Vector4f>& xyzW);
 
-private:
-	double getAllowedSphereRadius(unsigned atom_i,
-				      const std::vector<Eigen::Vector4f> &xyzW,
-				      std::vector<Eigen::Vector3f> &res) const;
 private:
 	double gridResolution=0.4;
 	double linkerLength=0.0;

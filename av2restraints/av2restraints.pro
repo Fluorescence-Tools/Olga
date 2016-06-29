@@ -13,7 +13,7 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
-    AV/av_routines.h \
+    AV/fretAV.h \
     AV/Distance.h \
     AV/MolecularSystemDomain.h \
     AV/Position.h \
@@ -36,7 +36,7 @@ HEADERS += \
      EvaluatorChi2r.h
 
 SOURCES += \
-    AV/av_routines.cpp \
+    AV/fretAV.cpp \
     AV/Distance.cpp \
     AV/MolecularSystemDomain.cpp \
     AV/Position.cpp \

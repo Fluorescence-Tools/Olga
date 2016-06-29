@@ -82,10 +82,6 @@ private:
 	//std::shared_ptr<std::string> _topFileName;
 	std::shared_ptr<const std::string> _topFileName;
 	std::vector<Chunk> _chunks;
-
-	//TODO: remove, deprecated
-	//using FrameName_Numbers=std::pair<std::string,boost::icl::interval_set<int>>;//trajectoryFileName,frameNumbers
-	//std::vector<FrameName_Numbers> _trajectories;
 };
 
 #endif // MOLECULARTRAJECTORY_H

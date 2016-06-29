@@ -1,5 +1,5 @@
 #include "PositionSimulation.h"
-#include "av_routines.h"
+#include "fretAV.h"
 #include "Position.h"
 
 PositionSimulation::PositionSimulation()
@@ -132,57 +132,11 @@ PositionSimulationResult
 PositionSimulationAV3::calculate(unsigned atom_i,
 				 const std::vector<Eigen::Vector4f> &xyzW)
 {
-	std::vector<Eigen::Vector3f> res;
-	double as=getAllowedSphereRadius(atom_i,xyzW,res);
-	if(as!=allowedSphereRadius) {
-		std::cout<<"allowed sphere radius determined: "
-			   +std::to_string(as)+"A\n"<<std::flush;
-	}
+	std::vector<Eigen::Vector3f> res=
+			calculateAV3(xyzW,xyzW[atom_i],linkerLength,
+				     linkerLength,{radius[0],radius[1],radius[2]},
+				     gridResolution);
 	return PositionSimulationResult(std::move(res));
-}
-
-double PositionSimulationAV3::
-getAllowedSphereRadius(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW,
-		       std::vector<Eigen::Vector3f> &res) const
-{
-	res.clear();
-	if(allowedSphereRadius>0.0f) {
-		res=std::move(calculate3R(linkerLength, linkerWidth, radius[0],
-			      radius[1],radius[2], atom_i,gridResolution, vdWRMax,
-				allowedSphereRadius, linknodes, xyzW));
-	}
-	if(res.size()>0 || allowedSphereRadius>=allowedSphereRadiusMax) {
-		return allowedSphereRadius;
-	}
-
-	const double minRadius=*std::min_element(radius,radius+3);
-	const double dAs=(allowedSphereRadiusMax-allowedSphereRadiusMin)/5.0;
-	size_t prevResSize=0;
-	for(double as=allowedSphereRadiusMin; as<=allowedSphereRadiusMax;as+=dAs)
-	{
-		res.clear();
-		res=std::move(calculate1R(linkerLength, linkerWidth, minRadius,
-					  atom_i,gridResolution, vdWRMax,
-					  as, linknodes, xyzW));
-		//check if AV size is stable for two different allowed spheres
-		if(res.size()/2<prevResSize) {
-			res=calculate3R(static_cast<float>(linkerLength),
-					static_cast<float>(linkerWidth),
-					static_cast<float>(radius[0]),
-					static_cast<float>(radius[1]),
-					static_cast<float>(radius[2]),atom_i,
-					static_cast<float>(gridResolution),
-					vdWRMax,
-					static_cast<float>(as),
-					linknodes, xyzW);
-			if(!res.empty()) {
-				return as;
-			}
-		}
-		prevResSize=res.size();
-	}
-	res.clear();
-	return -1.0;
 }
 
 bool PositionSimulationAV1::load(const QVariantMap& settings)
@@ -249,45 +203,10 @@ void PositionSimulationAV1::setSetting(int row, const QVariant &val)
 
 PositionSimulationResult PositionSimulationAV1::calculate(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW)
 {
-	std::vector<Eigen::Vector3f> res;
-	double as=getAllowedSphereRadius(atom_i,xyzW,res);
-	if(as!=allowedSphereRadius) {
-		std::cout<<"allowed sphere radius determined: "
-			   +std::to_string(as)+"A\n"<<std::flush;
-	}
+	std::vector<Eigen::Vector3f> res
+			=calculateAV(xyzW,xyzW[atom_i],linkerLength,linkerWidth,
+				     radius,gridResolution);
 	return PositionSimulationResult(std::move(res));
-}
-
-double PositionSimulationAV1::
-getAllowedSphereRadius(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW,
-		       std::vector<Eigen::Vector3f> &res) const
-{
-	res.clear();
-	if(allowedSphereRadius>0.0f) {
-		res=std::move(calculate1R(linkerLength, linkerWidth, radius,
-					  atom_i,gridResolution, vdWRMax,
-					  allowedSphereRadius, linknodes, xyzW));
-	}
-	if(res.size()>0 || allowedSphereRadiusMax<=allowedSphereRadius) {
-		return allowedSphereRadius;
-	}
-
-	const double dAs=(allowedSphereRadiusMax-allowedSphereRadiusMin)/5.0;
-	size_t prevResSize=0;
-	for(double as=allowedSphereRadiusMin; as<=allowedSphereRadiusMax;as+=dAs)
-	{
-		res.clear();
-		res=std::move(calculate1R(linkerLength, linkerWidth, radius,
-					  atom_i,gridResolution, vdWRMax,
-					  as, linknodes, xyzW));
-		//check if AV size is stable for two different allowed spheres
-		if(res.size()/2<prevResSize) {
-			return as;
-		}
-		prevResSize=res.size();
-	}
-	res.clear();
-	return -1;
 }
 
 /*

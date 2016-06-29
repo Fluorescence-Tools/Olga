@@ -15,16 +15,14 @@ FORMS += \
 
 HEADERS += \
     mainwindow.h \
-    Q_DebugStream.h \
-    EvaluatorChi2Contribution.h
+    Q_DebugStream.h
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp \
-    EvaluatorChi2Contribution.cpp
+    mainwindow.cpp
 
 HEADERS += \
-    AV/av_routines.h \
+    AV/fretAV.h \
     AV/Distance.h \
     AV/MolecularSystemDomain.h \
     AV/Position.h \
@@ -49,10 +47,11 @@ HEADERS += \
     EvaluatorDelegate.h \
     CheckBoxList.h \
     EvaluatorWeightedResidual.h \
-    EvaluatorChi2r.h
+    EvaluatorChi2r.h \
+    EvaluatorChi2Contribution.h
 
 SOURCES += \
-    AV/av_routines.cpp \
+    AV/fretAV.cpp \
     AV/Distance.cpp \
     AV/MolecularSystemDomain.cpp \
     AV/Position.cpp \
@@ -76,4 +75,5 @@ SOURCES += \
     EvaluatorDelegate.cpp \
     CheckBoxList.cpp \
     EvaluatorWeightedResidual.cpp \
-    EvaluatorChi2r.cpp
+    EvaluatorChi2r.cpp \
+    EvaluatorChi2Contribution.cpp
