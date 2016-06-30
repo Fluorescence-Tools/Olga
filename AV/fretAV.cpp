@@ -11,17 +11,20 @@ using edge_t=std::pair<int,float>;
 
 inline int edgeL2center(int edgeL)
 {
+	//Return the center position given the cube's edge length
 	return (edgeL+1)/2;
 }
 
 inline int index(const int& x, const int& y, const int& z, const int& edgeL)
 {
+	//convert 3-D coordinates to 1-D offest
 	return z+edgeL*(y+x*edgeL);
 }
 
 inline int index(const Eigen::Vector4f& rf, const float& discretizationStep,
 		 const int& center, const int& edgeL)
 {
+	//convert real space 3-D coordinates to 1-D offest
 	Eigen::Vector4i r=(rf/discretizationStep).cast <int>();
 	r+=Eigen::Vector4i(center,center,center,0);
 	return index(r[0],r[1],r[2],edgeL);
@@ -29,6 +32,8 @@ inline int index(const Eigen::Vector4f& rf, const float& discretizationStep,
 
 std::vector<edge_t> deltaIlist(const int& delta, const int& edgeL)
 {
+	//returns the list of 1-D represenataion offsets for the
+	//nearest 3D-neigbours within the radius of delta
 	std::vector<edge_t> diList;
 	const int maxSq=delta*delta;
 	diList.reserve(std::pow(delta,3));
@@ -60,8 +65,7 @@ std::vector<bool> xyzr2occupancy(const std::vector<Eigen::Vector4f>& xyzR,
 				 const float& maxLength,
 				 const float& discretizationStep)
 {
-	//map xyzR to atom-linker clashes in discrete space
-	//convert xyzR to occupancy map
+	//map xyzR to clash/occupancy map in discrete space
 	using Eigen::Vector4f;
 	using std::vector;
 	const float maxR=maxRadius(xyzR);
@@ -97,6 +101,7 @@ std::vector<bool> xyzr2occupancy(const std::vector<Eigen::Vector4f>& xyzR,
 
 std::vector<bool> expandedOccupancy(const std::vector<bool>& occ, const int& iClash)
 {
+	//expand the given occupancy map by iClash radius in all directions
 	std::vector<bool> expanded(occ);
 	const int edgeL=std::nearbyint(std::cbrt(occ.size()));
 	const auto& clashList=deltaIlist(iClash,edgeL);
@@ -113,7 +118,7 @@ std::vector<bool> expandedOccupancy(const std::vector<bool>& occ, const int& iCl
 
 void ignoreSphere(std::vector<bool>& occupancy,const int& ignoreR)
 {
-	//ignore obstacles closer than ignoreRadius from source
+	//remove obstacles closer than ignoreR<adius> from the center (source)
 	const int edgeL=std::nearbyint(std::cbrt(occupancy.size()));
 	const int center=edgeL2center(edgeL);
 	const std::vector<edge_t> deltaIgnore=deltaIlist(ignoreR,edgeL);
@@ -147,37 +152,39 @@ void blockOutside(std::vector<bool>& occupancy,const int& maxR)
 	}
 }
 
-std::vector<edge_t> offsets(const int& edgeL) {
-	std::vector<edge_t> offs;
-	const int delta=2;
-	const std::set<int> layer2distSq={6,5};
-	for (int dx=-delta; dx<=delta; ++dx) {
-		for (int dy=-delta; dy<=delta; ++dy) {
-			for (int dz=-delta; dz<=delta; ++dz) {
-				if(dx==0 && dy==0 && dz==0) {
-					continue;
-				}
-				int dSq=dx*dx+dy*dy+dz*dz;
-				if(dSq>=4 && !layer2distSq.count(dSq)) {
-					continue;
-				}
-				int di=dz+edgeL*(dy+dx*edgeL);
-				offs.emplace_back(di,sqrt(dSq));
-			}
+std::vector<edge_t> essentialEdges(const int& edgeL) {
+	//returns the list of 1-D edge_index_offsets which matter
+	//for the path length determination (Dijkstra) algorithm.
+	//The shorter this list is, the faster Dijstra algorithm will run
+	//at the cost of lower path length precision.
+	//For example, including edges to only 6 nearest neighbours will result
+	//in isopath surfaces that are cubic instead of spherical.
+	std::vector<edge_t> fullList=deltaIlist(3,edgeL);
+	std::set<float> allowedDist;
+	for (float dSq:{1.0f,2.0f,3.0f,4.0f,5.0f,6.0f}) { //good compromise
+		allowedDist.insert(sqrt(float(dSq)));
+	}
+	std::vector<edge_t> diList;
+	for (const edge_t& e:fullList) {
+		if(allowedDist.count(e.second)>0) {
+			diList.push_back(e);
 		}
 	}
-	offs.shrink_to_fit();
-	return offs;
+	diList.shrink_to_fit();
+	return diList;
 }
 
 inline void
-setNeigbours(std::vector<edge_t>& neis, const int& s, const std::vector<bool>& occupancy, const std::vector<edge_t>& offsets)
+setNeigbours(std::vector<edge_t>& neis, const int& source,
+	     const std::vector<bool>& occupancy, const std::vector<edge_t>& allEssential)
 {
+	//from potential relevant(essential) neighbours select those
+	//which are not blocked by obstacles
 	neis.clear();
-	for (edge_t n:offsets) {
-		n.first+=s;
+	for (edge_t n:allEssential) {
+		n.first+=source;
 		if(!occupancy[n.first]) {
-			neis.push_back(n);
+			neis.push_back(std::move(n));
 		}
 	}
 }
@@ -190,7 +197,7 @@ std::vector<float> pathLength(const std::vector<bool>& occupancyVdWL)
 
 	const int edgeL=std::nearbyint(std::cbrt(occupancyVdWL.size()));
 	const int center=edgeL2center(edgeL);
-	const vector<edge_t>& offs=offsets(edgeL);
+	const vector<edge_t>& allEssentialEdges=essentialEdges(edgeL);
 	int sourceVertex=index(center,center,center,edgeL);
 	vector<float> pathL(occupancyVdWL.size(), std::numeric_limits<float>::max());
 	pathL[sourceVertex] = 0;
@@ -205,7 +212,7 @@ std::vector<float> pathLength(const std::vector<bool>& occupancyVdWL)
 		const queue_entry_t qt=que.top();
 		que.pop();
 		if (qt.first > pathL[qt.second]) continue;
-		setNeigbours(neigbours,qt.second,occupancyVdWL,offs);
+		setNeigbours(neigbours,qt.second,occupancyVdWL,allEssentialEdges);
 		for (const edge_t &e : neigbours) {
 			queue_entry_t t;
 			t.second=e.first;//tv
@@ -252,8 +259,6 @@ path2points(const std::vector<float>& pathL,
 	return points;
 }
 
-
-
 std::vector<Eigen::Vector3f> calculateAV(const std::vector<Eigen::Vector4f> &xyzR,
 					 Eigen::Vector4f rSource, float linkerLength,
 					 float linkerWidth, float dyeRadius,
@@ -261,6 +266,7 @@ std::vector<Eigen::Vector3f> calculateAV(const std::vector<Eigen::Vector4f> &xyz
 {
 	using std::vector;
 	using Eigen::Vector4f;
+
 	const float maxR=std::max(linkerWidth*0.5f,dyeRadius);
 	auto occupancyVdW=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,discretizationStep);
 
