@@ -78,7 +78,7 @@ std::vector<bool> xyzr2occupancy(const std::vector<Eigen::Vector4f>& xyzR,
 
 	vector<vector<edge_t>> deltaILists;
 	deltaILists.reserve(maxR/discretizationStep+1);
-	for (int di=0; di<=maxR/discretizationStep; ++di) {
+	for (int di=0; di<=maxR/discretizationStep+1; ++di) {
 		deltaILists.push_back(deltaIlist(di,edgeL));
 	}
 	std::vector<bool> occupancy(vol,false);
@@ -90,7 +90,7 @@ std::vector<bool> xyzr2occupancy(const std::vector<Eigen::Vector4f>& xyzR,
 			continue;
 		}
 		int i0=index(r,discretizationStep,center,edgeL);
-		int maxDi=r0[3]/discretizationStep;
+		int maxDi=std::nearbyint(r0[3]/discretizationStep);
 		for (const auto& pair: deltaILists[maxDi]) {
 			const int& di=pair.first;
 			occupancy[i0+di]=true;
@@ -161,7 +161,7 @@ std::vector<edge_t> essentialEdges(const int& edgeL) {
 	//in isopath surfaces that are cubic instead of spherical.
 	std::vector<edge_t> fullList=deltaIlist(3,edgeL);
 	std::set<float> allowedDist;
-	for (float dSq:{1.0f,2.0f,3.0f,4.0f,5.0f,6.0f}) { //good compromise
+	for (float dSq:{1.0f,2.0f,3.0f,5.0f,6.0f}) { //good compromise
 		allowedDist.insert(sqrt(float(dSq)));
 	}
 	std::vector<edge_t> diList;
@@ -266,16 +266,15 @@ std::vector<Eigen::Vector3f> calculateAV(const std::vector<Eigen::Vector4f> &xyz
 {
 	using std::vector;
 	using Eigen::Vector4f;
-
 	const float maxR=std::max(linkerWidth*0.5f,dyeRadius);
 	auto occupancyVdW=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,discretizationStep);
-
-	auto occupancyVdWL=expandedOccupancy(occupancyVdW,linkerWidth*0.5f/discretizationStep);
-	ignoreSphere(occupancyVdWL,linkerWidth*0.5f/discretizationStep);
+	int linkerR=std::nearbyint(linkerWidth*0.5f/discretizationStep);
+	auto occupancyVdWL=expandedOccupancy(occupancyVdW,linkerR);
+	ignoreSphere(occupancyVdWL,linkerR);
 	blockOutside(occupancyVdWL,linkerLength/discretizationStep);
 	const auto& pathL=pathLength(occupancyVdWL);
-
-	auto occupancyVdWDye=expandedOccupancy(occupancyVdW,dyeRadius/discretizationStep);
+	int dyeR=std::nearbyint(dyeRadius/discretizationStep);
+	auto occupancyVdWDye=expandedOccupancy(occupancyVdW,dyeR);
 	const auto& ret=path2points(pathL,occupancyVdWDye,rSource,linkerLength,discretizationStep);
 	return ret;
 }
@@ -289,15 +288,17 @@ std::vector<Eigen::Vector3f> calculateAV3(const std::vector<Eigen::Vector4f> &xy
 	using Eigen::Vector4f;
 	const float maxR=std::max(linkerWidth*0.5f,dyeRadii.maxCoeff());
 	auto occupancyVdW=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,discretizationStep);
-	auto occupancyVdWL=expandedOccupancy(occupancyVdW,linkerWidth*0.5f/discretizationStep);
-	ignoreSphere(occupancyVdWL,linkerWidth*0.5/discretizationStep);
+	int linkerR=std::nearbyint(linkerWidth*0.5f/discretizationStep);
+	auto occupancyVdWL=expandedOccupancy(occupancyVdW,linkerR);
+	ignoreSphere(occupancyVdWL,linkerR);
 	blockOutside(occupancyVdWL,linkerLength/discretizationStep);
 	const auto& pathL=pathLength(occupancyVdWL);
 
 	std::vector<Eigen::Vector3f> points;
 	for(int i=0; i<3; i++) {
 		float dyeRadius=dyeRadii[i];
-		auto occupancyVdWDye=expandedOccupancy(occupancyVdW,dyeRadius/discretizationStep);
+		int dyeR=std::nearbyint(dyeRadius/discretizationStep);
+		auto occupancyVdWDye=expandedOccupancy(occupancyVdW,dyeR);
 		auto cur=path2points(pathL,occupancyVdWDye,rSource,linkerLength,discretizationStep);
 		points.reserve(points.size()+cur.size());
 		std::move(cur.begin(),cur.end(),std::back_inserter(points));
