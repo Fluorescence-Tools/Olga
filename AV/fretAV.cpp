@@ -69,7 +69,7 @@ std::vector<bool> xyzr2occupancy(const std::vector<Eigen::Vector4f>& xyzR,
 	using Eigen::Vector4f;
 	using std::vector;
 	const float maxR=maxRadius(xyzR);
-	const int iR=1+(maxLength+maxR*2.0f)/discretizationStep;
+	const int iR=1+std::nearbyint((maxLength+maxR*2.0f)/discretizationStep);
 	const int edgeL=2*iR+1;
 	const int center=edgeL2center(edgeL);
 	const int vol=std::pow(edgeL,3);
@@ -103,13 +103,17 @@ std::vector<bool> expandedOccupancy(const std::vector<bool>& occ, const int& iCl
 {
 	//expand the given occupancy map by iClash radius in all directions
 	std::vector<bool> expanded(occ);
-	const int edgeL=std::nearbyint(std::cbrt(occ.size()));
+	const int vol=occ.size();
+	const int edgeL=std::nearbyint(std::cbrt(vol));
 	const auto& clashList=deltaIlist(iClash,edgeL);
-	for(size_t i=0; i<occ.size(); ++i) {
+	for(size_t i=0; i<vol; ++i) {
 		if(occ[i]) {
 			for (const auto& pair: clashList) {
 				const int& di=pair.first;
-				expanded[i+di]=true;
+				int iCur=i+di;
+				if(iCur>=0 && iCur<vol) {
+					expanded[iCur]=true;
+				}
 			}
 		}
 	}
@@ -269,6 +273,7 @@ std::vector<Eigen::Vector3f> calculateAV(const std::vector<Eigen::Vector4f> &xyz
 	const float maxR=std::max(linkerWidth*0.5f,dyeRadius);
 	auto occupancyVdW=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,discretizationStep);
 	int linkerR=std::nearbyint(linkerWidth*0.5f/discretizationStep);
+	ignoreSphere(occupancyVdW,linkerR+1);
 	auto occupancyVdWL=expandedOccupancy(occupancyVdW,linkerR);
 	ignoreSphere(occupancyVdWL,linkerR);
 	blockOutside(occupancyVdWL,linkerLength/discretizationStep);

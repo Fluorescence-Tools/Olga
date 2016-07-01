@@ -8,8 +8,11 @@ std::shared_ptr<AbstractCalcResult> EvaluatorPositionSimulation::calculate(const
 		std::cerr<<frame.fullName()+" simulation "+_position.name()+" failed: empty AV\n";
 		std::cerr.flush();
 	}
-	//res.dumpShellXyz(frame.trajFileName()+"_"+_position.name()+".xyz");
-	return std::make_shared<CalcResult<PositionSimulationResult>>(std::move(res));
+	/*std::string fname=_position.name();
+	std::replace(fname.begin(),fname.end(),'/','_');
+	res.dumpShellXyz(frame.trajFileName()+"_"+fname+".xyz");
+	std::cout<<"dumping! "+frame.trajFileName()+"_"+fname+".xyz\n"<<std::flush;
+	*/return std::make_shared<CalcResult<PositionSimulationResult>>(std::move(res));
 }
 
 EvaluatorPositionSimulation::
