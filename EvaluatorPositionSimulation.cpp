@@ -11,8 +11,8 @@ std::shared_ptr<AbstractCalcResult> EvaluatorPositionSimulation::calculate(const
 	/*std::string fname=_position.name();
 	std::replace(fname.begin(),fname.end(),'/','_');
 	res.dumpShellXyz(frame.trajFileName()+"_"+fname+".xyz");
-	std::cout<<"dumping! "+frame.trajFileName()+"_"+fname+".xyz\n"<<std::flush;
-	*/return std::make_shared<CalcResult<PositionSimulationResult>>(std::move(res));
+	std::cout<<"dumping! "+frame.trajFileName()+"_"+fname+".xyz\n"<<std::flush;*/
+	return std::make_shared<CalcResult<PositionSimulationResult>>(std::move(res));
 }
 
 EvaluatorPositionSimulation::
