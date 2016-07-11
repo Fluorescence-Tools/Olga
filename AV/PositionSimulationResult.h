@@ -27,6 +27,16 @@ public:
 	double Rdae(const PositionSimulationResult& other, double R0, unsigned nsamples=200000) const;
 	double Rmp(const PositionSimulationResult& other) const;
 	double modelDistance(const PositionSimulationResult& other, const std::string& type, double R0=0) const;
+	double minDistance(const PositionSimulationResult& other) const
+	{
+		float minDistSq=std::numeric_limits<double>::infinity();
+		for(const Eigen::Vector3f& p1:_points) {
+			for (const Eigen::Vector3f& p2:other._points) {
+				minDistSq=std::min(minDistSq,(p2-p1).squaredNorm());
+			}
+		}
+		return std::sqrt(minDistSq);
+	}
 	std::ostream& dump_xyz(std::ostream& os) const;
 	std::ostream& dumpShellXyz(std::ostream& os);
 	bool dumpXyz(const std::string& fileName) const;

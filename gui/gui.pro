@@ -42,6 +42,7 @@ HEADERS += \
     PterosSystemLoader.h \
     EvaluatorPositionSimulation.h \
     EvaluatorDistance.h \
+    EvaluatorMinDistance.h \
     EvaluatorChi2.h \
     EvaluatorsTreeModel.h \
     EvaluatorDelegate.h \
@@ -70,6 +71,7 @@ SOURCES += \
     PterosSystemLoader.cpp \
     EvaluatorPositionSimulation.cpp \
     EvaluatorDistance.cpp \
+    EvaluatorMinDistance.cpp \
     EvaluatorChi2.cpp \
     EvaluatorsTreeModel.cpp \
     EvaluatorDelegate.cpp \

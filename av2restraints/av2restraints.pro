@@ -30,6 +30,7 @@ HEADERS += \
     EvaluatorEulerAngle.h \
     EvaluatorPositionSimulation.h \
     EvaluatorDistance.h \
+    EvaluatorMinDistance.h \
     EvaluatorChi2.h \
     EvaluatorChi2Contribution.h \
     EvaluatorWeightedResidual.h \
@@ -53,6 +54,7 @@ SOURCES += \
     PterosSystemLoader.cpp \
     EvaluatorPositionSimulation.cpp \
     EvaluatorDistance.cpp \
+    EvaluatorMinDistance.cpp \
     EvaluatorChi2.cpp \
     EvaluatorChi2Contribution.cpp \
     EvaluatorWeightedResidual.cpp \
