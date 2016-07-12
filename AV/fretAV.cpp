@@ -68,17 +68,18 @@ std::vector<bool> xyzr2occupancy(const std::vector<Eigen::Vector4f>& xyzR,
 	//map xyzR to clash/occupancy map in discrete space
 	using Eigen::Vector4f;
 	using std::vector;
-	const float maxR=maxRadius(xyzR)+extraClash;
+	const float maxR=maxRadius(xyzR);
+	const float maxRe=maxR+extraClash;
 	const int iR=1+std::nearbyint((maxLength+maxR*2.0f)/discretizationStep);
 	const int edgeL=2*iR+1;
 	const int center=edgeL2center(edgeL);
 	const int vol=std::pow(edgeL,3);
-	const float maxLengthSq=std::pow(maxLength+maxR,2.0f);
+	const float maxLengthSq=std::pow(maxLength+maxRe,2.0f);
 
 
 	vector<vector<edge_t>> deltaILists;
-	deltaILists.reserve(maxR/discretizationStep+1);
-	for (int di=0; di<=maxR/discretizationStep+1; ++di) {
+	deltaILists.reserve(maxRe/discretizationStep+1);
+	for (int di=0; di<=maxRe/discretizationStep+1; ++di) {
 		deltaILists.push_back(deltaIlist(di,edgeL));
 	}
 	std::vector<bool> occupancy(vol,false);
