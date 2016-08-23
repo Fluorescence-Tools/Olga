@@ -262,7 +262,7 @@ std::vector<Eigen::Vector3f> calculateAV(const std::vector<Eigen::Vector4f> &xyz
 	const auto& pathL=pathLength(occupancyVdWL);
 	auto occupancyVdWDye=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,
 					    discretizationStep,dyeRadius);
-	const auto& ret=path2points(pathL,occupancyVdWDye,rSource,linkerLength,discretizationStep);
+	auto ret=path2points(pathL,occupancyVdWDye,rSource,linkerLength,discretizationStep);
 	return std::move(ret);
 }
 

@@ -134,7 +134,7 @@ PositionSimulationAV3::calculate(unsigned atom_i,
 {
 	std::vector<Eigen::Vector3f> res=
 			calculateAV3(xyzW,xyzW[atom_i],linkerLength,
-				     linkerLength,{radius[0],radius[1],radius[2]},
+				     linkerWidth,{radius[0],radius[1],radius[2]},
 				     gridResolution);
 	return PositionSimulationResult(std::move(res));
 }
