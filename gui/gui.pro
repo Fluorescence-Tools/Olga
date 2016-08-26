@@ -15,13 +15,8 @@ FORMS += \
 
 HEADERS += \
     mainwindow.h \
-    Q_DebugStream.h
-
-SOURCES += \
-    main.cpp \
-    mainwindow.cpp
-
-HEADERS += \
+    Q_DebugStream.h \
+    EvaluatorSphereAVOverlap.h \
     AV/fretAV.h \
     AV/Distance.h \
     AV/MolecularSystemDomain.h \
@@ -52,6 +47,9 @@ HEADERS += \
     EvaluatorChi2Contribution.h
 
 SOURCES += \
+    main.cpp \
+    mainwindow.cpp \
+    EvaluatorSphereAVOverlap.cpp \
     AV/fretAV.cpp \
     AV/Distance.cpp \
     AV/MolecularSystemDomain.cpp \

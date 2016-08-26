@@ -16,6 +16,7 @@ HEADERS += \
     AV/fretAV.h \
     AV/Distance.h \
     AV/MolecularSystemDomain.h \
+    EvaluatorSphereAVOverlap.h \
     AV/Position.h \
     AV/PositionSimulation.h \
     AV/PositionSimulationResult.h \
@@ -40,6 +41,7 @@ SOURCES += \
     AV/fretAV.cpp \
     AV/Distance.cpp \
     AV/MolecularSystemDomain.cpp \
+    EvaluatorSphereAVOverlap.cpp \
     AV/Position.cpp \
     AV/PositionSimulation.cpp \
     AV/PositionSimulationResult.cpp \

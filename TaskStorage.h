@@ -240,6 +240,7 @@ public:
 	EvalId evaluatorChi2Conribution;
 	EvalId evaluatorWeightedResidual;
 	EvalId evaluatorMinDistance;
+	EvalId evaluatorAVOverlap;
 	EvalId evaluatorTrasformationMatrix;
 	EvalId evaluatorEulerAngle;
 };

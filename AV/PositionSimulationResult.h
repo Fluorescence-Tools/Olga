@@ -55,6 +55,24 @@ public:
 		}
 		_meanPosition+=r;
 	}
+	float overlap(Eigen::Vector3f ref, float maxR) const
+	{
+		float totalVol=0.0f;
+		float overlapVol=0.0f;
+		const float maxRSq=maxR*maxR;
+		Eigen::Vector3f mp=meanPosition();
+		for (const Eigen::Vector3f& point: _points) {
+			float rMpSq=(mp-point).squaredNorm();
+			float w=(std::exp(-rMpSq/(2.0f*10.0f*10.0f))+1.0f)*0.5f;
+			totalVol+=w;
+			float rSq=(ref-point).squaredNorm();
+			if(rSq<maxRSq) {
+				overlapVol+=w;
+			}
+		}
+
+		return overlapVol;
+	}
 
 protected:
 	typedef boost::multi_array<bool, 3> densityArray_t;

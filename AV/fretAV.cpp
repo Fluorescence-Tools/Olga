@@ -70,7 +70,7 @@ std::vector<bool> xyzr2occupancy(const std::vector<Eigen::Vector4f>& xyzR,
 	using std::vector;
 	const float maxR=maxRadius(xyzR);
 	const float maxRe=maxR+extraClash;
-	const int iR=1+std::nearbyint((maxLength+maxR*2.0f)/discretizationStep);
+	const int iR=1+std::lround((maxLength+maxR*2.0f)/discretizationStep);
 	const int edgeL=2*iR+1;
 	const int center=edgeL2center(edgeL);
 	const int vol=std::pow(edgeL,3);
@@ -91,7 +91,7 @@ std::vector<bool> xyzr2occupancy(const std::vector<Eigen::Vector4f>& xyzR,
 			continue;
 		}
 		int i0=index(r,discretizationStep,center,edgeL);
-		int maxDi=std::nearbyint((r0[3]+extraClash)/discretizationStep);
+		int maxDi=std::lround((r0[3]+extraClash)/discretizationStep);
 		for (const auto& pair: deltaILists[maxDi]) {
 			const int& di=pair.first;
 			int cur=i0+di;
@@ -106,7 +106,7 @@ std::vector<bool> xyzr2occupancy(const std::vector<Eigen::Vector4f>& xyzR,
 void ignoreSphere(std::vector<bool>& occupancy,const int& ignoreR)
 {
 	//remove obstacles closer than ignoreR<adius> from the center (source)
-	const int edgeL=std::nearbyint(std::cbrt(occupancy.size()));
+	const int edgeL=std::lround(std::cbrt(occupancy.size()));
 	const int center=edgeL2center(edgeL);
 	const std::vector<edge_t> deltaIgnore=deltaIlist(ignoreR,edgeL);
 	int i0=index(center,center,center,edgeL);
@@ -121,7 +121,7 @@ void blockOutside(std::vector<bool>& occupancy,const int& maxR)
 {
 	//block all vertices further away from source than maxR
 	const int maxRSq=maxR*maxR;
-	const int edgeL=std::nearbyint(std::cbrt(occupancy.size()));
+	const int edgeL=std::lround(std::cbrt(occupancy.size()));
 	const int center=edgeL2center(edgeL);
 	int i=0;
 	for(int x=0; x<edgeL; ++x) {
@@ -182,7 +182,7 @@ std::vector<float> pathLength(const std::vector<bool>& occupancyVdWL)
 	using Eigen::Vector4f;
 	using std::vector;
 
-	const int edgeL=std::nearbyint(std::cbrt(occupancyVdWL.size()));
+	const int edgeL=std::lround(std::cbrt(occupancyVdWL.size()));
 	const int center=edgeL2center(edgeL);
 	const vector<edge_t>& allEssentialEdges=essentialEdges(edgeL);
 	int sourceVertex=index(center,center,center,edgeL);
@@ -222,7 +222,7 @@ path2points(const std::vector<float>& pathL,
 	//check dye Clashes and convert weights grid to a point array
 	using Eigen::Vector3f;
 	using std::vector;
-	const int edgeL=std::nearbyint(std::cbrt(pathL.size()));
+	const int edgeL=std::lround(std::cbrt(pathL.size()));
 	const int center=edgeL2center(edgeL);
 
 	const float maxVerthexL=maxRealLength/discretizationStep;
@@ -256,7 +256,7 @@ std::vector<Eigen::Vector3f> calculateAV(const std::vector<Eigen::Vector4f> &xyz
 	const float maxR=std::max(linkerWidth*0.5f,dyeRadius);
 	auto occupancyVdWL=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,
 					  discretizationStep,linkerWidth*0.5f);
-	int linkerR=std::nearbyint(linkerWidth*0.5f/discretizationStep);
+	int linkerR=std::lround(linkerWidth*0.5f/discretizationStep);
 	ignoreSphere(occupancyVdWL,linkerR+1);
 	blockOutside(occupancyVdWL,linkerLength/discretizationStep);
 	const auto& pathL=pathLength(occupancyVdWL);
@@ -276,7 +276,7 @@ std::vector<Eigen::Vector3f> calculateAV3(const std::vector<Eigen::Vector4f> &xy
 	const float maxR=std::max(linkerWidth*0.5f,dyeRadii.maxCoeff());
 	auto occupancyVdWL=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,
 					  discretizationStep,linkerWidth*0.5f);
-	int linkerR=std::nearbyint(linkerWidth*0.5f/discretizationStep);
+	int linkerR=std::lround(linkerWidth*0.5f/discretizationStep);
 	ignoreSphere(occupancyVdWL,linkerR+1);
 	blockOutside(occupancyVdWL,linkerLength/discretizationStep);
 	const auto& pathL=pathLength(occupancyVdWL);

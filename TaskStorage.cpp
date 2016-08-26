@@ -9,6 +9,7 @@
 #include "EvaluatorTrasformationMatrix.h"
 #include "EvaluatorEulerAngle.h"
 #include "EvaluatorMinDistance.h"
+#include "EvaluatorSphereAVOverlap.h"
 
 #include "AV/Position.h"
 
@@ -33,6 +34,8 @@ TaskStorage::TaskStorage():_tasksRingBuf(_tasksRingBufSize),
 	evaluatorWeightedResidual=_currentId;
 	addEvaluator(std::make_unique<const EvaluatorMinDistance>(*this,"unknown"));
 	evaluatorMinDistance=_currentId;
+	addEvaluator(std::make_unique<const EvaluatorSphereAVOverlap>(*this,"unknown"));
+	evaluatorAVOverlap=_currentId;
 	addEvaluator(std::make_unique<const EvaluatorChi2Contribution>(*this,"unknown"));
 	evaluatorChi2Conribution=_currentId;
 	addEvaluator(std::make_unique<const EvaluatorTrasformationMatrix>(*this,"unknown"));
@@ -230,12 +233,14 @@ TaskStorage::MutableEvalPtr TaskStorage::makeEvaluator(int typeNum) const {
 	case 4:
 		return std::make_unique<EvaluatorMinDistance>(*this,"new minimum distance");
 	case 5:
-		return std::make_unique<EvaluatorChi2>(*this,"new χ²");
+		return std::make_unique<EvaluatorSphereAVOverlap>(*this,"new AV overlap");
 	case 6:
-		return std::make_unique<EvaluatorChi2r>(*this,"new χᵣ²");
+		return std::make_unique<EvaluatorChi2>(*this,"new χ²");
 	case 7:
-		return std::make_unique<EvaluatorTrasformationMatrix>(*this,"new coordinate system");
+		return std::make_unique<EvaluatorChi2r>(*this,"new χᵣ²");
 	case 8:
+		return std::make_unique<EvaluatorTrasformationMatrix>(*this,"new coordinate system");
+	case 9:
 		return std::make_unique<EvaluatorEulerAngle>(*this,"new euler angles");
 	default:
 		return MutableEvalPtr();
