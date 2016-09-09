@@ -92,7 +92,7 @@ public:
 	Setting setting(int row) const;
 	virtual void setSetting(int row, const QVariant& val);
 	virtual int settingsCount() const {
-		return 7;
+		return 8;
 	}
 	virtual PositionSimulation *Clone(){
 		return new PositionSimulationAV1(*this);
@@ -108,6 +108,7 @@ private:
 	double allowedSphereRadius=0.5;
 	double allowedSphereRadiusMin=0.5;
 	double allowedSphereRadiusMax=2.0;
+	double minVolumeSphereFraction=0.0;
 
 	const int linknodes=3;
 };

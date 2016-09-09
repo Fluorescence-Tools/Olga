@@ -28,12 +28,11 @@ std::shared_ptr<AbstractCalcResult> EvaluatorSphereAVOverlap::calculate(const pt
 		std::cerr<<err.what()<<std::endl;
 	}
 
-	float totalOverlap=0.0f;
 	int selectedCount=select.size();
+	std::vector<Eigen::Vector3f> refs;
 	for (int i=0; i<selectedCount; ++i) {
-		Eigen::Vector3f ref=select.XYZ(i)*10.0f;
-		totalOverlap+=av.overlap(ref,_overlapRadius);
+		refs.push_back(select.XYZ(i)*10.0f);
 	}
 
-	return std::make_shared<CalcResult<float>>(totalOverlap);
+	return std::make_shared<CalcResult<float>>(av.overlap(refs,_overlapRadius));
 }

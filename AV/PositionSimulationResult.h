@@ -55,7 +55,7 @@ public:
 		}
 		_meanPosition+=r;
 	}
-	float overlap(Eigen::Vector3f ref, float maxR) const
+	float overlap(const std::vector<Eigen::Vector3f>& refs, float maxR) const
 	{
 		float totalVol=0.0f;
 		float overlapVol=0.0f;
@@ -65,13 +65,18 @@ public:
 			float rMpSq=(mp-point).squaredNorm();
 			float w=(std::exp(-rMpSq/(2.0f*10.0f*10.0f))+1.0f)*0.5f;
 			totalVol+=w;
-			float rSq=(ref-point).squaredNorm();
-			if(rSq<maxRSq) {
-				overlapVol+=w;
+			for (const Eigen::Vector3f& ref: refs ) {
+				float rSq=(ref-point).squaredNorm();
+				if(rSq<maxRSq) {
+					overlapVol+=w;
+					break;
+				}
 			}
 		}
-
-		return overlapVol;
+		if(totalVol<2000.0f) {//TODO:remove
+			return -1.0f;
+		}
+		return overlapVol/totalVol;
 	}
 
 protected:

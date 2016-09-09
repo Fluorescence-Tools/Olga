@@ -148,6 +148,7 @@ bool PositionSimulationAV1::load(const QVariantMap& settings)
 	allowedSphereRadius=settings.value("allowed_sphere_radius",0.5).toDouble();
 	allowedSphereRadiusMin=settings.value("allowed_sphere_radius_min",0.5).toDouble();
 	allowedSphereRadiusMax=settings.value("allowed_sphere_radius_max",2.0).toDouble();
+	allowedSphereRadiusMax=settings.value("min_sphere_volume_fraction",0.0).toDouble();
 	return true;
 }
 
@@ -169,6 +170,8 @@ PositionSimulation::Setting PositionSimulationAV1::setting(int row) const
 		return Setting{"allowed_sphere_radius_min",allowedSphereRadiusMin};
 	case 6:
 		return Setting{"allowed_sphere_radius_max",allowedSphereRadiusMax};
+	case 7:
+		return Setting{"min_sphere_volume_fraction",minVolumeSphereFraction};
 	}
 	return Setting();
 }
@@ -198,6 +201,10 @@ void PositionSimulationAV1::setSetting(int row, const QVariant &val)
 	case 6:
 		allowedSphereRadiusMax=val.toDouble();
 		return;
+	case 7:
+		minVolumeSphereFraction=val.toDouble();
+		return;
+
 	}
 }
 
@@ -206,6 +213,10 @@ PositionSimulationResult PositionSimulationAV1::calculate(unsigned atom_i, const
 	std::vector<Eigen::Vector3f> res
 			=calculateAV(xyzW,xyzW[atom_i],linkerLength,linkerWidth,
 				     radius,gridResolution);
+	double volfrac=res.size()/(4.0/3.0*3.14159*std::pow(linkerLength/gridResolution,3.0));
+	if (minVolumeSphereFraction>volfrac) {
+		res.clear();
+	}
 	return PositionSimulationResult(std::move(res));
 }
 
