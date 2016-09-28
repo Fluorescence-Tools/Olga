@@ -3,6 +3,7 @@
 #include <vector>
 #include <queue>
 #include <set>
+#include <fstream>
 
 #include <Eigen/Dense>
 
@@ -245,6 +246,32 @@ path2points(const std::vector<float>& pathL,
 	}
 	return points;
 }
+void savePoints(const std::vector<bool>& arr, const Eigen::Vector4f& rSource,
+		const float& discretizationStep, const std::string& fileName)
+{
+	using Eigen::Vector3f;
+	using std::vector;
+	const int edgeL=std::lround(std::cbrt(arr.size()));
+	const int center=edgeL2center(edgeL);
+
+	std::ofstream of(fileName);
+	of<<"999999\n \n";
+	int vertex=0;
+	for (int x=0; x<edgeL; ++x) {
+		for (int y=0; y<edgeL; ++y) {
+			for (int z=0; z<edgeL; ++z) {
+				if(arr[vertex]==true) {
+					Vector3f r(x-center,y-center,
+						   z-center);
+					r*=discretizationStep;
+					r+=rSource.head<3>();
+					of<<"AV "<<r[0]<<" "<<r[1]<<" "<<r[2]<<"\n";
+				}
+				++vertex;
+			}
+		}
+	}
+}
 
 std::vector<Eigen::Vector3f> calculateAV(const std::vector<Eigen::Vector4f> &xyzR,
 					 Eigen::Vector4f rSource, float linkerLength,
@@ -256,6 +283,10 @@ std::vector<Eigen::Vector3f> calculateAV(const std::vector<Eigen::Vector4f> &xyz
 	const float maxR=std::max(linkerWidth*0.5f,dyeRadius);
 	auto occupancyVdWL=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,
 					  discretizationStep,linkerWidth*0.5f);
+	/*std::string fname="occVdWL_"+std::to_string(rSource[0])+"_"
+			+std::to_string(rSource[1])
+			+std::to_string(rSource[2])+".xyz";
+	savePoints(occupancyVdWL,rSource,discretizationStep,fname);*/
 	int linkerR=std::lround(linkerWidth*0.5f/discretizationStep);
 	ignoreSphere(occupancyVdWL,linkerR+1);
 	blockOutside(occupancyVdWL,linkerLength/discretizationStep);

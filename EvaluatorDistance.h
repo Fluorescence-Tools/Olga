@@ -89,17 +89,31 @@ public:
 			_dist.setType(val.toString().toStdString());
 			return;
 		case 1:
-			_av1=val.value<EvalId>();
+		{
+			auto tmpId=val.value<EvalId>();
+			if (tmpId==EvalId(-1)) {
+				std::cerr<<"Can not set position_1\n"<<std::flush;
+				return;
+			}
+			_av1=tmpId;
 			//str=_storage.eval(_av1).name();
 			//qDebug()<<"av1="<<static_cast<int>(_av1)<<", "<<str;
 			_dist.setPosition1(_storage.eval(_av1).name());
 			return;
+		}
 		case 2:
-			_av2=val.value<EvalId>();
+		{
+			auto tmpId=val.value<EvalId>();
+			if (tmpId==EvalId(-1)) {
+				std::cerr<<"Can not set position_2\n"<<std::flush;
+				return;
+			}
+			_av2=tmpId;
 			//str=_storage.eval(_av2).name();
 			//qDebug()<<"av2="<<static_cast<int>(_av2)<<", "<<str;
 			_dist.setPosition2(_storage.eval(_av2).name());
 			return;
+		}
 		case 3:
 			_dist.setDistance(val.toDouble());
 			return;

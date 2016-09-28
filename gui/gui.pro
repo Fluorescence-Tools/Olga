@@ -77,3 +77,6 @@ SOURCES += \
     EvaluatorWeightedResidual.cpp \
     EvaluatorChi2r.cpp \
     EvaluatorChi2Contribution.cpp
+
+DISTFILES += \
+    ../legacy_to_json.ods
