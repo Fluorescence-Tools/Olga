@@ -135,7 +135,9 @@ public:
 	virtual PositionSimulationResult calculate(unsigned atom_i,
 						   const std::vector<Eigen::Vector4f>& xyzW)
 	{
-		std::vector<Eigen::Vector3f> vec{xyzW[atom_i].head<3>()};
+		std::vector<Eigen::Vector4f> vec(1);
+		vec[0]=xyzW[atom_i];
+		vec[0][3]=1.0f;
 		return PositionSimulationResult(std::move(vec));
 	}
 

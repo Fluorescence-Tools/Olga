@@ -7,14 +7,19 @@
 
 Eigen::Vector3f PositionSimulationResult::meanPosition() const
 {
+
 	if(std::isnan(_meanPosition(0)))
 	{
-		_meanPosition.fill(0.0);
-		for(const Eigen::Vector3f& point:_points)
+		Eigen::Vector3f tmp;
+		tmp.fill(0.0);
+		double totalW=0.0;
+		for(const Eigen::Vector4f& point:_points)
 		{
-			_meanPosition+=point;
+			tmp+=point.head<3>()*point[3];
+			totalW+=point[3];
 		}
-		_meanPosition/=static_cast<double>(_points.size());
+		tmp/=totalW;
+		_meanPosition=tmp;
 	}
 	return _meanPosition;
 }
@@ -25,7 +30,7 @@ double PositionSimulationResult::Rda(const PositionSimulationResult &other, unsi
 	unsigned long av1length=_points.size();
 	unsigned long av2length=other._points.size();
 	const unsigned long rndLim=(av1length-1)*(av2length-1);
-	double mean=0.0;
+
 	if(nsamples<(av1length*av2length) && nsamples!=0)//MC sampling
 	{
 		std::random_device rd;
@@ -33,33 +38,35 @@ double PositionSimulationResult::Rda(const PositionSimulationResult &other, unsi
 		double r = 0.;
 		unsigned long i1, i2;
 		std::uniform_int_distribution<unsigned long> dist(0,rndLim);
-		nsamples/=2;
-		for(unsigned i=0; i<nsamples; i++)
+		double totalW=0.0;
+		for(unsigned i=0; i<nsamples/2; i++)
 		{
 			i1 = dist(engine);
 			i2 = dist(engine);
-			r += (_points.at(i1%av1length)-other._points.at(i2%av2length)).norm();
-			r += (_points.at(i2%av1length)-other._points.at(i1%av2length)).norm();
+			float w=_points.at(i1%av1length)[3]*other._points.at(i2%av2length)[3];
+			totalW+=w;
+			r += (_points.at(i1%av1length)-other._points.at(i2%av2length)).head<3>().norm()*w;
+			w=_points.at(i2%av1length)[3]*other._points.at(i1%av2length)[3];
+			totalW+=w;
+			r += (_points.at(i2%av1length)-other._points.at(i1%av2length)).head<3>().norm()*w;
 		}
-		nsamples*=2;
-		mean = r/static_cast<double>(nsamples);
-		return mean;
+		return r/totalW;
 	}
 	else//explicit sampling
 	{
 		double r=0.0;
+		double totalW=0.0;
 		for(unsigned i=0; i<av1length; i++)
 		{
 			for(unsigned j=0; j<av2length; j++)
 			{
-				r += (_points.at(i)-other._points.at(j)).norm();
+				float w=_points.at(i)[3]*other._points.at(j)[3];
+				totalW+=w;
+				r += (_points.at(i)-other._points.at(j)).head<3>().norm()*w;
 			}
-
 		}
-		mean = r/static_cast<double>(av1length*av2length);
-		return mean;
+		return r/totalW;
 	}
-	return mean;
 }
 
 double PositionSimulationResult::Rdae(const PositionSimulationResult &other, double R0, unsigned nsamples) const
@@ -75,31 +82,38 @@ double PositionSimulationResult::Rdae(const PositionSimulationResult &other, dou
 		std::mt19937 engine(rd());
 		std::uniform_int_distribution<unsigned long> distr(0,rndLim);
 		int i1, i2;
-
-		nsamples/=2;
-		for(unsigned i=0; i<nsamples; i++)
+		double totalW = 0.0;
+		for(unsigned i=0; i<nsamples/2; i++)
 		{
 			i1 = distr(engine);
 			i2 = distr(engine);
-			r2 = (_points.at(i1%av1length)-other._points.at(i2%av2length)).squaredNorm();
-			e += 1. / (1. + r2 * r2 * r2 * R0r6);
-			r2 = (_points.at(i2%av1length)-other._points.at(i1%av2length)).squaredNorm();
-			e += 1. / (1. + r2 * r2 * r2 * R0r6);
+			float w = _points.at(i1%av1length)[3]*other._points.at(i2%av2length)[3];
+			totalW+=w;
+			r2 = (_points.at(i1%av1length)-other._points.at(i2%av2length)).head<3>().squaredNorm();
+			e += w / (1. + r2 * r2 * r2 * R0r6);
+
+			w = _points.at(i2%av1length)[3]*other._points.at(i1%av2length)[3];
+			totalW+=w;
+			r2 = (_points.at(i2%av1length)-other._points.at(i1%av2length)).head<3>().squaredNorm();
+			e += w / (1. + r2 * r2 * r2 * R0r6);
 		}
-		e /= static_cast<double>(nsamples*2);
+		e /= totalW;
 	}
 	else//explicit sampling
 	{
+		double totalW = 0.0;
 		for(unsigned i=0; i<av1length; i++)
 		{
 			for(unsigned j=0; j<av2length; j++)
 			{
-				r2 = (_points.at(i)-other._points.at(j)).squaredNorm();
-				e += 1. / (1. + r2 * r2 * r2 * R0r6);
+				float w =_points.at(i)[3]*other._points.at(j)[3];
+				totalW+=w;
+				r2 = (_points.at(i)-other._points.at(j)).head<3>().squaredNorm();
+				e += w / (1. + r2 * r2 * r2 * R0r6);
 			}
 
 		}
-		e /= static_cast<double>(av1length*av2length);
+		e /= totalW;
 	}
 	return R0 * pow((1./e - 1.), 1./ 6.);
 }
@@ -224,12 +238,12 @@ bool PositionSimulationResult::dumpShellXyz(const std::string &fileName) {
 PositionSimulationResult::densityArray_t PositionSimulationResult::pointsToDensity(double res) const
 {
 	//l,w,d
-	Eigen::Vector3f minLWD(_points.at(0));
-	Eigen::Vector3f maxLWD(_points.at(0));
+	Eigen::Vector3f minLWD(_points.at(0).head<3>());
+	Eigen::Vector3f maxLWD(_points.at(0).head<3>());
 	for(const auto& point: _points)
 	{
-		minLWD=minLWD.array().min(point.array());
-		maxLWD=maxLWD.array().max(point.array());
+		minLWD=minLWD.array().min(point.head<3>().array());
+		maxLWD=maxLWD.array().max(point.head<3>().array());
 	}
 
 	densityArrayRange_t rangeI(minLWD(0)/res-1,maxLWD(0)/res+1);
@@ -240,7 +254,7 @@ PositionSimulationResult::densityArray_t PositionSimulationResult::pointsToDensi
 	std::fill(density.data(), density.data() + density.num_elements(), false);
 	for(const auto& point: _points)
 	{
-		Eigen::Vector3i xyz=(point/res).cast<int>();
+		Eigen::Vector3i xyz=(point/res).head(3).cast<int>();
 		density[xyz(0)][xyz(1)][xyz(2)]=true;
 	}
 	return density;

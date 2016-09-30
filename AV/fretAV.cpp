@@ -214,30 +214,31 @@ std::vector<float> pathLength(const std::vector<bool>& occupancyVdWL)
 	return std::move(pathL);
 }
 
-std::vector<Eigen::Vector3f>
+std::vector<Eigen::Vector4f>
 path2points(const std::vector<float>& pathL,
 	    const std::vector<bool>& occupancyVdWDye,
 	    const Eigen::Vector4f& rSource,
 	    const float& maxRealLength, const float& discretizationStep)
 {
 	//check dye Clashes and convert weights grid to a point array
-	using Eigen::Vector3f;
+	using Eigen::Vector4f;
 	using std::vector;
 	const int edgeL=std::lround(std::cbrt(pathL.size()));
 	const int center=edgeL2center(edgeL);
 
 	const float maxVerthexL=maxRealLength/discretizationStep;
-	vector<Vector3f> points;
+	vector<Vector4f> points;
 	int vertex=0;
 	for (int x=0; x<edgeL; ++x) {
 		for (int y=0; y<edgeL; ++y) {
 			for (int z=0; z<edgeL; ++z) {
 				if(pathL[vertex]<=maxVerthexL &&
 				   occupancyVdWDye[vertex]==false) {
-					Vector3f r(x-center,y-center,
-						   z-center);
+					Vector4f r(x-center,y-center,
+						   z-center,1.0f);
 					r*=discretizationStep;
-					r+=rSource.head<3>();
+					r+=rSource;
+					r[3]=1.0f;
 					points.push_back(std::move(r));
 				}
 				++vertex;
@@ -273,7 +274,7 @@ void savePoints(const std::vector<bool>& arr, const Eigen::Vector4f& rSource,
 	}
 }
 
-std::vector<Eigen::Vector3f> calculateAV(const std::vector<Eigen::Vector4f> &xyzR,
+std::vector<Eigen::Vector4f> calculateAV(const std::vector<Eigen::Vector4f> &xyzR,
 					 Eigen::Vector4f rSource, float linkerLength,
 					 float linkerWidth, float dyeRadius,
 					 float discretizationStep)
@@ -297,7 +298,7 @@ std::vector<Eigen::Vector3f> calculateAV(const std::vector<Eigen::Vector4f> &xyz
 	return std::move(ret);
 }
 
-std::vector<Eigen::Vector3f> calculateAV3(const std::vector<Eigen::Vector4f> &xyzR,
+std::vector<Eigen::Vector4f> calculateAV3(const std::vector<Eigen::Vector4f> &xyzR,
 					 Eigen::Vector4f rSource, float linkerLength,
 					 float linkerWidth, Eigen::Vector3f dyeRadii,
 					 float discretizationStep)
@@ -312,7 +313,7 @@ std::vector<Eigen::Vector3f> calculateAV3(const std::vector<Eigen::Vector4f> &xy
 	blockOutside(occupancyVdWL,linkerLength/discretizationStep);
 	const auto& pathL=pathLength(occupancyVdWL);
 
-	std::vector<Eigen::Vector3f> points;
+	std::vector<Eigen::Vector4f> points;
 	for(int i=0; i<3; i++) {
 		float dyeR=dyeRadii[i];
 		auto occupancyVdWDye=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,

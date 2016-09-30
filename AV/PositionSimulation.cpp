@@ -132,7 +132,7 @@ PositionSimulationResult
 PositionSimulationAV3::calculate(unsigned atom_i,
 				 const std::vector<Eigen::Vector4f> &xyzW)
 {
-	std::vector<Eigen::Vector3f> res=
+	std::vector<Eigen::Vector4f> res=
 			calculateAV3(xyzW,xyzW[atom_i],linkerLength,
 				     linkerWidth,{radius[0],radius[1],radius[2]},
 				     gridResolution);
@@ -210,8 +210,7 @@ void PositionSimulationAV1::setSetting(int row, const QVariant &val)
 
 PositionSimulationResult PositionSimulationAV1::calculate(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW)
 {
-	std::vector<Eigen::Vector3f> res
-			=calculateAV(xyzW,xyzW[atom_i],linkerLength,linkerWidth,
+	std::vector<Eigen::Vector4f> res=calculateAV(xyzW,xyzW[atom_i],linkerLength,linkerWidth,
 				     radius,gridResolution);
 	double volfrac=res.size()/(4.0/3.0*3.14159*std::pow(linkerLength/gridResolution,3.0));
 	if (minVolumeSphereFraction>volfrac) {

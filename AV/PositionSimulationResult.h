@@ -17,9 +17,9 @@ public:
 	PositionSimulationResult()
 	{
 	}
-	PositionSimulationResult(std::vector<Eigen::Vector3f>&& points)
+	PositionSimulationResult(std::vector<Eigen::Vector4f>&& points)
 	{
-		_points=std::forward<std::vector<Eigen::Vector3f>>(points);
+		_points=std::forward<std::vector<Eigen::Vector4f>>(points);
 	}
 
 	Eigen::Vector3f meanPosition() const;
@@ -30,9 +30,9 @@ public:
 	double minDistance(const PositionSimulationResult& other) const
 	{
 		float minDistSq=std::numeric_limits<double>::infinity();
-		for(const Eigen::Vector3f& p1:_points) {
-			for (const Eigen::Vector3f& p2:other._points) {
-				minDistSq=std::min(minDistSq,(p2-p1).squaredNorm());
+		for(const Eigen::Vector4f& p1:_points) {
+			for (const Eigen::Vector4f& p2:other._points) {
+				minDistSq=std::min(minDistSq,(p2-p1).head<3>().squaredNorm());
 			}
 		}
 		return std::sqrt(minDistSq);
@@ -51,7 +51,7 @@ public:
 	}
 	void translate(const Eigen::Vector3f r) {
 		for(auto& point:_points) {
-			point+=r;
+			point.head(3)+=r;
 		}
 		_meanPosition+=r;
 	}
@@ -61,20 +61,17 @@ public:
 		float overlapVol=0.0f;
 		const float maxRSq=maxR*maxR;
 		Eigen::Vector3f mp=meanPosition();
-		for (const Eigen::Vector3f& point: _points) {
-			float rMpSq=(mp-point).squaredNorm();
-			float w=(std::exp(-rMpSq/(2.0f*10.0f*10.0f))+1.0f)*0.5f;
-			totalVol+=w;
+		for (const Eigen::Vector4f& point: _points) {
+			/*float rMpSq=(mp-point.head<3>()).squaredNorm();
+			float w=(std::exp(-rMpSq/(2.0f*10.0f*10.0f))+1.0f)*0.5f;*/
+			totalVol+=point[3];
 			for (const Eigen::Vector3f& ref: refs ) {
-				float rSq=(ref-point).squaredNorm();
+				float rSq=(ref-point.head<3>()).squaredNorm();
 				if(rSq<maxRSq) {
-					overlapVol+=w;
+					overlapVol+=point[3];
 					break;
 				}
 			}
-		}
-		if(totalVol<2000.0f) {//TODO:remove
-			return -1.0f;
 		}
 		return overlapVol/totalVol;
 	}
@@ -88,7 +85,7 @@ protected:
 	densityArray_t pointsToDensity(double res=0.5) const;
 	static bool allNeighboursFilled(const densityArray_t& arr, int i, int j, int k);
 	std::vector<Eigen::Vector3f> shell(double res=0.5) const;
-	std::vector<Eigen::Vector3f> _points;
+	std::vector<Eigen::Vector4f> _points;
 	static constexpr double nan=std::numeric_limits<double>::quiet_NaN();
 	mutable Eigen::Vector3f _meanPosition={nan,nan,nan};
 };
