@@ -71,7 +71,8 @@ private:
 	double allowedSphereRadius=0.5;
 	double allowedSphereRadiusMin=0.5;
 	double allowedSphereRadiusMax=2.0;
-
+    double contactR=0.0;
+    double contactW=1.0;
 	const int linknodes=3;
 };
 
@@ -109,6 +110,8 @@ private:
 	double allowedSphereRadiusMin=0.5;
 	double allowedSphereRadiusMax=2.0;
 	double minVolumeSphereFraction=0.0;
+    double contactR=0.0;
+    double contactW=1.0;
 
 	const int linknodes=3;
 };
