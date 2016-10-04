@@ -15,22 +15,17 @@ class XYZVstore;
 class PositionSimulation
 {
 public:
-	//virtual bool load(const QJsonObject& positionJson)=0;
-	//static PositionSimulation* create(const QJsonObject& positionJson);
-	//virtual QJsonObject jsonObject() const=0;
 	PositionSimulation();
 	virtual ~PositionSimulation();
-	virtual bool load(const QVariantMap& settings)=0;
 	virtual int loadLegacy(std::istream& /*is*/){return -1;}
 	virtual PositionSimulationResult
 	calculate(const Eigen::Vector3f& attachmentAtomPos,
-		 const std::vector<Eigen::Vector4f>& xyzW);
+		  const std::vector<Eigen::Vector4f>& xyzW);
 	virtual PositionSimulationResult
 	calculate(unsigned atom_i,
-		  const std::vector<Eigen::Vector4f>& xyzW)=0;// v.d.Waals radii
+		  const std::vector<Eigen::Vector4f>& xyzW) = 0;// v.d.Waals radii
 	static PositionSimulation* create(const Position::SimulationType &simulationType);
-	static PositionSimulation* create(const QVariantMap& settings);
-	virtual PositionSimulation *Clone()=0;
+	virtual PositionSimulation *Clone() = 0;
 
 	using Setting=AbstractEvaluator::Setting;
 	virtual Setting setting(int row) const = 0;
@@ -44,7 +39,6 @@ protected:
 class PositionSimulationAV3: public PositionSimulation
 {
 public:
-	bool load(const QVariantMap& settings);
 	int loadLegacy(std::istream& is) {
 		int pdbId;
 		is >> linkerLength >> linkerWidth >> radius[0] >>radius[1]
@@ -54,7 +48,7 @@ public:
 	Setting setting(int row) const;
 	virtual void setSetting(int row, const QVariant& val);
 	virtual int settingsCount() const {
-		return 9;
+		return 11;
 	}
 	virtual PositionSimulation *Clone(){
 		return new PositionSimulationAV3(*this);
@@ -71,19 +65,16 @@ private:
 	double allowedSphereRadius=0.5;
 	double allowedSphereRadiusMin=0.5;
 	double allowedSphereRadiusMax=2.0;
-    double contactR=0.0;
-    double contactW=1.0;
+	double contactR=0.0;
+	double contactW=1.0;
+
 	const int linknodes=3;
 };
 
 class PositionSimulationAV1: public PositionSimulation
 {
 public:
-	//PositionSimulationAV1(const QJsonObject& positionJson);
-	//bool load(const QJsonObject& positionJson);
-	//QJsonObject jsonObject() const;
 	PositionSimulationAV1()=default;
-	bool load(const QVariantMap& settings);
 	int loadLegacy(std::istream& is){
 		int pdbId;
 		is >> linkerLength >> linkerWidth >> radius >>pdbId;
@@ -93,7 +84,7 @@ public:
 	Setting setting(int row) const;
 	virtual void setSetting(int row, const QVariant& val);
 	virtual int settingsCount() const {
-		return 8;
+		return 10;
 	}
 	virtual PositionSimulation *Clone(){
 		return new PositionSimulationAV1(*this);
@@ -110,8 +101,8 @@ private:
 	double allowedSphereRadiusMin=0.5;
 	double allowedSphereRadiusMax=2.0;
 	double minVolumeSphereFraction=0.0;
-    double contactR=0.0;
-    double contactW=1.0;
+	double contactR=0.0;
+	double contactW=1.0;
 
 	const int linknodes=3;
 };
@@ -119,7 +110,7 @@ private:
 class PositionSimulationAtom: public PositionSimulation
 {
 public:
-	bool load(const QVariantMap& /*settings*/){return true;}
+
 	PositionSimulationAtom()=default;
 
 	Setting setting(int /*row*/) const

@@ -12,15 +12,13 @@ private:
 	std::shared_ptr<AbstractCalcResult> calculate(const pteros::System &system,const FrameDescriptor &frame) const;
 public:
 	EvaluatorPositionSimulation(const TaskStorage& storage,
-				    const QVariantMap& settings,
-				    const std::string& name);
+				    const std::string& name):
+		AbstractEvaluator(storage),_position(name) {}
 	EvaluatorPositionSimulation(const TaskStorage& storage,
-				    const std::string& name):EvaluatorPositionSimulation(storage,QVariantMap(),name) {}
-	EvaluatorPositionSimulation(const TaskStorage& storage,
-				    const QString &line,
+				    const QString &legacy,
 				    const QString &pdbFileName):
-		EvaluatorPositionSimulation(storage,QVariantMap(),"") {
-		_position.setFromLegacy(line.toStdString(),pdbFileName.toStdString());
+		EvaluatorPositionSimulation(storage,"") {
+		_position.setFromLegacy(legacy.toStdString(),pdbFileName.toStdString());
 	}
 
 	virtual Task

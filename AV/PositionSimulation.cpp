@@ -24,28 +24,6 @@ PositionSimulation* PositionSimulation::create(const Position::SimulationType &s
 	return nullptr;
 }
 
-PositionSimulation* PositionSimulation::create(const QVariantMap &settings)
-{
-	Position::SimulationType type=settings.value("simulation_type").value<Position::SimulationType>();
-	PositionSimulation* pos=create(type);
-	pos->load(settings);
-	return pos;
-}
-
-bool PositionSimulationAV3::load(const QVariantMap& settings)
-{
-	gridResolution=settings.value("simulation_grid_resolution",0.4).toDouble();
-	linkerLength=settings.value("linker_length").toDouble();
-	linkerWidth=settings.value("linker_width").toDouble();
-	radius[0]=settings.value("radius1").toDouble();
-	radius[1]=settings.value("radius2").toDouble();
-	radius[2]=settings.value("radius3").toDouble();
-	allowedSphereRadius=settings.value("allowed_sphere_radius",-1.0).toDouble();
-	allowedSphereRadiusMin=settings.value("allowed_sphere_radius_min",0.5).toDouble();
-	allowedSphereRadiusMax=settings.value("allowed_sphere_radius_max",2.0).toDouble();
-	return true;
-}
-
 PositionSimulation::Setting PositionSimulationAV3::setting(int row) const
 {
 	switch(row)
@@ -68,6 +46,10 @@ PositionSimulation::Setting PositionSimulationAV3::setting(int row) const
 		return Setting{"allowed_sphere_radius_min",allowedSphereRadiusMin};
 	case 8:
 		return Setting{"allowed_sphere_radius_max",allowedSphereRadiusMax};
+	case 9:
+		return Setting{"contact_volume_thickness",contactR};
+	case 10:
+		return Setting{"contact_volume_density",contactW};
 	}
 	return Setting();
 }
@@ -103,6 +85,12 @@ void PositionSimulationAV3::setSetting(int row, const QVariant &val)
 	case 8:
 		allowedSphereRadiusMax=val.toDouble();
 		return;
+	case 9:
+		contactR=val.toDouble();
+		return;
+	case 10:
+		contactW=val.toDouble();
+		return;
 	}
 }
 
@@ -135,21 +123,8 @@ PositionSimulationAV3::calculate(unsigned atom_i,
 	std::vector<Eigen::Vector4f> res=
 			calculateAV3(xyzW,xyzW[atom_i],linkerLength,
 				     linkerWidth,{radius[0],radius[1],radius[2]},
-                     gridResolution,contactR,contactW);
+		     gridResolution,contactR,contactW);
 	return PositionSimulationResult(std::move(res));
-}
-
-bool PositionSimulationAV1::load(const QVariantMap& settings)
-{
-	gridResolution=settings.value("simulation_grid_resolution",0.4).toDouble();
-	linkerLength=settings.value("linker_length").toDouble();
-	linkerWidth=settings.value("linker_width").toDouble();
-	radius=settings.value("radius1").toDouble();
-	allowedSphereRadius=settings.value("allowed_sphere_radius",0.5).toDouble();
-	allowedSphereRadiusMin=settings.value("allowed_sphere_radius_min",0.5).toDouble();
-	allowedSphereRadiusMax=settings.value("allowed_sphere_radius_max",2.0).toDouble();
-	allowedSphereRadiusMax=settings.value("min_sphere_volume_fraction",0.0).toDouble();
-	return true;
 }
 
 PositionSimulation::Setting PositionSimulationAV1::setting(int row) const
@@ -172,6 +147,10 @@ PositionSimulation::Setting PositionSimulationAV1::setting(int row) const
 		return Setting{"allowed_sphere_radius_max",allowedSphereRadiusMax};
 	case 7:
 		return Setting{"min_sphere_volume_fraction",minVolumeSphereFraction};
+	case 8:
+		return Setting{"contact_volume_thickness",contactR};
+	case 9:
+		return Setting{"contact_volume_density",contactW};
 	}
 	return Setting();
 }
@@ -204,91 +183,22 @@ void PositionSimulationAV1::setSetting(int row, const QVariant &val)
 	case 7:
 		minVolumeSphereFraction=val.toDouble();
 		return;
-
+	case 8:
+		contactR=val.toDouble();
+		return;
+	case 9:
+		contactW=val.toDouble();
+		return;
 	}
 }
 
 PositionSimulationResult PositionSimulationAV1::calculate(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW)
 {
 	std::vector<Eigen::Vector4f> res=calculateAV(xyzW,xyzW[atom_i],linkerLength,linkerWidth,
-                     radius,gridResolution,contactR,contactW);
+		     radius,gridResolution,contactR,contactW);
 	double volfrac=res.size()/(4.0/3.0*3.14159*std::pow(linkerLength/gridResolution,3.0));
 	if (minVolumeSphereFraction>volfrac) {
 		res.clear();
 	}
 	return PositionSimulationResult(std::move(res));
 }
-
-/*
-PositionSimulation* PositionSimulation::create(const QJsonObject &positionJson)
-{
-	std::string type=positionJson.value("simulation_type").toString().toStdString();
-	PositionSimulation* pos=create(type);
-	pos->load(positionJson);
-	return pos;
-}
-
-PositionSimulationAV3::PositionSimulationAV3(const QJsonObject &positionJson)
-{
-	load(positionJson);
-}
-
-bool PositionSimulationAV3::load(const QJsonObject &positionJson)
-{
-	gridResolution=positionJson.value("simulation_grid_resolution").toDouble(0.4);
-	linkerLength=positionJson.value("linker_length").toDouble(0.0);
-	linkerWidth=positionJson.value("linker_width").toDouble(0.0);
-	radius[0]=positionJson.value("radius1").toDouble(0.0);
-	radius[1]=positionJson.value("radius2").toDouble(0.0);
-	radius[2]=positionJson.value("radius3").toDouble(0.0);
-	allowedSphereRadius=positionJson.value("allowed_sphere_radius").toDouble(-1.0);
-	allowedSphereRadiusMin=positionJson.value("allowed_sphere_radius_min").toDouble(0.5);
-	allowedSphereRadiusMax=positionJson.value("allowed_sphere_radius_max").toDouble(2.0);
-	return true;
-}
-QJsonObject PositionSimulationAV3::jsonObject() const
-{
-	QJsonObject position;
-	position.insert("simulation_grid_resolution",gridResolution);
-	position.insert("linker_length",linkerLength);
-	position.insert("linker_width",linkerWidth);
-	position.insert("radius1",radius[0]);
-	position.insert("radius2",radius[1]);
-	position.insert("radius3",radius[2]);
-	position.insert("allowed_sphere_radius",allowedSphereRadius);
-	position.insert("allowed_sphere_radius_min",allowedSphereRadiusMin);
-	position.insert("allowed_sphere_radius_max",allowedSphereRadiusMax);
-	return position;
-}
-
-PositionSimulationAV1::PositionSimulationAV1(const QJsonObject &positionJson)
-{
-	load(positionJson);
-}
-
-bool PositionSimulationAV1::load(const QJsonObject &positionJson)
-{
-	gridResolution=positionJson.value("simulation_grid_resolution").toDouble(0.4);
-	linkerLength=positionJson.value("linker_length").toDouble(0.0);
-	linkerWidth=positionJson.value("linker_width").toDouble(0.0);
-	radius=positionJson.value("radius1").toDouble(0.0);
-	allowedSphereRadius=positionJson.value("allowed_sphere_radius").toDouble(0.5);
-	allowedSphereRadiusMin=positionJson.value("allowed_sphere_radius_min").toDouble(0.5);
-	allowedSphereRadiusMax=positionJson.value("allowed_sphere_radius_max").toDouble(2.0);
-	return true;
-}
-
-QJsonObject PositionSimulationAV1::jsonObject() const
-{
-	QJsonObject position;
-	position.insert("simulation_grid_resolution",gridResolution);
-	position.insert("linker_length",linkerLength);
-	position.insert("linker_width",linkerWidth);
-	position.insert("radius1",radius);
-	position.insert("allowed_sphere_radius",allowedSphereRadius);
-	position.insert("allowed_sphere_radius_min",allowedSphereRadiusMin);
-	position.insert("allowed_sphere_radius_max",allowedSphereRadiusMax);
-	return position;
-}
-
-*/

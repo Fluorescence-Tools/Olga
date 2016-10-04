@@ -7,16 +7,12 @@
 #include <string>
 #include <future>
 
-#include <QJsonObject>
-#include <QJsonDocument>
 #include <QVariant>
-
-
+#include <QJsonDocument>
 
 Position::Position()
 {
-	_simulation=0;
-	_residueSeqNumber=0;
+	_simulation=PositionSimulation::create(_simulationType);
 }
 
 Position::~Position()
@@ -72,17 +68,12 @@ Position& Position::operator=(Position&& o)
 	o._simulation=0;
 	return *this;
 }
-/*
-Position::Position(const QJsonObject &positionJson, const std::string& name)
+
+Position::Position(const std::string& name):Position()
 {
-	_simulation=0;
-	load(positionJson, name);
-}*/
-Position::Position(const QVariantMap &settings, const std::string& name)
-{
-	_simulation=0;
-	load(settings, name);
+	_name=name;
 }
+
 QMap<QString,double> loadvdWRadii(const QString& fileName)
 {
 	QMap<QString,double> map={{"H",0.1},
@@ -134,7 +125,7 @@ std::vector<Eigen::Vector4f> coordsVdW(const pteros::System &system)
 PositionSimulationResult Position::calculate(const pteros::System &system) const
 {
 	std::vector<Eigen::Vector4f> xyzW;
-	if(_stripMask.empty()) {
+	if (_stripMask.empty()) {
 		xyzW=coordsVdW(system);
 	} else {
 		try {
@@ -146,7 +137,6 @@ PositionSimulationResult Position::calculate(const pteros::System &system) const
 			std::cerr<<"stripping failed: "+err.what()+"\n"<<std::flush;
 			xyzW=coordsVdW(system);
 		}
-
 	}
 	Eigen::Vector3f refPos=atomXYZ(system);
 	return calculate(refPos,xyzW);
@@ -212,19 +202,6 @@ void Position::setSetting(int row, const QVariant &val)
 
 int Position::settingsCount() const {
 	return _localSettingCount+(_simulation?_simulation->settingsCount():0);
-}
-
-bool Position::load(const QVariantMap &settings, const std::string& name)
-{
-	_name=name;
-	_chainIdentifier=settings.value("chain_identifier").toString().toStdString();
-	_residueSeqNumber=settings.value("residue_seq_number").toInt();
-	_residueName=settings.value("residue_name").toString().toStdString();
-	_atomName=settings.value("atom_name").toString().toStdString();
-	_simulationType=settings.value("simulation_type").value<SimulationType>();
-	delete _simulation;
-	_simulation=PositionSimulation::create(settings);
-	return true;
 }
 
 const std::string &Position::name() const
@@ -312,16 +289,6 @@ std::vector<Position> Position::fromLegacy(const std::string &labelingFileName, 
 	}
 	return positions;
 }
-/*
-QJsonObject Position::jsonObjects(const std::vector<std::shared_ptr<Position>> &arr)
-{
-	QJsonObject positions;
-	for(const auto& position:arr)
-	{
-		positions.insert(QString::fromStdString(position->name()),position->jsonObject());
-	}
-	return positions;
-}*/
 
 Eigen::Vector3f Position::atomXYZ(const pteros::System &system) const
 {
@@ -407,36 +374,3 @@ void Position::setChainIdentifier(const std::string &chainIdentifier)
 {
 	_chainIdentifier = chainIdentifier;
 }
-
-/*
-QJsonObject Position::jsonObject() const
-{
-	QJsonObject position;
-	if(_simulation)
-	{
-		position=_simulation->jsonObject();
-	}
-	//position.insert("position_name",QString::fromStdString(_name));
-	position.insert("chain_identifier",QString::fromStdString(_chainIdentifier));
-	position.insert("residue_seq_number",static_cast<int>(_residueSeqNumber));
-	position.insert("residue_name",QString::fromStdString(_residueName));
-	position.insert("atom_name",QString::fromStdString(_atomName));
-	position.insert("simulation_type",QString::fromStdString(_simulationType));
-
-	return position;
-}
-
-bool Position::load(const QJsonObject &positionJson, const std::string& name)
-{
-	//_name=positionJson.value("position_name").toString().toStdString();
-	_name=name;
-	_chainIdentifier=positionJson.value("chain_identifier").toString().toStdString();
-	_residueSeqNumber=positionJson.value("residue_seq_number").toVariant().toInt();
-	_residueName=positionJson.value("residue_name").toString().toStdString();
-	_atomName=positionJson.value("atom_name").toString().toStdString();
-	_simulationType=positionJson.value("simulation_type").toString().toStdString();
-	delete _simulation;
-	_simulation=PositionSimulation::create(positionJson);
-	return true;
-}
-*/

@@ -170,7 +170,11 @@ std::ostream &PositionSimulationResult::dump_xyz(std::ostream &os) const
 
 	for(int i=0; i < n; i++)
 	{
-		os<<"AV ";
+		if (_points.at(i)[3]>1.0f) {
+			os<<"AVc ";
+		} else {
+			os<<"AV ";
+		}
 		os<<_points.at(i)[0]<<"\t";
 		os<<_points.at(i)[1]<<"\t";
 		os<<_points.at(i)[2]<<"\n";
