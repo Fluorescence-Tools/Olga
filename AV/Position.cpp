@@ -125,6 +125,7 @@ std::vector<Eigen::Vector4f> coordsVdW(const pteros::System &system)
 PositionSimulationResult Position::calculate(const pteros::System &system) const
 {
 	std::vector<Eigen::Vector4f> xyzW;
+	Eigen::Vector3f refPos=atomXYZ(system);
 	if (_stripMask.empty()) {
 		xyzW=coordsVdW(system);
 	} else {
@@ -138,7 +139,6 @@ PositionSimulationResult Position::calculate(const pteros::System &system) const
 			xyzW=coordsVdW(system);
 		}
 	}
-	Eigen::Vector3f refPos=atomXYZ(system);
 	return calculate(refPos,xyzW);
 }
 
