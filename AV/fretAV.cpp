@@ -4,6 +4,7 @@
 #include <queue>
 #include <set>
 #include <fstream>
+#include <iostream>
 
 #include <Eigen/Dense>
 
@@ -219,7 +220,7 @@ path2points(const std::vector<float>& pathL,
 	    const std::vector<bool>& occupancyVdWDye,
 	    const Eigen::Vector4f& rSource,
 	    const float& maxRealLength, const float& discretizationStep,
-	    const float contactR, const float contactW)
+	    const float contactR, const float trappedFrac)
 {
 	//check dye Clashes and convert weights grid to a point array
 	using Eigen::Vector4f;
@@ -229,6 +230,7 @@ path2points(const std::vector<float>& pathL,
 	const int center=edgeL2center(edgeL);
 
 	auto contactNeis=deltaIlist(contactR/discretizationStep,edgeL);
+	std::vector<int> trappedPointIndexes;
 
 	const float maxVerthexL=maxRealLength/discretizationStep;
 	vector<Vector4f> points;
@@ -243,22 +245,34 @@ path2points(const std::vector<float>& pathL,
 					r*=discretizationStep;
 					r+=rSource;
 					r[3]=1.0f;
+					points.push_back(std::move(r));
 					for (const auto& pair: contactNeis) {
 						const int& di=pair.first;
-						int nei=vertex+di;
+						const int nei=vertex+di;
 						if(nei>=0 && nei<vol) {
 							if(occupancyVdWDye[nei]==true) {
-								r[3]=contactW;
+								//r[3]=contactW;
+								trappedPointIndexes.push_back(points.size()-1);
 								break;
 							}
 						}
 					}
-
-					points.push_back(std::move(r));
 				}
 				++vertex;
 			}
 		}
+	}
+	const float freeFrac=1.0f-trappedFrac;
+	const float volTrapped=trappedPointIndexes.size();
+	const float volFree=points.size()-volTrapped;
+	const float contactRho=volFree*trappedFrac/(volTrapped*freeFrac);
+	if (contactRho>=0.0f) {
+		for (const int i: trappedPointIndexes) {
+			points[i][3]=contactRho;
+		}
+	} else {
+		std::cerr<<"WARNING! contactRho=" + std::to_string(contactRho)
+			   +" < 0 \n"<<std::flush;
 	}
 	return points;
 }
@@ -292,7 +306,7 @@ void savePoints(const std::vector<bool>& arr, const Eigen::Vector4f& rSource,
 std::vector<Eigen::Vector4f> calculateAV(const std::vector<Eigen::Vector4f> &xyzR,
 					 Eigen::Vector4f rSource, float linkerLength,
 					 float linkerWidth, float dyeRadius,
-					 float discretizationStep,float contactR, float contactW)
+					 float discretizationStep,float contactR, float trappedFrac)
 {
 	using std::vector;
 	using Eigen::Vector4f;
@@ -302,24 +316,24 @@ std::vector<Eigen::Vector4f> calculateAV(const std::vector<Eigen::Vector4f> &xyz
 	int linkerR=std::lround(linkerWidth*0.5f/discretizationStep);
 	ignoreSphere(occupancyVdWL,linkerR+1);
 
-	/*std::string fname="occVdWL_"+std::to_string(rSource[0])+"_"
+	std::string fname="occVdWL_"+std::to_string(rSource[0])+"_"
 			+std::to_string(rSource[1])
 			+std::to_string(rSource[2])+".xyz";
-	savePoints(occupancyVdWL,rSource,discretizationStep,fname);*/
+	savePoints(occupancyVdWL,rSource,discretizationStep,fname);
 
 	blockOutside(occupancyVdWL,linkerLength/discretizationStep);
 	const auto& pathL=pathLength(occupancyVdWL);
 	auto occupancyVdWDye=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,
 					    discretizationStep,dyeRadius);
 	auto ret=path2points(pathL,occupancyVdWDye,rSource,linkerLength,
-			     discretizationStep,contactR,contactW);
+			     discretizationStep,contactR,trappedFrac);
 	return std::move(ret);
 }
 
 std::vector<Eigen::Vector4f> calculateAV3(const std::vector<Eigen::Vector4f> &xyzR,
 					  Eigen::Vector4f rSource, float linkerLength,
 					  float linkerWidth, Eigen::Vector3f dyeRadii,
-					  float discretizationStep,float contactR, float contactW)
+					  float discretizationStep,float contactR, float trappedFrac)
 {
 	using std::vector;
 	using Eigen::Vector4f;
@@ -337,7 +351,7 @@ std::vector<Eigen::Vector4f> calculateAV3(const std::vector<Eigen::Vector4f> &xy
 		auto occupancyVdWDye=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,
 						    discretizationStep,dyeR);
 		auto cur=path2points(pathL,occupancyVdWDye,rSource,
-				     linkerLength,discretizationStep, contactR, contactW);
+				     linkerLength,discretizationStep, contactR, trappedFrac);
 		points.reserve(points.size()+cur.size());
 		std::move(cur.begin(),cur.end(),std::back_inserter(points));
 	}

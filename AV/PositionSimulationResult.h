@@ -57,10 +57,13 @@ public:
 	}
 	float overlap(const std::vector<Eigen::Vector3f>& refs, float maxR) const
 	{
+		if (_points.size()==0) {
+			return std::numeric_limits<double>::quiet_NaN();
+		}
 		float totalVol=0.0f;
 		float overlapVol=0.0f;
 		const float maxRSq=maxR*maxR;
-		Eigen::Vector3f mp=meanPosition();
+		//Eigen::Vector3f mp=meanPosition();
 		for (const Eigen::Vector4f& point: _points) {
 			/*float rMpSq=(mp-point.head<3>()).squaredNorm();
 			float w=(std::exp(-rMpSq/(2.0f*10.0f*10.0f))+1.0f)*0.5f;*/

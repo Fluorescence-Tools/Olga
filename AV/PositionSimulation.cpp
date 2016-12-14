@@ -153,7 +153,7 @@ PositionSimulation::Setting PositionSimulationAV1::setting(int row) const
 	case 8:
 		return Setting{"contact_volume_thickness",contactR};
 	case 9:
-		return Setting{"contact_volume_density",contactW};
+		return Setting{"contact_volume_trapped_fraction",trappedFrac};
 	}
 	return Setting();
 }
@@ -190,7 +190,7 @@ void PositionSimulationAV1::setSetting(int row, const QVariant &val)
 		contactR=val.toDouble();
 		return;
 	case 9:
-		contactW=val.toDouble();
+		trappedFrac=val.toDouble();
 		return;
 	}
 }
@@ -198,7 +198,7 @@ void PositionSimulationAV1::setSetting(int row, const QVariant &val)
 PositionSimulationResult PositionSimulationAV1::calculate(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW)
 {
 	std::vector<Eigen::Vector4f> res=calculateAV(xyzW,xyzW[atom_i],linkerLength,linkerWidth,
-		     radius,gridResolution,contactR,contactW);
+		     radius,gridResolution,contactR,trappedFrac);
 	double volfrac=res.size()/(4.0/3.0*3.14159*std::pow(linkerLength/gridResolution,3.0));
 	if (minVolumeSphereFraction>volfrac) {
 		res.clear();

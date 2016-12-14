@@ -187,18 +187,16 @@ std::ostream &PositionSimulationResult::dump_xyz(std::ostream &os) const
 
 std::ostream &PositionSimulationResult::dumpShellXyz(std::ostream &os)
 {
+	if(_points.size()==0)
+	{
+		os<<"AV cloud is empty\n";
+		return os;
+	}
 	std::vector<Eigen::Vector3f> _shell=shell();
 	int n=_shell.size();
 	std::ios::fmtflags osflags  = os.flags();
 	os<<n+1<<"\n";
-	if(n==0)
-	{
-		os<<"AV cloud is empty, probably the simulation has not been performed\n";
-	}
-	else
-	{
-		os<<"comment\n";
-	}
+	os<<"comment\n";
 	os.unsetf ( std::ios::fixed );
 	os<<std::setprecision(5);
 
