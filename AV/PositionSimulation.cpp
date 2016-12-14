@@ -49,7 +49,7 @@ PositionSimulation::Setting PositionSimulationAV3::setting(int row) const
 	case 9:
 		return Setting{"contact_volume_thickness",contactR};
 	case 10:
-		return Setting{"contact_volume_density",contactW};
+		return Setting{"contact_volume_trapped_fraction",contactW};
 	}
 	return Setting();
 }
