@@ -47,9 +47,11 @@ PositionSimulation::Setting PositionSimulationAV3::setting(int row) const
 	case 8:
 		return Setting{"allowed_sphere_radius_max",allowedSphereRadiusMax};
 	case 9:
-		return Setting{"contact_volume_thickness",contactR};
+		return Setting{"min_sphere_volume_fraction",minVolumeSphereFraction};
 	case 10:
-		return Setting{"contact_volume_trapped_fraction",contactW};
+		return Setting{"contact_volume_thickness",contactR};
+	case 11:
+		return Setting{"contact_volume_trapped_fraction",trappedFrac};
 	}
 	return Setting();
 }
@@ -86,10 +88,13 @@ void PositionSimulationAV3::setSetting(int row, const QVariant &val)
 		allowedSphereRadiusMax=val.toDouble();
 		return;
 	case 9:
-		contactR=val.toDouble();
+		minVolumeSphereFraction=val.toDouble();
 		return;
 	case 10:
-		contactW=val.toDouble();
+		contactR=val.toDouble();
+		return;
+	case 11:
+		trappedFrac=val.toDouble();
 		return;
 	}
 }
@@ -103,8 +108,7 @@ PositionSimulation::calculate(const Eigen::Vector3f &attachmentAtomPos,
 	for(unsigned i=0; i<xyzW.size(); i++)
 	{
 		v[3]=xyzW[i][3];
-		if( (v-xyzW.at(i)).squaredNorm()<0.01f )
-		{
+		if( (v-xyzW.at(i)).squaredNorm()<0.01f ) {
 			atom_i=i;
 			break;
 		}
@@ -126,7 +130,11 @@ PositionSimulationAV3::calculate(unsigned atom_i,
 	std::vector<Eigen::Vector4f> res=
 			calculateAV3(xyzW,xyzW[atom_i],linkerLength,
 				     linkerWidth,{radius[0],radius[1],radius[2]},
-		     gridResolution,contactR,contactW);
+		     gridResolution,contactR,trappedFrac);
+	double volfrac=res.size()/(4.0/3.0*3.14159*std::pow(linkerLength/gridResolution,3.0));
+	if (minVolumeSphereFraction>volfrac) {
+		res.clear();
+	}
 	return PositionSimulationResult(std::move(res));
 }
 
