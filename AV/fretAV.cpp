@@ -321,7 +321,7 @@ std::vector<Eigen::Vector4f> calculateAV(const std::vector<Eigen::Vector4f> &xyz
 	std::string fname="occVdWL_"+std::to_string(rSource[0])+"_"
 			+std::to_string(rSource[1])
 			+std::to_string(rSource[2])+".xyz";
-	savePoints(occupancyVdWL,rSource,discretizationStep,fname);
+	//savePoints(occupancyVdWL,rSource,discretizationStep,fname);
 
 	blockOutside(occupancyVdWL,linkerLength/discretizationStep);
 	const auto& pathL=pathLength(occupancyVdWL);
