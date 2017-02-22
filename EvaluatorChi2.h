@@ -14,8 +14,12 @@ private:
 		distances.clear();
 		for(const auto& id:_distCalcs)
 		{
-			auto eval=static_cast<const EvaluatorDistance&>(_storage.eval(id));
-			distances.push_back(eval._dist);
+            try {
+                auto eval=dynamic_cast<const EvaluatorDistance&>(_storage.eval(id));
+                distances.push_back(eval._dist);
+            } catch(std::bad_cast exp) {
+                std::cerr<<"ERROR! In Chi2 '" + _name + "': Evaluator '"+_storage.eval(id).name() + "' type is not Distance, as it shoud be!\n";
+            }
 		}
 	}
 
