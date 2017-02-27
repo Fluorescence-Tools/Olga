@@ -44,7 +44,8 @@ HEADERS += \
     CheckBoxList.h \
     EvaluatorWeightedResidual.h \
     EvaluatorChi2r.h \
-    EvaluatorChi2Contribution.h
+    EvaluatorChi2Contribution.h \
+    EvaluatorAvFile.h
 
 SOURCES += \
     main.cpp \
@@ -76,7 +77,8 @@ SOURCES += \
     CheckBoxList.cpp \
     EvaluatorWeightedResidual.cpp \
     EvaluatorChi2r.cpp \
-    EvaluatorChi2Contribution.cpp
+    EvaluatorChi2Contribution.cpp \
+    EvaluatorAvFile.cpp
 
 DISTFILES += \
     ../legacy_to_json.ods

@@ -21,8 +21,6 @@
 #include "FrameDescriptor.h"
 #include "AV/MolecularSystemDomain.h"
 
-
-
 class TrajectoriesTreeModel : public QAbstractItemModel
 {
 	Q_OBJECT

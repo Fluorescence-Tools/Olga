@@ -6,6 +6,7 @@
 #include "EvaluatorChi2r.h"
 #include "EvaluatorTrasformationMatrix.h"
 #include "EvaluatorEulerAngle.h"
+#include "EvaluatorAvFile.h"
 
 #include <QFileDialog>
 
