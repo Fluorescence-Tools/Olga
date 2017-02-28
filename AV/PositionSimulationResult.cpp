@@ -24,6 +24,37 @@ Eigen::Vector3f PositionSimulationResult::meanPosition() const
 	return _meanPosition;
 }
 
+double PositionSimulationResult::meanFretEfficiency(const PositionSimulationResult &other, const double R0) const
+{
+	const unsigned long nsamples=40000;
+
+	unsigned long av1length=_points.size();
+	unsigned long av2length=other._points.size();
+	const unsigned long rndLim=(av1length-1)*(av2length-1);
+	std::random_device rd;
+	std::mt19937 engine(rd());
+	double eff = 0.0;
+	unsigned long i1, i2;
+	std::uniform_int_distribution<unsigned long> dist(0,rndLim);
+	double totalW=0.0;
+	for(unsigned i=0; i<nsamples/2; i++)
+	{
+		i1 = dist(engine);
+		i2 = dist(engine);
+
+		double w=_points.at(i1%av1length)[3]*other._points.at(i2%av2length)[3];
+		totalW+=w;
+		double r = (_points.at(i1%av1length)-other._points.at(i2%av2length)).head<3>().norm();
+		eff += 1.0/(1.0+std::pow(r/R0,6.0))*w;
+
+		w=_points.at(i2%av1length)[3]*other._points.at(i1%av2length)[3];
+		totalW+=w;
+		r = (_points.at(i2%av1length)-other._points.at(i1%av2length)).head<3>().norm();
+		eff += 1.0/(1.0+std::pow(r/R0,6.0))*w;
+	}
+	return eff/totalW;
+}
+
 double PositionSimulationResult::Rda(const PositionSimulationResult &other, unsigned nsamples) const
 {
 	using std::min;

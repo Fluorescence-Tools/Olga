@@ -45,7 +45,8 @@ HEADERS += \
     EvaluatorWeightedResidual.h \
     EvaluatorChi2r.h \
     EvaluatorChi2Contribution.h \
-    EvaluatorAvFile.h
+    EvaluatorAvFile.h \
+    EvaluatorFretEfficiency.h
 
 SOURCES += \
     main.cpp \
@@ -78,7 +79,8 @@ SOURCES += \
     EvaluatorWeightedResidual.cpp \
     EvaluatorChi2r.cpp \
     EvaluatorChi2Contribution.cpp \
-    EvaluatorAvFile.cpp
+    EvaluatorAvFile.cpp \
+    EvaluatorFretEfficiency.cpp
 
 DISTFILES += \
     ../legacy_to_json.ods

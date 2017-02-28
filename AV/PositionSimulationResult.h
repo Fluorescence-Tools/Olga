@@ -23,6 +23,7 @@ public:
 	}
 
 	Eigen::Vector3f meanPosition() const;
+	double meanFretEfficiency(const PositionSimulationResult& other, const double R0) const;
 	double Rda(const PositionSimulationResult& other, unsigned nsamples=200000) const;
 	double Rdae(const PositionSimulationResult& other, double R0, unsigned nsamples=200000) const;
 	double Rmp(const PositionSimulationResult& other) const;
