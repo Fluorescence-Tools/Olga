@@ -1,5 +1,7 @@
 #include <vector>
 
+#include <Eigen/Dense>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QSettings>
@@ -30,6 +32,7 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 	qRegisterMetaType<FrameDescriptor>("FrameDescriptor");
 	qRegisterMetaType<EvalId>("EvalId");
 	qRegisterMetaType<Position::SimulationType>("SimulationType");
+	qRegisterMetaType<Eigen::Vector3d>("Eigen::Vector3d");
 
 	ui->setupUi(this);
 

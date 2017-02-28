@@ -115,16 +115,16 @@ void EvaluatorDelegate::setEditorData(QWidget *editor, const QModelIndex &index)
 		} else if(displayData.userType()==intListType) {
 			checkBoxList.setChecked(displayData.value<QList<int>>());
 			return;
-		} else if(data.userType()==vec3dType) {
-			const Eigen::Vector3d& vec=data.value<Eigen::Vector3d>();
-			QString str=QString("%1 %2 %3").arg(vec[0]).arg(vec[1])
-					.arg(vec[2]);
-			vec3dedit.setText(str);
-			return;
 		} else if(data.userType()==buttonsType) {
 			updateToolBar(toolBar,data.value<ButtonFlags>());
 			return;
 		}
+	} else if(data.userType()==vec3dType) {
+		const Eigen::Vector3d& vec=data.value<Eigen::Vector3d>();
+		QString str=QString("%1 %2 %3").arg(vec[0]).arg(vec[1])
+				.arg(vec[2]);
+		vec3dedit.setText(str);
+		return;
 	}
 	if(data.canConvert<ButtonFlags>()) {
 		return;
@@ -146,14 +146,14 @@ void EvaluatorDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 			return;
 		}
 	} else if(data.userType()==vec3dType) {
-		QVector3D vec;
+		Eigen::Vector3d vec;
 		QRegularExpression re("[;\\s]+");
 		const QString& str=vec3dedit.text();
 		QVector<QStringRef> list=str.splitRef(re,QString::SkipEmptyParts);
 		for(int i:{0,1,2}) {
 			vec[i]=list[i].toDouble();
 		}
-		model->setData(index,vec,Qt::EditRole);
+		model->setData(index,QVariant::fromValue(vec),Qt::EditRole);
 		return;
 	} else if(data.canConvert<ButtonFlags>()) {
 		return;
@@ -164,8 +164,8 @@ void EvaluatorDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 void EvaluatorDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
 	QVariant data=index.data();
-	if(QMetaType::Type(data.type())==QMetaType::QVector3D) {
-		const QVector3D& vec=data.value<QVector3D>();
+	if(data.userType()==vec3dType) {
+		const Eigen::Vector3d& vec=data.value<Eigen::Vector3d>();
 		const auto& str=QString("(%1 %2 %3)")
 				.arg(vec[0]).arg(vec[1]).arg(vec[2]);
 		QStyleOptionViewItem opt = option;

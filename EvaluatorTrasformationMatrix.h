@@ -1,7 +1,9 @@
 #ifndef EVALUATORTRANSORMATIONMATRIX_H
 #define EVALUATORTRANSORMATIONMATRIX_H
-
+#include <QMetaType>
 #include "AbstractEvaluator.h"
+#include "TaskStorage.h"
+#include <Eigen/Dense>
 
 class EvaluatorTrasformationMatrix : public AbstractEvaluator
 {
@@ -42,49 +44,12 @@ public:
 	{
 		return 2*numPoints()+1;
 	}
-	virtual Setting setting(int row) const
-	{
-		if(row==0) {
-			return Setting{"num_reference_points",numPoints()};
-		} else {
-			int i=(row-1)/2;
-			if(row%2==1) {
-				const QString& pname=QString("selection_%1").arg(i);
-				const QString& selection=QString::fromStdString(comSellPos[i].first);
-				return Setting{pname, selection};
-			} else {
-				const QString& pname=QString("local_position_%1").arg(i);
-				const Eigen::Vector3d& evec=comSellPos[i].second;
-				Eigen::Vector3d qvec(evec[0],evec[1],evec[2]);
-				return Setting{pname,QVariant::fromValue(qvec)};
-			}
-		}
-	}
-	virtual void setSetting(int row, const QVariant& val)
-	{
-		if(row==0) {
-			int newPointsCount=val.toInt();
-			if(newPointsCount<3) {
-				return;
-			} else {
-				comSellPos.resize(newPointsCount,
-						  std::make_pair("",Eigen::Vector3d(0.0,0.0,0.0)));
-			}
-		} else {
-			int i=(row-1)/2;
-			if(row%2==1) {
-				comSellPos[i].first=val.toString().toStdString();
-			} else {
-				const Eigen::Vector3d& qvec=val.value<Eigen::Vector3d>();
-				Eigen::Vector3d& vec=comSellPos[i].second;
-				for(int j:{0,1,2}) {vec[j]=qvec[j];}
-			}
-		}
-	}
+	virtual Setting setting(int row) const;
+	virtual void setSetting(int row, const QVariant& val);
 
 
 private:
 	std::shared_ptr<AbstractCalcResult> calculate(const pteros::System &system) const;
 };
-
+//Q_DECLARE_METATYPE( Eigen::Vector3d )
 #endif // EVALUATORTRANSORMATIONMATRIX_H

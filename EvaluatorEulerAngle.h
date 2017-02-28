@@ -8,7 +8,7 @@ class EvaluatorEulerAngle : public AbstractEvaluator
 {
 private:
 	//std::weak_ptr<const EvaluatorTrasformationMatrix> _refCalc, _bodyCalc;
-	EvalId _refCalc, _bodyCalc;
+	EvalId _refCalc, _bodyCalc=_storage.evaluatorTrasformationMatrix;
 	std::string _name;
 public:
 	EvaluatorEulerAngle(const TaskStorage& storage, const std::string& name):
@@ -52,11 +52,13 @@ public:
 		{
 		case 0:
 		{
-			return {"reference_body",QVariant::fromValue(_refCalc)};
+			EvalId id=_storage.isValid(_refCalc)?_refCalc:_storage.evaluatorTrasformationMatrix;
+			return {"reference_body",QVariant::fromValue(id)};
 		}
 		case 1:
 		{
-			return {"target_body",QVariant::fromValue(_bodyCalc)};
+			EvalId id=_storage.isValid(_bodyCalc)?_bodyCalc:_storage.evaluatorTrasformationMatrix;
+			return {"target_body",QVariant::fromValue(id)};
 		}
 		}
 		return {"",""};

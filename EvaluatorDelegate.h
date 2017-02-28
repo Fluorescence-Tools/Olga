@@ -2,6 +2,8 @@
 #define EVALUATORDELEGATE_H
 #include <cstdint>
 
+#include <Eigen/Dense>
+
 #include <QStyledItemDelegate>
 #include <QComboBox>
 #include <QToolButton>
@@ -11,6 +13,7 @@
 #include <QVector3D>
 
 #include "CheckBoxList.h"
+#include "TaskStorage.h"
 
 class EvaluatorDelegate : public QStyledItemDelegate
 {
@@ -83,7 +86,7 @@ private:
 	}*/
 	const int buttonsType=QVariant::fromValue(ButtonFlags()).userType();
 	const int intListType=QVariant::fromValue(QList<int>()).userType();
-	const int vec3dType=QVariant::fromValue(QVector3D()).userType();
+	const int vec3dType=QVariant::fromValue(Eigen::Vector3d()).userType();
 	//const int evalType=QVariant::fromValue(EvalPtr()).userType();
 	//const int evalsType=;
 	//const int simtypeType=QVariant::fromValue(Position::SimulationType()).userType();
