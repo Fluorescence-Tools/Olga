@@ -262,19 +262,22 @@ path2points(const std::vector<float>& pathL,
 			}
 		}
 	}
-	const float freeFrac=1.0f-trappedFrac;
-	const float volTrapped=trappedPointIndexes.size();
-	const float volFree=points.size()-volTrapped;
-	const float contactRho=volFree*trappedFrac/(volTrapped*freeFrac);
-	/*std::cout<<"trappedFrac = "+std::to_string(trappedFrac)
-		   +"; contactRho = "+std::to_string(contactRho)+"\n";*/
-	if (contactRho>=0.0f) {
-		for (const int i: trappedPointIndexes) {
-			points[i][3]=contactRho;
+	if (contactR>0.0 &&  trappedFrac>=0.0) {
+		const float freeFrac=1.0f-trappedFrac;
+		const float volTrapped=trappedPointIndexes.size();
+		const float volFree=points.size()-volTrapped;
+		const float contactRho=volFree*trappedFrac/(volTrapped*freeFrac);
+		/*std::cout<<"trappedFrac = "+std::to_string(trappedFrac)
+			   +"; contactRho = "+std::to_string(contactRho)+"\n";*/
+		if (contactRho>=0.0f) {
+			for (const int i: trappedPointIndexes) {
+				points[i][3]=contactRho;
+			}
+		} else {
+			std::cerr<<"WARNING! contactRho="
+				   + std::to_string(contactRho)
+				   +" < 0 \n"<<std::flush;
 		}
-	} else {
-		std::cerr<<"WARNING! contactRho=" + std::to_string(contactRho)
-			   +" < 0 \n"<<std::flush;
 	}
 	return points;
 }

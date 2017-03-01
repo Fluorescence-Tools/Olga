@@ -39,9 +39,9 @@ public:
 		return std::sqrt(minDistSq);
 	}
 	std::ostream& dump_xyz(std::ostream& os) const;
-	std::ostream& dumpShellXyz(std::ostream& os);
+	std::ostream& dumpShellXyz(std::ostream& os) const;
 	bool dumpXyz(const std::string& fileName) const;
-	bool dumpShellXyz(const std::string& fileName);
+	bool dumpShellXyz(const std::string& fileName) const;
 	bool empty() const
 	{
 		return !_points.size();

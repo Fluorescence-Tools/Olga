@@ -216,7 +216,7 @@ std::ostream &PositionSimulationResult::dump_xyz(std::ostream &os) const
 	return os;
 }
 
-std::ostream &PositionSimulationResult::dumpShellXyz(std::ostream &os)
+std::ostream &PositionSimulationResult::dumpShellXyz(std::ostream &os) const
 {
 	if(_points.size()==0)
 	{
@@ -256,7 +256,7 @@ bool PositionSimulationResult::dumpXyz(const std::string &fileName) const {
 	return true;
 }
 
-bool PositionSimulationResult::dumpShellXyz(const std::string &fileName) {
+bool PositionSimulationResult::dumpShellXyz(const std::string &fileName) const {
 	std::ofstream outfile;
 	outfile.open(fileName, std::ifstream::out);
 	if(!outfile.is_open())
