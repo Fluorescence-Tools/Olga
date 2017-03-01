@@ -40,4 +40,9 @@ DISTFILES += \
     doc/legacy_to_json.ods \
     doc/manjaro_build.txt \
     doc/radix_dejkstra.ods \
-    README.md
+    README.md \
+    examples/Atlastin/C1-3_AV_5-10-20-30d.fps.json \
+    examples/Atlastin/C1-3_AV_5-10-20-30d_savexyz.fps.json \
+    examples/Atlastin/0_C1_3q5d_fixed.pdb \
+    examples/Atlastin/0_C2_4idn_fixed.pdb \
+    examples/Atlastin/0_C3_3q5e_fixed.pdb
