@@ -81,6 +81,3 @@ SOURCES += \
     EvaluatorChi2Contribution.cpp \
     EvaluatorAvFile.cpp \
     EvaluatorFretEfficiency.cpp
-
-DISTFILES += \
-    ../legacy_to_json.ods

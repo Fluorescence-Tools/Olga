@@ -36,4 +36,8 @@ SRC_DIR = $$PWD
 
 DISTFILES += \
     .gitignore \
-    vdWRadii.json
+    vdWRadii.json \
+    doc/legacy_to_json.ods \
+    doc/manjaro_build.txt \
+    doc/radix_dejkstra.ods \
+    README.md
