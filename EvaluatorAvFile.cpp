@@ -15,7 +15,18 @@ AbstractEvaluator::Task EvaluatorAvFile::makeTask(const FrameDescriptor &frame) 
 		auto resAv=dynamic_cast<CalcResult<PositionSimulationResult>*>(ptrAv.get());
 		PositionSimulationResult av=resAv->get();
 		QFileInfo trajInfo(QString::fromStdString(trajFname));
-		std::string fname=_writeDirPath+'/'+trajInfo.baseName().toStdString()+"_"+posName+".xyz";
+		QFileInfo _writeDirInfo(QString::fromStdString(_writeDirPath));
+		std::string fname;
+		if (_writeDirInfo.isAbsolute()) {
+			fname=_writeDirPath+'/'
+			      +trajInfo.baseName().toStdString()
+			      +"_"+posName+".xyz";
+		} else {
+			fname=trajInfo.absolutePath().toStdString()
+			      +'/'+_writeDirPath
+			      +'/'+trajInfo.baseName().toStdString()
+			      +"_"+posName+".xyz";
+		}
 		return calculate(av,fname);
 	}).share();
 }
