@@ -7,6 +7,7 @@ Depepndencies:
  * boost
  * qt5
  * [libcuckoo](https://github.com/efficient/libcuckoo)
+ * [readerwriterqueue](https://github.com/cameron314/readerwriterqueue)
  * [async++](https://github.com/Amanieu/asyncplusplus)
  * [pteros](http://pteros.sourceforge.net/)
 
