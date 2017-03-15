@@ -36,6 +36,7 @@ SRC_DIR = $$PWD
 
 DISTFILES += \
     .gitignore \
+    .gitlab-ci.yml \
     vdWRadii.json \
     doc/legacy_to_json.ods \
     doc/radix_dejkstra.ods \

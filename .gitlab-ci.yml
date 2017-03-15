@@ -6,7 +6,7 @@ build-ubuntu16.04:
   stage: compile
   image: burningdaylight/docker-ubuntu16.04-devel
   script:
-    - mkdir build-ubuntu16.04
+    - mkdir -p build-ubuntu16.04
     - cd build-ubuntu16.04; qmake ..; make
   cache:
     paths:
@@ -20,7 +20,7 @@ build-win64:
   stage: compile
   image: burningdaylight/docker-mingw-qt5
   script:
-    - mkdir build-win64
+    - mkdir -p build-win64
     - cd build-win64; x86_64-w64-mingw32-qmake-qt5 ..; make
   cache:
     paths:
@@ -35,7 +35,7 @@ build-win32:
   stage: compile
   image: burningdaylight/docker-mingw-qt5
   script:
-    - mkdir build-win32
+    - mkdir -p build-win32
     - cd build-win32; i686-w64-mingw32-qmake-qt5 ..; make
   cache:
     paths:
