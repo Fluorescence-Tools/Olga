@@ -7,6 +7,7 @@ build-ubuntu16.04:
   image: burningdaylight/docker-ubuntu16.04-devel
   script:
     - mkdir -p build-ubuntu16.04
+    - rm -f build-ubuntu16.04/gui/Olga build-ubuntu16.04/gui/main.o
     - cd build-ubuntu16.04; qmake ..; make
   cache:
     paths:
@@ -21,6 +22,7 @@ build-win64:
   image: burningdaylight/docker-mingw-qt5
   script:
     - mkdir -p build-win64
+    - rm -f build-win64/gui/release/Olga.exe build-win64/gui/release/main.o
     - cd build-win64; x86_64-w64-mingw32-qmake-qt5 ..; make
   cache:
     paths:
@@ -36,6 +38,7 @@ build-win32:
   image: burningdaylight/docker-mingw-qt5
   script:
     - mkdir -p build-win32
+    - rm -f build-win32/gui/release/Olga.exe build-win32/gui/release/main.o
     - cd build-win32; i686-w64-mingw32-qmake-qt5 ..; make
   cache:
     paths:

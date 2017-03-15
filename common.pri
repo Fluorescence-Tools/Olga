@@ -14,10 +14,7 @@ QMAKE_LFLAGS *= -O2 -flto #-fwhole-program
 COMMIT_DATE = $$system(git show -s --pretty='%ci')
 COMMIT_DATE = $$first(COMMIT_DATE)
 COMMIT_HASH = $$system(git log --pretty=format:'%h' -n 1)
-COMMIT_BRANCH = $$system(git symbolic-ref --short HEAD)
-isEmpty(COMMIT_BRANCH) {
-	COMMIT_BRANCH = $$system(git branch --contains $$COMMIT_HASH | head -n1 | cut -d / -f 2 )
-}
+COMMIT_BRANCH =$$system(git branch -a --contains $$COMMIT_HASH | grep -v HEAD | head -n1 | tr / \' \' | awk \'{print $NF}\')
 DEFINES += APP_VERSION=\\\"$$COMMIT_DATE-$$COMMIT_BRANCH-$$COMMIT_HASH\\\"
 
 CONFIG += c++11
