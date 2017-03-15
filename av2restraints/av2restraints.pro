@@ -2,12 +2,12 @@
     error( "Couldn't find the common.pri file!" )
 }
 
-QT       += core
+QT += core
 QT -= gui
 LIBS   -= -lQtGui
 
 TEMPLATE = app
-CONFIG += console static
+CONFIG += console
 
 SOURCES += \
     main.cpp
@@ -65,4 +65,3 @@ SOURCES += \
     EvaluatorChi2r.cpp \
     EvaluatorAvFile.cpp \
     EvaluatorFretEfficiency.cpp
-    

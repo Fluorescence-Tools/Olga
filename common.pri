@@ -12,7 +12,7 @@ QMAKE_LFLAGS -= -std=c++0x
 QMAKE_LFLAGS *= -O2 -flto #-fwhole-program
 
 if(true){
-COMMIT_BRANCH = $$system(git rev-parse --abbrev-ref HEAD)
+COMMIT_BRANCH = $$system(git symbolic-ref --short HEAD)
 COMMIT_DATE = $$system(git show -s --pretty='%ci')
 COMMIT_DATE = $$first(COMMIT_DATE)
 COMMIT_HASH = $$system(git log --pretty=format:'%h' -n 1)
