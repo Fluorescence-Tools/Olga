@@ -1,0 +1,105 @@
+stages:
+  - compile
+  - package
+
+build-ubuntu16.04:
+  stage: compile
+  image: burningdaylight/docker-ubuntu16.04-devel
+  script:
+    - mkdir build-ubuntu16.04
+    - cd build-ubuntu16.04; qmake ..; make
+  cache:
+    paths:
+    - build-ubuntu16.04/
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - build-ubuntu16.04/gui/Olga
+
+build-win64:
+  stage: compile
+  image: burningdaylight/docker-mingw-qt5
+  script:
+    - mkdir build-win64
+    - cd build-win64; x86_64-w64-mingw32-qmake-qt5 ..; make
+  cache:
+    paths:
+    - build-win64/
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - build-win64/gui/release/Olga.exe
+
+
+build-win32:
+  stage: compile
+  image: burningdaylight/docker-mingw-qt5
+  script:
+    - mkdir build-win32
+    - cd build-win32; i686-w64-mingw32-qmake-qt5 ..; make
+  cache:
+    paths:
+    - build-win32/
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - build-win32/gui/release/Olga.exe
+
+pack-win64:
+  stage: package
+  image: burningdaylight/docker-mingw-qt5
+  script:
+    - mkdir -p ./Olga/platforms/
+    - mkdir -p ./Olga/imageformats/
+    - cp build-win64/gui/release/Olga.exe ./Olga/
+    - "cp /usr/x86_64-w64-mingw32/bin/lib{GLESv2,async++,bz2-1,freetype-6,\
+	gcc_s_seh-1,glib-2.0-0,harfbuzz-0,iconv-2,intl-8,pcre-1,pcre16-0,png16-16,\
+	pteros,pteros_analysis,stdc++-6,tng_io,winpthread-1,\
+	boost_filesystem-mt,boost_system-mt,graphite2,gomp-1}.dll ./Olga/"
+    - "cp /usr/x86_64-w64-mingw32/bin/{Qt5Core,Qt5Gui,Qt5Multimedia,Qt5Network,\
+	Qt5Svg,Qt5Widgets,zlib1}.dll ./Olga/"
+    - cp /usr/x86_64-w64-mingw32/lib/qt/plugins/platforms/qwindows.dll ./Olga/platforms/
+    - "cp /usr/x86_64-w64-mingw32/lib/qt/plugins/imageformats/\
+	{qsvg,qico,qtiff,qjpeg}.dll ./Olga/imageformats/"
+    - cp ./*.json ./Olga/
+    - cp -r ./examples ./Olga/
+    - cp -r ./doc ./Olga/
+  dependencies:
+    - build-win64
+  artifacts:
+    name: "Olga_win64_${CI_BUILD_REF_NAME}-${CI_BUILD_REF:0:8}"
+    expire_in: 1 week
+    paths:
+      - Olga
+
+pack-win32:
+  stage: package
+  image: burningdaylight/docker-mingw-qt5
+  script:
+    - mkdir -p ./Olga/platforms/
+    - mkdir -p ./Olga/imageformats/
+    - cp build-win32/gui/release/Olga.exe ./Olga/
+    - "cp /usr/i686-w64-mingw32/bin/lib{GLESv2,async++,bz2-1,freetype-6,\
+	gcc_s_sjlj-1,glib-2.0-0,harfbuzz-0,iconv-2,intl-8,pcre-1,pcre16-0,\
+	png16-16,pteros,pteros_analysis,stdc++-6,tng_io,winpthread-1,\
+	boost_filesystem-mt,boost_system-mt,graphite2,gomp-1}.dll ./Olga/"
+    - "cp /usr/i686-w64-mingw32/bin/{Qt5Core,Qt5Gui,Qt5Multimedia,Qt5Network,\
+	Qt5Svg,Qt5Widgets,zlib1}.dll ./Olga/"
+    - cp /usr/i686-w64-mingw32/lib/qt/plugins/platforms/qwindows.dll ./Olga/platforms/
+    - "cp /usr/i686-w64-mingw32/lib/qt/plugins/imageformats/\
+	{qsvg,qico,qtiff,qjpeg}.dll ./Olga/imageformats/"
+    - cp ./*.json ./Olga/
+    - cp -r ./examples ./Olga/
+    - cp -r ./doc ./Olga/
+  dependencies:
+    - build-win32
+  artifacts:
+    expire_in: 1 week
+    name: "Olga_win32_${CI_BUILD_REF_NAME}-${CI_BUILD_REF:0:8}"
+    paths:
+      - Olga
+
+#test:
+#  stage: test
+#  script:
+#    - ./runmytests.sh

@@ -1,4 +1,0 @@
-gpg --recv-key BB5869F064EA74AB
-mkdir $HOME/tmp-yaourt
-yaourt -S --tmp $HOME/tmp-yaourt --noconfirm mingw-w64-cmake mingw-w64-zlib mingw-w64-boost mingw-w64-libiconv mingw-w64-libpng  mingw-w64-sqlite mingw-w64-qt5-base mingw-w64-qt5-winextras mingw-w64-qt5-tools mingw-w64-qt5-multimedia mingw-w64-qt5-imageformats mingw-w64-qt5-svg 
-rf -rf $HOME/tmp-yaourt
