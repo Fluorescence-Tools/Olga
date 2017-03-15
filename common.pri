@@ -11,16 +11,15 @@ QMAKE_LFLAGS -= -O1
 QMAKE_LFLAGS -= -std=c++0x
 QMAKE_LFLAGS *= -O2 -flto #-fwhole-program
 
-if(true){
-COMMIT_BRANCH = $$system(git symbolic-ref --short HEAD)
 COMMIT_DATE = $$system(git show -s --pretty='%ci')
 COMMIT_DATE = $$first(COMMIT_DATE)
 COMMIT_HASH = $$system(git log --pretty=format:'%h' -n 1)
+COMMIT_BRANCH = $$system(git symbolic-ref --short HEAD)
+isEmpty(COMMIT_BRANCH) {
+	COMMIT_BRANCH = $$system(git branch --contains $$COMMIT_HASH | head -n1 | cut -d \" \" -f 2 )
+}
 DEFINES += APP_VERSION=\\\"$$COMMIT_DATE-$$COMMIT_BRANCH-$$COMMIT_HASH\\\"
-}
-else {
-DEFINES += APP_VERSION=\\\"123\\\"
-}
+
 CONFIG += c++11
 CONFIG += no_keywords
 CONFIG(release, debug|release): DEFINES+=NDEBUG
@@ -47,4 +46,5 @@ DISTFILES += \
     examples/Atlastin/0_C2_4idn_fixed.pdb \
     examples/Atlastin/0_C3_3q5e_fixed.pdb \
     $$PWD/doc/GUI-description.png \
-    $$PWD/doc/containers.ods
+    $$PWD/doc/containers.ods \
+    $$PWD/LICENSE
