@@ -16,7 +16,7 @@ COMMIT_DATE = $$first(COMMIT_DATE)
 COMMIT_HASH = $$system(git log --pretty=format:'%h' -n 1)
 COMMIT_BRANCH = $$system(git symbolic-ref --short HEAD)
 isEmpty(COMMIT_BRANCH) {
-	COMMIT_BRANCH = $$system(git branch --contains $$COMMIT_HASH | head -n1 | cut -d \" \" -f 2 )
+	COMMIT_BRANCH = $$system(git branch --contains $$COMMIT_HASH | head -n1 | cut -d / -f 2 )
 }
 DEFINES += APP_VERSION=\\\"$$COMMIT_DATE-$$COMMIT_BRANCH-$$COMMIT_HASH\\\"
 
