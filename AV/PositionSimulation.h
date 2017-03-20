@@ -56,7 +56,6 @@ public:
 	using PositionSimulation::calculate;
 	virtual PositionSimulationResult
 	calculate(unsigned atom_i,const std::vector<Eigen::Vector4f>& xyzW);
-
 private:
 	double gridResolution=0.4;
 	double linkerLength=0.0;
@@ -92,7 +91,6 @@ public:
 	}
 	using PositionSimulation::calculate;
 	virtual PositionSimulationResult calculate(unsigned atom_i, const std::vector<Eigen::Vector4f>& xyzW);
-
 private:
 	double gridResolution=0.4;
 	double linkerLength=0.0;

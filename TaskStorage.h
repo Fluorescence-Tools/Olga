@@ -235,6 +235,7 @@ public:
 	//TODO: make theese const
 	EvalId evaluatorPositionSimulation;
 	EvalId evaluatorEvaluatorAvFile;
+	EvalId evaluatorEvaluatorAvVolume;
 	EvalId evaluatorFretEfficiency;
 	EvalId evaluatorDistance;
 	EvalId evaluatorChi2;

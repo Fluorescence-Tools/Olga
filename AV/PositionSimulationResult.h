@@ -50,6 +50,16 @@ public:
 	{
 		return _points.size();
 	}
+	size_t freeSize() const
+	{
+		size_t size=0;
+		for(const auto& point:_points) {
+			if(point[3]==1.0f) {
+				++size;
+			}
+		}
+		return size;
+	}
 	void translate(const Eigen::Vector3f r) {
 		for(auto& point:_points) {
 			point.head(3)+=r;

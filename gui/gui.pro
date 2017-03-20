@@ -46,7 +46,8 @@ HEADERS += \
     EvaluatorChi2r.h \
     EvaluatorChi2Contribution.h \
     EvaluatorAvFile.h \
-    EvaluatorFretEfficiency.h
+    EvaluatorFretEfficiency.h \
+    EvaluatorAvVolume.h
 
 SOURCES += \
     main.cpp \
@@ -80,4 +81,5 @@ SOURCES += \
     EvaluatorChi2r.cpp \
     EvaluatorChi2Contribution.cpp \
     EvaluatorAvFile.cpp \
-    EvaluatorFretEfficiency.cpp
+    EvaluatorFretEfficiency.cpp \
+    EvaluatorAvVolume.cpp

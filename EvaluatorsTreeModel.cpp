@@ -7,6 +7,7 @@
 //#include "EvaluatorTrasformationMatrix.h"
 #include "EvaluatorEulerAngle.h"
 #include "EvaluatorAvFile.h"
+#include "EvaluatorAvVolume.h"
 
 #include <QFileDialog>
 

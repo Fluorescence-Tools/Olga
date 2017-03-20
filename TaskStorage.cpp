@@ -12,6 +12,7 @@
 #include "EvaluatorMinDistance.h"
 #include "EvaluatorSphereAVOverlap.h"
 #include "EvaluatorAvFile.h"
+#include "EvaluatorAvVolume.h"
 
 #include "AV/Position.h"
 
@@ -28,6 +29,8 @@ TaskStorage::TaskStorage():_tasksRingBuf(_tasksRingBufSize),
 	evaluatorPositionSimulation=_currentId;
 	addEvaluator(std::make_unique<const EvaluatorAvFile>(*this,"unknown"));
 	evaluatorEvaluatorAvFile=_currentId;
+	addEvaluator(std::make_unique<const EvaluatorAvVolume>(*this,"unknown"));
+	evaluatorEvaluatorAvVolume=_currentId;
 	addEvaluator(std::make_unique<const EvaluatorFretEfficiency>(*this,"unknown"));
 	evaluatorFretEfficiency=_currentId;
 	addEvaluator(std::make_unique<const EvaluatorDistance>(*this,"unknown"));
@@ -233,24 +236,26 @@ TaskStorage::MutableEvalPtr TaskStorage::makeEvaluator(int typeNum) const {
 	case 1:
 		return std::make_unique<EvaluatorAvFile>(*this,"new AV File");
 	case 2:
-		return std::make_unique<EvaluatorFretEfficiency>(*this,"new <E>");
+		return std::make_unique<EvaluatorAvVolume>(*this,"new AV Volume");
 	case 3:
-		return std::make_unique<EvaluatorDistance>(*this,"new distance");
+		return std::make_unique<EvaluatorFretEfficiency>(*this,"new <E>");
 	case 4:
-		return std::make_unique<EvaluatorWeightedResidual>(*this,"new w.res.");
+		return std::make_unique<EvaluatorDistance>(*this,"new distance");
 	case 5:
-		return std::make_unique<EvaluatorChi2Contribution>(*this,"new χ² contribution");
+		return std::make_unique<EvaluatorWeightedResidual>(*this,"new w.res.");
 	case 6:
-		return std::make_unique<EvaluatorMinDistance>(*this,"new minimum distance");
+		return std::make_unique<EvaluatorChi2Contribution>(*this,"new χ² contribution");
 	case 7:
-		return std::make_unique<EvaluatorSphereAVOverlap>(*this,"new AV overlap");
+		return std::make_unique<EvaluatorMinDistance>(*this,"new minimum distance");
 	case 8:
-		return std::make_unique<EvaluatorChi2>(*this,"new χ²");
+		return std::make_unique<EvaluatorSphereAVOverlap>(*this,"new AV overlap");
 	case 9:
-		return std::make_unique<EvaluatorChi2r>(*this,"new χᵣ²");
+		return std::make_unique<EvaluatorChi2>(*this,"new χ²");
 	case 10:
-		return std::make_unique<EvaluatorTrasformationMatrix>(*this,"new coordinate system");
+		return std::make_unique<EvaluatorChi2r>(*this,"new χᵣ²");
 	case 11:
+		return std::make_unique<EvaluatorTrasformationMatrix>(*this,"new coordinate system");
+	case 12:
 		return std::make_unique<EvaluatorEulerAngle>(*this,"new euler angles");
 	default:
 		return MutableEvalPtr();
