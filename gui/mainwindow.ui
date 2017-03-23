@@ -277,7 +277,7 @@
      <x>0</x>
      <y>0</y>
      <width>1004</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -288,6 +288,7 @@
     <addaction name="actionLoadSettings"/>
     <addaction name="actionSaveSettings"/>
     <addaction name="actionExportData"/>
+    <addaction name="actionAddLpBatch"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -440,6 +441,15 @@
    </property>
    <property name="toolTip">
     <string>Import all structure(s) from a selected folder</string>
+   </property>
+  </action>
+  <action name="actionAddLpBatch">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/quickopen.svgz</normaloff>:/icons/quickopen.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>Add multiple labeling positions</string>
    </property>
   </action>
  </widget>
@@ -620,6 +630,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionAddLpBatch</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>addLpBatch()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>356</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>loadEvaluators()</slot>
@@ -631,5 +657,6 @@
   <slot>showAbout()</slot>
   <slot>addEvaluator()</slot>
   <slot>loadStructuresFolder()</slot>
+  <slot>addLpBatch()</slot>
  </slots>
 </ui>

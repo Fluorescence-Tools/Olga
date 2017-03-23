@@ -53,6 +53,8 @@ private Q_SLOTS:
 	void expand(const QModelIndex &parentIndex, int first, int last);
 	void showAbout();
 
+	void addLpBatch();
+
 private:
 	QString timespan(unsigned seconds);
 

@@ -352,6 +352,17 @@ EvaluatorsTreeModel::MutableEvalPtr EvaluatorsTreeModel::removeEvaluator(int evR
 	return evptr;
 }
 
+void EvaluatorsTreeModel::setEvaluatorName(const QModelIndex &index, const std::string &name)
+{
+	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
+	if(item.isEvaluatorsClass()) {
+		if(item.classRow()==0) {
+			pendingEvals[index.row()]->setName(name);
+			return;
+		}
+	}
+}
+
 
 void EvaluatorsTreeModel::activateEvaluator(const QModelIndex &index)
 {
@@ -360,13 +371,32 @@ void EvaluatorsTreeModel::activateEvaluator(const QModelIndex &index)
 		auto evId=_storage.addEvaluator(removeEvaluator(index.row()));
 	}
 }
+
+void EvaluatorsTreeModel::setEvaluatorOption(const QModelIndex &index, const QString &optionName, const QVariant &value)
+{
+	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
+	if(!item.isEvaluatorsClass()) {
+		return;
+	}
+	if(item.classRow()!=0) {
+		return;
+	}
+	auto& eval=pendingEvals[index.row()];
+	for(int i=0; i<eval->settingsCount(); ++i) {
+		if(eval->setting(i).first==optionName) {
+			eval->setSetting(i,value);
+			return;
+		}
+	}
+	return;
+}
 /*
 void EvaluatorsTreeModel::activateEvaluator(int evRow)
 {
 	loadEvaluator(_storage.addEvaluator(removeEvaluator(evRow)));
 }*/
 
-void EvaluatorsTreeModel::duplicateEvaluator(const QModelIndex &index)
+QModelIndex EvaluatorsTreeModel::duplicateEvaluator(const QModelIndex &index)
 {
 	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
 	if(item.isEvaluatorsClass()) {
@@ -378,7 +408,10 @@ void EvaluatorsTreeModel::duplicateEvaluator(const QModelIndex &index)
 		MutableEvalPtr& ev=pendingEvals.back();
 		ev->setName(origEval.name()+" copy");
 		_storage.setEval(ev,properties);
+		QModelIndex drafts=this->index(0,0);
+		return this->index(pendingEvals.size()-1,0,drafts);
 	}
+	return QModelIndex();
 }
 
 void EvaluatorsTreeModel::loadEvaluators(const QVariantMap& settings)

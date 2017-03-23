@@ -11,7 +11,8 @@ RESOURCES += \
     icons.qrc
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    BatchLPDialog.ui
 
 HEADERS += \
     mainwindow.h \
@@ -47,7 +48,8 @@ HEADERS += \
     EvaluatorChi2Contribution.h \
     EvaluatorAvFile.h \
     EvaluatorFretEfficiency.h \
-    EvaluatorAvVolume.h
+    EvaluatorAvVolume.h \
+    BatchLPDialog.h
 
 SOURCES += \
     main.cpp \
@@ -82,4 +84,5 @@ SOURCES += \
     EvaluatorChi2Contribution.cpp \
     EvaluatorAvFile.cpp \
     EvaluatorFretEfficiency.cpp \
-    EvaluatorAvVolume.cpp
+    EvaluatorAvVolume.cpp \
+    BatchLPDialog.cpp

@@ -150,6 +150,12 @@ public:
 	using MutableEvalPtr=std::unique_ptr<AbstractEvaluator>;
 	std::string evalTypeName(int typeNum) const;
 	MutableEvalPtr makeEvaluator(int typeNum) const;
+	template<typename T>
+	MutableEvalPtr makeEvaluator() const
+	{
+		T tmp(*this,"none");
+		return std::make_unique<T>(*this,"new "+tmp.className());
+	}
 	QStringList supportedTypes() const;
 	std::vector<MutableEvalPtr> loadEvaluators(const QVariantMap& settings);
 	bool ready() const {

@@ -84,14 +84,51 @@ public:
 	using MutableEvalPtr=std::unique_ptr<AbstractEvaluator>;
 
 	void addEvaluator(int typeNum);
+	template<typename T>
+	QModelIndex addEvaluator()
+	{
+		MutableEvalPtr eval=_storage.makeEvaluator<T>();
+		if(eval) {
+			addEvaluator(std::move(eval));
+			QModelIndex drafts=index(0,0);
+			return index(pendingEvals.size()-1,0,drafts);
+		}
+		return QModelIndex();
+	}
 	void removeEvaluator(const QModelIndex& index);
 	MutableEvalPtr removeEvaluator(int evRow);
+	void setEvaluatorName(const QModelIndex& index, const std::string &name);
 	void activateEvaluator(const QModelIndex& index);
 	void activateEvaluator(int evRow);
-	void duplicateEvaluator(const QModelIndex& index);
+	void setEvaluatorOption(const QModelIndex& index,
+				const QString& optionName,const QVariant& value);
+	QModelIndex duplicateEvaluator(const QModelIndex& index);
 	QVariantMap evaluators() const;
 	void loadEvaluators(const QVariantMap &settings);
 	QVariantMap evaluatorsFromLegacy(QTextStream& in) const;
+	template<typename T>
+	QList<QModelIndex> evaluatorsAvailable() const
+	{
+		QList<QModelIndex> list;
+		//T eval(_storage,"none");
+		MutableEvalPtr eval=_storage.makeEvaluator<T>();
+		auto classId=std::type_index(typeid(*eval));
+		auto it=classRows.find(classId);
+		size_t classRow=-1;
+		if(it!=classRows.end()) {
+			classRow=it->second;
+		} else {
+			return list;
+		}
+		const auto& root=index(classRow,0,QModelIndex());
+		if(!root.isValid()) {
+			return list;
+		}
+		for(int r=0; r<rowCount(root); r++){
+			list<<this->index(r,0,root);
+		}
+		return list;
+	}
 private:
 	//EvalPtr eval(const EvalPtr& oldEval, int newEvalRow);
 	QString uniqueEvalName(const QVariantMap& evalMap, const QString& name) const;

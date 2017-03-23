@@ -43,6 +43,10 @@ public:
 		}
 		return total;
 	}
+	bool empty() const
+	{
+		return !totalFrameCount();
+	}
 	void setTopology(std::shared_ptr<const std::string> fileName)
 	{
 		//_topFileName=std::make_shared<std::string>(fileName);

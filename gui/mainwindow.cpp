@@ -4,6 +4,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "BatchLPDialog.h"
 #include <QSettings>
 #include <QCloseEvent>
 #include <QFileDialog>
@@ -621,6 +622,24 @@ void MainWindow::showAbout()
 	QMessageBox::about(this, "SRHDDumpReader",
 			   QString("Olga v. %1\nMykola Dimura, dimura@hhu.de\n")
 			   .arg(QApplication::applicationVersion()));
+}
+
+void MainWindow::addLpBatch()
+{
+	BatchLPDialog dialog(this,evalsModel);
+	auto system=trajectoriesModel.firstSystem();
+	std::vector<std::pair<int,std::string>> residues;
+	if (system.num_atoms()>0) {
+		auto sel=system.select_all();
+		auto residueIds=sel.get_unique_resid();
+		auto residueNames=sel.get_unique_resname();
+		residues.reserve(residueIds.size());
+		for(size_t i=0; i<residueIds.size(); ++i) {
+			residues.emplace_back(residueIds[i], residueNames[i]);
+		}
+	}
+	dialog.setResidueList(residues);
+	dialog.exec();
 }
 
 QString MainWindow::timespan(unsigned seconds)
