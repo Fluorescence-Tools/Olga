@@ -13,7 +13,7 @@ class EvaluatorDistance : public AbstractEvaluator
 	friend class EvaluatorWeightedResidual;
 	//static EvaluatorPositionSimulation _avStub;
 private:
-	EvalId _av1, _av2;
+	EvalId _av1=_storage.evaluatorPositionSimulation, _av2=_av1;
 	Distance _dist;
 public:
 	EvaluatorDistance(const TaskStorage& storage,

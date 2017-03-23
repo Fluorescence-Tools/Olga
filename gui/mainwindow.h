@@ -54,6 +54,7 @@ private Q_SLOTS:
 	void showAbout();
 
 	void addLpBatch();
+	void addDistanceBatch();
 
 private:
 	QString timespan(unsigned seconds);

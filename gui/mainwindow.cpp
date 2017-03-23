@@ -5,6 +5,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "BatchLPDialog.h"
+#include "BatchDistanceDialog.h"
+
 #include <QSettings>
 #include <QCloseEvent>
 #include <QFileDialog>
@@ -626,6 +628,7 @@ void MainWindow::showAbout()
 
 void MainWindow::addLpBatch()
 {
+
 	BatchLPDialog dialog(this,evalsModel);
 	auto system=trajectoriesModel.firstSystem();
 	std::vector<std::pair<int,std::string>> residues;
@@ -638,7 +641,40 @@ void MainWindow::addLpBatch()
 			residues.emplace_back(residueIds[i], residueNames[i]);
 		}
 	}
+	if(residues.empty()) {
+		QMessageBox::warning(this,tr("Can not add labeling positions"),
+				     tr("Could not populate the residue list.\n"
+					"Did you import any molecule or trajectory?"));
+		return;
+	}
+	if(evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>().empty()) {
+		QMessageBox::warning(this,tr("Can not add labeling positions"),
+				     tr("Could not populate the references "
+					"list.\nCreate a labeling postion "
+					"to copy from, please."));
+		return;
+	}
 	dialog.setResidueList(residues);
+	dialog.exec();
+}
+
+void MainWindow::addDistanceBatch()
+{
+	if(evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>().empty()) {
+		QMessageBox::warning(this,tr("Can not add distances"),
+				     tr("Could not populate the labeling "
+					"positions list.\nCreate some "
+					"labeling postions, please."));
+		return;
+	}
+	if(evalsModel.evaluatorsAvailable<EvaluatorDistance>().empty()) {
+		QMessageBox::warning(this,tr("Can not add distances"),
+				     tr("Could not populate the references "
+					"list.\nCreate a distance "
+					"to copy from, please."));
+		return;
+	}
+	BatchDistanceDialog dialog(this,evalsModel);
 	dialog.exec();
 }
 

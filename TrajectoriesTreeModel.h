@@ -67,6 +67,24 @@ public:
 	/*void updateColumn(int column);
 	void updateRow(const QModelIndex & parent, int row);
 	*/
+	pteros::System firstSystem() const
+	{
+		pteros::System system;
+		if(_molTrajs.empty()) {
+			return system;
+		}
+		if (_molTrajs[0].empty()) {
+			return system;
+		}
+		auto frame=frameDescriptor(childItem(nullptr,0), 0);
+		try {
+			return pteros::System(frame.topologyFileName());
+		}
+		catch (...) {
+			return system;
+		}
+
+	}
 public Q_SLOTS:
 private Q_SLOTS:
 
@@ -82,7 +100,7 @@ private:
 	std::shared_ptr<AbstractCalcResult>
 	calculate(const FrameDescriptor desc,
 		  const std::shared_ptr<AbstractEvaluator> calc) const;
-	pteros::System system(const FrameDescriptor &desc) const;
+	//pteros::System system(const FrameDescriptor &desc) const;
 private:
 	QVector<MolecularTrajectory> _molTrajs;
 	mutable std::unordered_set<TrajectoriesTreeItem> items;

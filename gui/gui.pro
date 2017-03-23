@@ -12,7 +12,8 @@ RESOURCES += \
 
 FORMS += \
     mainwindow.ui \
-    BatchLPDialog.ui
+    BatchLPDialog.ui \
+    BatchDistanceDialog.ui
 
 HEADERS += \
     mainwindow.h \
@@ -49,7 +50,8 @@ HEADERS += \
     EvaluatorAvFile.h \
     EvaluatorFretEfficiency.h \
     EvaluatorAvVolume.h \
-    BatchLPDialog.h
+    BatchLPDialog.h \
+    BatchDistanceDialog.h
 
 SOURCES += \
     main.cpp \
@@ -85,4 +87,5 @@ SOURCES += \
     EvaluatorAvFile.cpp \
     EvaluatorFretEfficiency.cpp \
     EvaluatorAvVolume.cpp \
-    BatchLPDialog.cpp
+    BatchLPDialog.cpp \
+    BatchDistanceDialog.cpp

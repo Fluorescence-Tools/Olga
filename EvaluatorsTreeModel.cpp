@@ -285,6 +285,17 @@ EvaluatorsTreeModel::~EvaluatorsTreeModel()
 
 }
 
+EvalId EvaluatorsTreeModel::evalId(const QModelIndex &index) const
+{
+	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
+	if(item.isEvaluatorsClass()) {
+		if(item.classRow()>0) {
+			return evalId(item.classRow(),index.row());
+		}
+	}
+	return EvalId(-1);
+}
+
 
 void EvaluatorsTreeModel::addEvaluator(int typeNum)
 {
@@ -361,6 +372,15 @@ void EvaluatorsTreeModel::setEvaluatorName(const QModelIndex &index, const std::
 			return;
 		}
 	}
+}
+
+std::string EvaluatorsTreeModel::evalName(const QModelIndex &index)
+{
+	auto item=EvaluatorsTreeItem::fromIntptr(index.internalId());
+	if(item.isEvaluatorsClass()) {
+		return eval(item.classRow(),index.row()).name();
+	}
+	return "";
 }
 
 
@@ -579,7 +599,7 @@ EvalId  EvaluatorsTreeModel::evalId(int classRow, int evalRow) const {
 }
 EvalId EvaluatorsTreeModel::findEval(int classRow, const QString& evName) const {
 	if(classRow<0) {
-		return EvalId(0);
+		return EvalId(-1);
 	}
 	std::string name=evName.toStdString();
 	return _storage.evalId(name);

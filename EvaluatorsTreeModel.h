@@ -83,6 +83,8 @@ public:
 	using ButtonFlags=EvaluatorDelegate::ButtonFlags;
 	using MutableEvalPtr=std::unique_ptr<AbstractEvaluator>;
 
+	EvalId evalId(const QModelIndex& index) const;
+
 	void addEvaluator(int typeNum);
 	template<typename T>
 	QModelIndex addEvaluator()
@@ -98,6 +100,7 @@ public:
 	void removeEvaluator(const QModelIndex& index);
 	MutableEvalPtr removeEvaluator(int evRow);
 	void setEvaluatorName(const QModelIndex& index, const std::string &name);
+	std::string evalName(const QModelIndex& index);
 	void activateEvaluator(const QModelIndex& index);
 	void activateEvaluator(int evRow);
 	void setEvaluatorOption(const QModelIndex& index,

@@ -7,11 +7,6 @@ BatchLPDialog::BatchLPDialog(QWidget *parent, EvaluatorsTreeModel& evModel) :
 {
 	ui->setupUi(this);
 
-	indexes=_evModel.evaluatorsAvailable<EvaluatorPositionSimulation>();
-	for (const auto& index:indexes) {
-		ui->settingSource->addItem(index.data().toString());
-	}
-
 	connect(ui->residuesWidget,&QListWidget::itemChanged,
 		[this](QListWidgetItem *item) {
 		auto newState=item->checkState();
@@ -19,6 +14,13 @@ BatchLPDialog::BatchLPDialog(QWidget *parent, EvaluatorsTreeModel& evModel) :
 			selItem->setCheckState(newState);
 		}
 	});
+
+	indexes=_evModel.evaluatorsAvailable<EvaluatorPositionSimulation>();
+	for (const auto& index:indexes) {
+		ui->settingSource->addItem(index.data().toString());
+	}
+
+
 }
 
 BatchLPDialog::~BatchLPDialog()
@@ -41,13 +43,17 @@ void BatchLPDialog::setResidueList(const std::vector<std::pair<int, std::string>
 
 void BatchLPDialog::accept()
 {
+	if(indexes.empty()) {
+		QDialog::accept();
+		return;
+	}
+	auto rootEval=indexes[ui->settingSource->currentIndex()];
 	for(int i=0;  i<ui->residuesWidget->count(); ++i) {
 		if(ui->residuesWidget->item(i)->checkState()==Qt::Unchecked) {
 			continue;
 		}
 		int resi=_residues[i].first;
 		auto resname=QString::fromStdString(_residues[i].second);
-		auto rootEval=indexes[ui->settingSource->currentIndex()];
 		auto index=_evModel.duplicateEvaluator(rootEval);
 		QString nameTemplate=ui->nameTemplateEdit->text();
 		auto name=nameTemplate.replace("{resid}",QString::number(resi));
