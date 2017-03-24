@@ -11,6 +11,9 @@ BatchDistanceDialog::BatchDistanceDialog(QWidget *parent, EvaluatorsTreeModel &e
 
 	connect(ui->lpList1,&QListWidget::itemChanged,
 		[this](QListWidgetItem *item) {
+		if (!item->isSelected()) {
+			return;
+		}
 		auto newState=item->checkState();
 		for (auto selItem:ui->lpList1->selectedItems()) {
 			selItem->setCheckState(newState);
@@ -18,6 +21,9 @@ BatchDistanceDialog::BatchDistanceDialog(QWidget *parent, EvaluatorsTreeModel &e
 	});
 	connect(ui->lpList2,&QListWidget::itemChanged,
 		[this](QListWidgetItem *item) {
+		if (!item->isSelected()) {
+			return;
+		}
 		auto newState=item->checkState();
 		for (auto selItem:ui->lpList2->selectedItems()) {
 			selItem->setCheckState(newState);

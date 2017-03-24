@@ -9,6 +9,9 @@ BatchLPDialog::BatchLPDialog(QWidget *parent, EvaluatorsTreeModel& evModel) :
 
 	connect(ui->residuesWidget,&QListWidget::itemChanged,
 		[this](QListWidgetItem *item) {
+		if (!item->isSelected()) {
+			return;
+		}
 		auto newState=item->checkState();
 		for (auto selItem:ui->residuesWidget->selectedItems()) {
 			selItem->setCheckState(newState);
