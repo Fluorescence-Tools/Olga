@@ -15,7 +15,7 @@ class BatchLPDialog : public QDialog
 public:
 	explicit BatchLPDialog(QWidget *parent, EvaluatorsTreeModel& evModel);
 	~BatchLPDialog();
-	void setResidueList(const std::vector<std::pair<int,std::string>>& residues);
+	void setResidueList(const std::vector<std::tuple<int, std::string, char> > &residues);
 public Q_SLOTS:
 	virtual void reject() override
 	{
@@ -23,7 +23,7 @@ public Q_SLOTS:
 	}
 	virtual void accept() override;
 private:
-	std::vector<std::pair<int, std::string> > _residues;
+	std::vector<std::tuple<int, std::string,char> > _residues;//resid, resname, chain
 	EvaluatorsTreeModel& _evModel;
 	Ui::BatchLPDialog *ui;
 	QList<QModelIndex> indexes;

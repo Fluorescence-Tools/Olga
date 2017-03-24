@@ -631,14 +631,15 @@ void MainWindow::addLpBatch()
 
 	BatchLPDialog dialog(this,evalsModel);
 	auto system=trajectoriesModel.firstSystem();
-	std::vector<std::pair<int,std::string>> residues;
+	std::vector<std::tuple<int,std::string,char>> residues;
 	if (system.num_atoms()>0) {
-		auto sel=system.select_all();
-		auto residueIds=sel.get_unique_resid();
-		auto residueNames=sel.get_unique_resname();
-		residues.reserve(residueIds.size());
-		for(size_t i=0; i<residueIds.size(); ++i) {
-			residues.emplace_back(residueIds[i], residueNames[i]);
+		std::vector<pteros::Selection> resSel;
+		system.select_all().split_by_residue(resSel);
+		for(pteros::Selection& sel:resSel) {
+			char chain=sel.begin()->Chain();
+			int resid=sel.begin()->Resid();
+			auto resname=sel.begin()->Resname();
+			residues.emplace_back(resid,resname,chain);
 		}
 	}
 	if(residues.empty()) {

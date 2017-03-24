@@ -31,11 +31,12 @@ BatchLPDialog::~BatchLPDialog()
 	delete ui;
 }
 
-void BatchLPDialog::setResidueList(const std::vector<std::pair<int, std::string> > &residues)
+void BatchLPDialog::setResidueList(const std::vector<std::tuple<int, std::string, char>> &residues)
 {
-	for (const auto& pair:residues) {
-		QString str = QString::number(pair.first) + " ("
-			    + QString::fromStdString(pair.second) + ")";
+	for (const auto& tup:residues) {
+		QString str = QString::number(std::get<0>(tup)) + " (chain "
+			    + QString(std::get<2>(tup)) + ", "
+			    + QString::fromStdString(std::get<1>(tup)) + ")";
 		QListWidgetItem* item=new QListWidgetItem(std::move(str));
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 		item->setCheckState(Qt::Unchecked);
@@ -55,14 +56,17 @@ void BatchLPDialog::accept()
 		if(ui->residuesWidget->item(i)->checkState()==Qt::Unchecked) {
 			continue;
 		}
-		int resi=_residues[i].first;
-		auto resname=QString::fromStdString(_residues[i].second);
+		int resi=std::get<0>(_residues[i]);
+		auto resname=QString::fromStdString(std::get<1>(_residues[i]));
+		QString chain(std::get<2>(_residues[i]));
+		chain=(chain==" ")?"":chain;
 		auto index=_evModel.duplicateEvaluator(rootEval);
 		QString nameTemplate=ui->nameTemplateEdit->text();
 		auto name=nameTemplate.replace("{resid}",QString::number(resi));
 		_evModel.setEvaluatorName(index,name.toStdString());
 		_evModel.setEvaluatorOption(index,"residue_seq_number",resi);
 		_evModel.setEvaluatorOption(index,"residue_name",resname);
+		_evModel.setEvaluatorOption(index,"chain_identifier",chain);
 		_evModel.activateEvaluator(index);
 	}
 	QDialog::accept();
