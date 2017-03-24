@@ -92,6 +92,7 @@ const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key, bool persist
 	assert(tid==std::this_thread::get_id());
 	//append a new job
 	Task& task=_tasks.emplace(key,eval(key.second).makeTask(key.first)).first->second;
+
 	pushTask(key);
 	_tasksRunning++;
 
@@ -364,7 +365,9 @@ EvalId TaskStorage::addEvaluator(EvalUPtr evptr)
 void TaskStorage::removeEvaluator(const EvalId &evId) {
 	Q_EMIT evaluatorIsGoingToBeRemoved(evId);
 	_evalNames.erase(eval(evId).name());
-	_evals.erase(evId);
+	const auto it=_evals.find(evId);
+	_removedEvals.push_back(std::move(it->second));
+	_evals.erase(it);
 	removeResults(evId);
 }
 

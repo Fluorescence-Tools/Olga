@@ -22,10 +22,10 @@
 
 #include <libcuckoo/cuckoohash_map.hh>
 namespace std {
-	template<typename T, typename... Args>
-	std::unique_ptr<T> make_unique(Args&&... args) {
-		return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-	}
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+	return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
 }
 
 template<typename K, typename V> using CuckooMap=cuckoohash_map<K, V, std::hash<K>>;
@@ -34,7 +34,7 @@ class EvaluatorPositionSimulation;
 using EvalUPtr=std::unique_ptr<const AbstractEvaluator>;
 template<class Tag, class Base = int> struct def_enum
 {
-    enum class type : Base { };
+	enum class type : Base { };
 };
 using EvalIdBase=uint_fast16_t;
 using EvalId=def_enum<EvalUPtr,EvalIdBase>::type;
@@ -176,14 +176,14 @@ private:
 	EvalId addEvaluator(EvalUPtr evptr);
 	void removeEvaluator(const EvalId& evId);
 	const Task& getTask(const CacheKey &key,
-				    bool persistent) const;
+			    bool persistent) const;
 	const Task& getTask(const FrameDescriptor &frame, const EvalId &evId,
-				    bool persistent) const
+			    bool persistent) const
 	{
 		return getTask(CacheKey(frame,evId),persistent);
 	}
 	const Task& makeTask(const CacheKey &key,
-			    bool persistent) const;
+			     bool persistent) const;
 	inline void pushTask(const CacheKey &key) const
 	{
 		auto& oldK=_tasksRingBuf[_tasksRBpos];
@@ -231,6 +231,7 @@ private:
 
 	std::unordered_map<std::string,EvalId> _evalNames;//main thread
 	std::unordered_map<EvalId,EvalUPtr> _evals;//main thread
+	std::vector<EvalUPtr> _removedEvals;
 	EvalId _currentId;//main thread
 	EvalId _maxStubEval;//main thread
 
