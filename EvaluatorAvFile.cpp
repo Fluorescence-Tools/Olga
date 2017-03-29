@@ -20,12 +20,12 @@ AbstractEvaluator::Task EvaluatorAvFile::makeTask(const FrameDescriptor &frame) 
 		if (_writeDirInfo.isAbsolute()) {
 			fname=_writeDirPath+'/'
 			      +trajInfo.baseName().toStdString()
-			      +"_"+posName+".xyz";
+			      +"_"+posName;
 		} else {
 			fname=trajInfo.absolutePath().toStdString()
 			      +'/'+_writeDirPath
 			      +'/'+trajInfo.baseName().toStdString()
-			      +"_"+posName+".xyz";
+			      +"_"+posName;
 		}
 		return calculate(av,fname);
 	}).share();
@@ -37,7 +37,10 @@ EvaluatorAvFile::calculate(const PositionSimulationResult &av,
 {
 	//std::cout<<"Dumping: "+fname+"\n"<<std::flush;
 	if (_onlyShell) {
-		return std::make_shared<CalcResult<bool>>(av.dumpShellXyz(fname));
+		return std::make_shared<CalcResult<bool>>(av.dumpShellXyz(fname+".xyz"));
+	}
+	if(_openDX) {
+		return std::make_shared<CalcResult<bool>>(av.dump_dxmap(fname+".dx"));
 	}
 	return std::make_shared<CalcResult<bool>>(av.dumpXyz(fname));
 }

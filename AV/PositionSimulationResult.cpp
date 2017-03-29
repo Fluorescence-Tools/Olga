@@ -215,7 +215,57 @@ std::ostream &PositionSimulationResult::dump_xyz(std::ostream &os) const
 	os.flags(osflags);
 	return os;
 }
+std::ostream &PositionSimulationResult::dump_dxmap(std::ostream &os) const
+{
+	const float res=2.0f;
+	densityArray_t density=pointsToDensity(res);
+	int iMin = density.index_bases()[0];
+	int jMin = density.index_bases()[1];
+	int kMin = density.index_bases()[2];
+	int iMax = iMin + density.shape()[0];
+	int jMax = jMin + density.shape()[1];
+	int kMax = kMin + density.shape()[2];
 
+	os<<"# TEST\nobject 1 class gridpositions counts "
+	 <<iMax-iMin<<' '<<jMax-jMin<<' '<<kMax-kMin<<'\n'
+	<<"origin "<<res*iMin<<' '<<res*jMin<<' '<<res*kMin<<'\n'
+	<<"delta "<<res<<" 0 0\n"
+	<<"delta 0 "<<res<<" 0\n"
+	<<"delta 0 0 "<<res<<"\n"
+	<<"object 2 class gridconnections counts "
+	<<iMax-iMin<<' '<<jMax-jMin<<' '<<kMax-kMin<<'\n'
+	<<"object 3 class array type double rank 0 items "
+	<<(kMax-kMin)*(jMax-jMin)*(iMax-iMin)<<" data follows\n";
+
+	int n=0;
+	for(int i=iMin; i<iMax; i++)
+		for(int j=jMin; j<jMax; j++)
+			for(int k=kMin; k<kMax; k++)
+			{
+				os<<density[i][j][k];
+				++n;
+				if(n%3==0) {
+					os<<'\n';
+				} else {
+					os<<' ';
+				}
+			}
+	os<<"\nobject \"density (all) [A^-3]\" class field\n";
+	return os;
+}
+
+bool PositionSimulationResult::dump_dxmap(const std::string &fileName) const
+{
+	std::ofstream outfile;
+	outfile.open(fileName, std::ifstream::out);
+	if(!outfile.is_open())
+	{
+		return false;
+	}
+	dump_dxmap(outfile);
+	outfile.close();
+	return true;
+}
 std::ostream &PositionSimulationResult::dumpShellXyz(std::ostream &os) const
 {
 	if(_points.size()==0)

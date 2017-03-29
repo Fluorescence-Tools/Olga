@@ -9,7 +9,7 @@ class EvaluatorAvFile : public AbstractEvaluator
 private:
 	EvalId _av;
 	std::string _name, _writeDirPath;
-	bool _onlyShell=false;
+	bool _onlyShell=false, _openDX=false;
 public:
 	EvaluatorAvFile(const TaskStorage& storage, const std::string& name):
 		AbstractEvaluator(storage),_name(name) {}
@@ -31,7 +31,7 @@ public:
 	}
 	virtual int settingsCount() const
 	{
-		return 3;
+		return 4;
 	}
 	virtual Setting setting(int row) const override
 	{
@@ -47,6 +47,8 @@ public:
 
 		case 2:
 			return {"only_shell",_onlyShell};
+		case 3:
+			return {"openDX",_openDX};
 		}
 		return {"",""};
 	}
@@ -69,6 +71,9 @@ public:
 			return;
 		case 2:
 			_onlyShell=val.toBool();
+			return;
+		case 3:
+			_openDX=val.toBool();
 			return;
 		}
 	}

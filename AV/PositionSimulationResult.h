@@ -42,6 +42,8 @@ public:
 	std::ostream& dumpShellXyz(std::ostream& os) const;
 	bool dumpXyz(const std::string& fileName) const;
 	bool dumpShellXyz(const std::string& fileName) const;
+	std::ostream& dump_dxmap(std::ostream &os) const;
+	bool dump_dxmap(const std::string& fileName) const;
 	bool empty() const
 	{
 		return !_points.size();
