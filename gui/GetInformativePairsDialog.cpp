@@ -79,14 +79,6 @@ void GetInformativePairsDialog::accept()
 	}
 	rmsdProgress.setValue(numFrames);
 
-	using std::endl;
-	using std::flush;
-	using std::vector;
-	using std::string;
-	using Eigen::MatrixXf;
-	using Eigen::VectorXf;
-	using Eigen::NoChange;
-
 	const int maxPairs=std::min(Eall.distanceCount(),ui->maxPairs->value());
 	QProgressDialog selectionProgress("Greedy selection...",QString(),0,
 					  maxPairs,this);

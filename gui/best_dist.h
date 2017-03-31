@@ -33,6 +33,20 @@ void printTimes()
 	std::cout<<"total: "<<tot<<std::endl;
 }
 
+double chi2CdfApprox(const unsigned ndof, const double chi2)
+{
+	using boost::math::chi_squared;
+	using boost::math::complement;
+	using boost::math::cdf;
+	using boost::math::quantile;
+
+	if (ndof>3500) {
+		//approximate with gaussian CDF (i.e. Erfc)
+		return 0.5*boost::math::erfc((-chi2+ndof)/std::sqrt(4.0*ndof));
+	}
+	chi_squared dist(ndof);
+	return cdf(dist,chi2);
+}
 
 class InterpChi2sf
 {
@@ -50,20 +64,7 @@ private:
 	float step;
 	int iMax;
 	std::array<Coefs,numSplines> k;
-	double chi2CdfApprox(const unsigned ndof, const double chi2)
-	{
-		using boost::math::chi_squared;
-		using boost::math::complement;
-		using boost::math::cdf;
-		using boost::math::quantile;
 
-		if (ndof>3500) {
-			//approximate with gaussian CDF (i.e. Erfc)
-			return 0.5*boost::math::erfc((-chi2+ndof)/std::sqrt(4.0*ndof));
-		}
-		chi_squared dist(ndof);
-		return cdf(dist,chi2);
-	}
 public:
 	InterpChi2sf()
 	{
@@ -238,8 +239,7 @@ public:
 
 		initChi2sfs(distanceCount()+1,std::min(_numFitParams,distanceCount()));
 
-		//std::vector<std::thread> threads(std::thread::hardware_concurrency());
-		std::vector<std::thread> threads(1);
+		std::vector<std::thread> threads(std::thread::hardware_concurrency());
 		const int grainSize=numCols/threads.size()+1;
 		for(int t=0; t<threads.size(); ++t) {
 			threads[t]=std::thread([&,t,this] {
@@ -462,20 +462,18 @@ private:
 		const int numConf=chi2.rows();
 		MatrixXf W(numConf,numConf);
 		W.triangularView<Eigen::Upper>()=chi2.binaryExpr(numPoints,
-								 [this](const float& c2, const float& np){
-			/*int ndof=std::lround(np)-_numFitParams;
-			if(ndof==0) {
-				return 0.0f;
-			}
-			ndof=std::max(ndof,1);
-			return 1.0-boost::math::cdf(boost::math::chi_squared(ndof),c2);*/
+								 [this](const float& c2, const float& np) {
 			if(std::lround(np)==0) {
 				return 1.0f;
 			}
 			int ndof=std::lround(np)-_numFitParams;
 			ndof=std::max(ndof,1);
-			return 1.0f-float(boost::math::cdf(boost::math::chi_squared(ndof),c2));
+			//return 1.0f-float(boost::math::cdf(boost::math::chi_squared(ndof),c2));
+			return 1.0f-float(chi2CdfApprox(ndof,c2));
+
+			//TODO: implement fast calculation
 			//return sfs[std::lround(np)].value(c2);
+
 		});
 		return std::move(W.selfadjointView<Eigen::Upper>());
 	}
