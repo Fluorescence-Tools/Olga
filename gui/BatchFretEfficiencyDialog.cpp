@@ -4,6 +4,8 @@
 #include "EvaluatorPositionSimulation.h"
 #include "EvaluatorFretEfficiency.h"
 
+#include <QProgressDialog>
+
 BatchFretEfficiencyDialog::BatchFretEfficiencyDialog(QWidget *parent, EvaluatorsTreeModel &evModel) :
 	QDialog(parent), _evModel(evModel),
 	ui(new Ui::BatchFretEfficiencyDialog)
@@ -50,6 +52,11 @@ BatchFretEfficiencyDialog::~BatchFretEfficiencyDialog()
 
 void BatchFretEfficiencyDialog::accept()
 {
+	const long numEffs=ui->lpList1->count()*ui->lpList2->count()/2;
+	QProgressDialog addProgress("Creating efficiencies...",QString(),0,
+				     numEffs,this);
+	addProgress.setWindowModality(Qt::WindowModal);
+
 	for(int i=0;  i<ui->lpList1->count(); ++i) {
 		if(ui->lpList1->item(i)->checkState()==Qt::Unchecked) {
 			continue;
@@ -78,7 +85,10 @@ void BatchFretEfficiencyDialog::accept()
 						    ui->r0SpinBox->value());
 			_evModel.setEvaluatorName(newEff,name.toStdString());
 			_evModel.activateEvaluator(newEff);
+
+			addProgress.setValue(addProgress.value()+1);
 		}
 	}
+	addProgress.setValue(numEffs);
 	QDialog::accept();
 }
