@@ -2,7 +2,22 @@
 #include <QApplication>
 #include <QTextCodec>
 #include <QCommandLineParser>
+#include <boost/exception/diagnostic_information.hpp>
 #include <iostream>
+#include <fstream>
+
+void dumpException(const std::string& str)
+{
+	std::ofstream outfile;
+	outfile.open("Olga_exception.log", std::ifstream::out);
+	if(!outfile.is_open())
+	{
+		return;
+	}
+	outfile<<str;
+	outfile.close();
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -27,6 +42,15 @@ int main(int argc, char *argv[])
 	QString resultsFileName=parser.value("o");
 	bool quiet=parser.isSet(quietOption);
 	MainWindow w(settingsFileName,pdbsDirPath,resultsFileName);
-	if(!quiet) {w.show();}
-	return a.exec();
+	try {
+		if(!quiet) {w.show();}
+		return a.exec();
+	} catch (std::exception &e) {
+		dumpException(std::string("std::exception: ") + e.what());
+	} catch (boost::exception& e) {
+		dumpException("boost::exception: " + boost::diagnostic_information(e));
+	} catch (...) {
+		dumpException("exception type: unknown");
+	}
+	return 1;
 }
