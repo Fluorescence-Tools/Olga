@@ -3,6 +3,7 @@
 #include "best_dist.h"
 #include <pteros/pteros.h>
 #include <QProgressDialog>
+#include <future>
 
 GetInformativePairsDialog::GetInformativePairsDialog(
 		QWidget *parent, const std::vector<FrameDescriptor>& frames,
@@ -40,18 +41,17 @@ void GetInformativePairsDialog::accept()
 {
 	using Eigen::MatrixXf;
 	using namespace pteros;
-
-	const float err=0.058;
 	const std::string sel="name CA";
+	const double err=0.058;
+	const int numSelectionMax=10;
 
 	FRETEfficiencies Eall(err,effs.rows());
 	Eall.setFromEffMatrix(effs,evalNames);
-	Eall.dumpDistances("distances.ha4");
 
 	MatrixXf RMSDs(frames.size(),frames.size());
 
 	QProgressDialog loadProgress("Loading structures...",QString(),0,
-				 frames.size(),this);
+				     frames.size(),this);
 	loadProgress.setWindowModality(Qt::WindowModal);
 	System traj(frames[0].topologyFileName());
 	traj.keep(sel);
@@ -66,7 +66,7 @@ void GetInformativePairsDialog::accept()
 
 	const size_t numFrames=frames.size();
 	QProgressDialog rmsdProgress("Calculating RMSD...",QString(),0,
-				 numFrames,this);
+				     numFrames,this);
 	rmsdProgress.setWindowModality(Qt::WindowModal);
 	for(int i=0; i<numFrames; ++i) {
 		Selection(traj,"all").fit_trajectory(i);
@@ -79,7 +79,7 @@ void GetInformativePairsDialog::accept()
 	rmsdProgress.setValue(numFrames);
 	dump_rmsds(RMSDs,"rmsds.dat");
 
-	using std::cout;
+
 	using std::endl;
 	using std::flush;
 	using std::vector;
@@ -88,20 +88,37 @@ void GetInformativePairsDialog::accept()
 	using Eigen::VectorXf;
 	using Eigen::NoChange;
 
+	QProgressDialog selectionProgress("Greedy selection...",QString(),0,
+					  numSelectionMax,this);
+	selectionProgress.setWindowModality(Qt::WindowModal);
+	std::future<void> selection(std::async(std::launch::async,[&,this]{
+		greedySelection(err,Eall,RMSDs);
+	}));
+	std::future_status status;
+	do {
+		status = selection.wait_for(std::chrono::milliseconds(20));
+		selectionProgress.setValue(1);
+	} while (status != std::future_status::ready);
+	selectionProgress.setValue(numSelectionMax);
+	QDialog::accept();
+}
+
+void GetInformativePairsDialog::greedySelection(
+		const float err,const FRETEfficiencies& Eall, const Eigen::MatrixXf& RMSDs) const
+{
 	std::stringstream ss;
 	ss.str(std::string());
 
 	FRETEfficiencies E(err,Eall.conformerCount());
 
-	cout<<"#\tAdded distance\t<<RMSD>>\n";
+	std::cout<<"#\tAdded distance\t<<RMSD>>\n";
 	for (int i=0; i<std::min(Eall.distanceCount(),10); ++i) {
 		int b=E.bestDistance(RMSDs,Eall);
 		ss<<i+1<<'\t'<<Eall.name(b);
 		E.addDistance(Eall,b);
-		ss<<"\t"<<std::setprecision(2)<<E.rmsdAve(RMSDs)<<endl;
-		cout<<ss.str();
+		ss<<"\t"<<std::setprecision(2)<<E.rmsdAve(RMSDs)<<std::endl;
+		std::cout<<ss.str();
 		ss.str(std::string());
 	}
-	QDialog::accept();
 }
 

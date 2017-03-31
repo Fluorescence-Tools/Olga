@@ -10,6 +10,8 @@ namespace Ui {
 class GetInformativePairsDialog;
 }
 
+class FRETEfficiencies;
+
 class GetInformativePairsDialog : public QDialog
 {
 	Q_OBJECT
@@ -28,6 +30,9 @@ private:
 	const Eigen::MatrixXf effs;
 	const std::vector<std::string> evalNames;
 	Ui::GetInformativePairsDialog *ui;
+
+	void greedySelection(const float err, const FRETEfficiencies &Eall,
+			     const Eigen::MatrixXf &RMSDs) const;
 };
 
 #endif // GETINFORMATIVEPAIRSDIALOG_H
