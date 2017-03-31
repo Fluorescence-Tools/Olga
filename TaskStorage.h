@@ -99,6 +99,22 @@ public:
 	{
 		return *_evals.at(id);
 	}
+	template<typename T>
+	std::vector<EvalId> evalIds() const
+	{
+		std::vector<EvalId> list;
+		//T eval(_storage,"none");
+		for(const auto& pair:_evals) {
+			if(pair.first<=_maxStubEval) {
+				continue;
+			}
+			if(dynamic_cast<const T*>(pair.second.get())) {
+				list.push_back(pair.first);
+			}
+		}
+		return list;
+	}
+	std::string evalName(const EvalId& id) const;
 	const AbstractEvaluator& eval(const std::string& name) const
 	{
 		static auto tid=std::this_thread::get_id();

@@ -6,6 +6,10 @@
 #include "ui_mainwindow.h"
 #include "BatchLPDialog.h"
 #include "BatchDistanceDialog.h"
+#include "BatchFretEfficiencyDialog.h"
+#include "GetInformativePairsDialog.h"
+#include "EvaluatorFretEfficiency.h"
+#include "CalcResult.h"
 
 #include <QSettings>
 #include <QCloseEvent>
@@ -676,6 +680,67 @@ void MainWindow::addDistanceBatch()
 		return;
 	}
 	BatchDistanceDialog dialog(this,evalsModel);
+	dialog.exec();
+}
+
+void MainWindow::addEfficiencyBatch()
+{
+	if(evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>().empty()) {
+		QMessageBox::warning(this,tr("Can not add distances"),
+				     tr("Could not populate the labeling "
+					"positions list.\nCreate some "
+					"labeling postions, please."));
+		return;
+	}
+	BatchFretEfficiencyDialog dialog(this,evalsModel);
+	dialog.exec();
+}
+
+void MainWindow::getInfromativePairs()
+{
+	std::vector<FrameDescriptor> frames=trajectoriesModel.frames();
+	if(frames.empty()) {
+		QMessageBox::warning(this,tr("No structures loaded"),
+				     tr("No structures loaded.\n"
+					"Load some, please."));
+		return;
+	}
+	std::vector<EvalId> evalIds=_storage.evalIds<EvaluatorFretEfficiency>();
+	if(evalIds.empty()) {
+		QMessageBox::warning(this,tr("No Efficiencies available"),
+				     tr("No Efficiencies are available.\n"
+					"Create some, please."));
+		return;
+	}
+	std::vector<std::string> evalNames;
+	evalNames.reserve(evalIds.size());
+	for (const auto evalId: evalIds) {
+		evalNames.push_back(_storage.evalName(evalId));
+	}
+
+	const int tasksCount=_storage.tasksPendingCount()+1;
+	QProgressDialog progress("Calculating efficiencies...",QString(),0,tasksCount,this);
+	progress.setWindowModality(Qt::WindowModal);
+	do {
+		progress.setValue(tasksCount-_storage.tasksPendingCount());
+		if (progress.wasCanceled()) {
+			return;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(25));
+	} while(_storage.tasksPendingCount());
+	progress.setValue(tasksCount);
+
+	Eigen::MatrixXf effs(frames.size(),evalIds.size());
+	for (int iFrame=0; iFrame<frames.size(); ++iFrame) {
+		const auto& fr=frames[iFrame];
+		for(int iEv=0; iEv<evalIds.size(); ++iEv) {
+			TaskStorage::Result res=_storage.getResult(fr,evalIds[iEv]);
+			auto dRes=std::static_pointer_cast<CalcResult<double>>(res);
+			effs(iFrame,iEv)=dRes->get();
+		}
+	}
+
+	GetInformativePairsDialog dialog(this,frames,effs,evalNames);
 	dialog.exec();
 }
 

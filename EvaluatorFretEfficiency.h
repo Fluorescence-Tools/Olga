@@ -8,7 +8,7 @@ class EvaluatorFretEfficiency : public AbstractEvaluator
 {
 private:
 	EvalId _av1, _av2;
-	double _R0;
+	double _R0=52.0;
 	std::string _name;
 public:
 	EvaluatorFretEfficiency(const TaskStorage& storage, const std::string& name);

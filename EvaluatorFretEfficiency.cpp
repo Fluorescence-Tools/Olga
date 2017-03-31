@@ -15,6 +15,11 @@ AbstractEvaluator::Task EvaluatorFretEfficiency::makeTask(const FrameDescriptor 
 				[this](result_t result){
 		auto ptrAv1=std::get<0>(result).get();
 		auto ptrAv2=std::get<1>(result).get();
+		if(!ptrAv1 || !ptrAv2) {
+			std::shared_ptr<AbstractCalcResult> r;
+			r=std::make_shared<CalcResult<double>>(std::numeric_limits<double>::quiet_NaN());
+			return r;
+		}
 		auto resAv1=dynamic_cast<CalcResult<PositionSimulationResult>*>(ptrAv1.get());
 		auto resAv2=dynamic_cast<CalcResult<PositionSimulationResult>*>(ptrAv2.get());
 		PositionSimulationResult av1=resAv1->get();

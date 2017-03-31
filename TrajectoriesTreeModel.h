@@ -85,6 +85,20 @@ public:
 		}
 
 	}
+	std::vector<FrameDescriptor> frames() const
+	{
+		std::vector<FrameDescriptor> res;
+		for(const MolecularTrajectory& mt:_molTrajs)//iterate over all frames in trajectories
+		{
+			for(int trajIdx=0; trajIdx<mt.chunkCount(); ++trajIdx) {
+				for(int frIdx=0; frIdx<mt.frameCount(trajIdx); ++frIdx) {
+					auto desc=mt.descriptor(trajIdx,frIdx);
+					res.push_back(std::move(desc));
+				}
+			}
+		}
+		return res;
+	}
 public Q_SLOTS:
 private Q_SLOTS:
 

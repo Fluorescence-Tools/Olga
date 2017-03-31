@@ -68,6 +68,12 @@ TaskStorage::getTask(const CacheKey &key, bool persistent) const
 {
 	static auto tid=std::this_thread::get_id();
 	assert(tid==std::this_thread::get_id());
+	//check Eval validity
+	if(!isValid(key.second)) {
+		Task& task=_tasks.emplace(key,async::make_task(Result()).share()).first->second;
+		pushTask(key);
+		return task;
+	}
 
 	//check in tasks
 	auto it=_tasks.find(key);
@@ -86,7 +92,7 @@ TaskStorage::getTask(const CacheKey &key, bool persistent) const
 	return makeTask(key,persistent);
 }
 //must only run in worker thread
-const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key, bool persistent) const
+const TaskStorage::Task& TaskStorage::makeTask(const CacheKey &key, bool persistent) const
 {
 	static auto tid=std::this_thread::get_id();
 	assert(tid==std::this_thread::get_id());
@@ -352,6 +358,11 @@ const TaskStorage::PterosSysTask &TaskStorage::getSysTask(const FrameDescriptor 
 std::string TaskStorage::getColumnName(const EvalId &id, int col) const
 {
 	return eval(id).columnName(col);
+}
+
+std::string TaskStorage::evalName(const EvalId &id) const
+{
+	return eval(id).name();
 }
 
 EvalId TaskStorage::addEvaluator(EvalUPtr evptr)

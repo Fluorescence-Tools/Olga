@@ -30,6 +30,9 @@ double PositionSimulationResult::meanFretEfficiency(const PositionSimulationResu
 
 	unsigned long av1length=_points.size();
 	unsigned long av2length=other._points.size();
+	if(av1length==0 || av2length==0) {
+		return std::numeric_limits<double>::quiet_NaN();
+	}
 	const unsigned long rndLim=(av1length-1)*(av2length-1);
 	std::random_device rd;
 	std::mt19937 engine(rd());

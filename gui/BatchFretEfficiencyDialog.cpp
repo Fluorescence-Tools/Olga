@@ -1,11 +1,12 @@
-#include "BatchDistanceDialog.h"
-#include "ui_BatchDistanceDialog.h"
-#include "EvaluatorPositionSimulation.h"
-#include "EvaluatorDistance.h"
+#include "BatchFretEfficiencyDialog.h"
+#include "ui_BatchFretEfficiencyDialog.h"
 
-BatchDistanceDialog::BatchDistanceDialog(QWidget *parent, EvaluatorsTreeModel &evModel) :
+#include "EvaluatorPositionSimulation.h"
+#include "EvaluatorFretEfficiency.h"
+
+BatchFretEfficiencyDialog::BatchFretEfficiencyDialog(QWidget *parent, EvaluatorsTreeModel &evModel) :
 	QDialog(parent), _evModel(evModel),
-	ui(new Ui::BatchDistanceDialog)
+	ui(new Ui::BatchFretEfficiencyDialog)
 {
 	ui->setupUi(this);
 
@@ -31,11 +32,7 @@ BatchDistanceDialog::BatchDistanceDialog(QWidget *parent, EvaluatorsTreeModel &e
 	});
 
 	lpIndexes=_evModel.evaluatorsAvailable<EvaluatorPositionSimulation>();
-	distanceIndexes=_evModel.evaluatorsAvailable<EvaluatorDistance>();
 
-	for (const auto& index:distanceIndexes) {
-		ui->referenceDistance->addItem(index.data().toString());
-	}
 	for (const auto& index:lpIndexes) {
 		QListWidgetItem* item;
 		item=new QListWidgetItem(index.data().toString());
@@ -46,19 +43,13 @@ BatchDistanceDialog::BatchDistanceDialog(QWidget *parent, EvaluatorsTreeModel &e
 	}
 }
 
-BatchDistanceDialog::~BatchDistanceDialog()
+BatchFretEfficiencyDialog::~BatchFretEfficiencyDialog()
 {
 	delete ui;
 }
 
-void BatchDistanceDialog::accept()
+void BatchFretEfficiencyDialog::accept()
 {
-	if(distanceIndexes.empty()) {
-		QDialog::accept();
-		return;
-	}
-	auto rootEval=distanceIndexes[ui->referenceDistance->currentIndex()];
-
 	for(int i=0;  i<ui->lpList1->count(); ++i) {
 		if(ui->lpList1->item(i)->checkState()==Qt::Unchecked) {
 			continue;
@@ -75,16 +66,18 @@ void BatchDistanceDialog::accept()
 						_evModel.evalName(lp2Index));
 			EvalId lp2Id=_evModel.evalId(lp2Index);
 
-			QModelIndex newDist=_evModel.duplicateEvaluator(rootEval);
+			QModelIndex newEff=_evModel.addEvaluator<EvaluatorFretEfficiency>();
 			QString nameTemplate=ui->nameTemplateEdit->text();
 			auto name=nameTemplate.replace("{lp1}",lp1name)
 				  .replace("{lp2}",lp2name);
-			_evModel.setEvaluatorOption(newDist,"position1_name",
+			_evModel.setEvaluatorOption(newEff,"position1_name",
 						    QVariant::fromValue(lp1Id));
-			_evModel.setEvaluatorOption(newDist,"position2_name",
+			_evModel.setEvaluatorOption(newEff,"position2_name",
 						    QVariant::fromValue(lp2Id));
-			_evModel.setEvaluatorName(newDist,name.toStdString());
-			_evModel.activateEvaluator(newDist);
+			_evModel.setEvaluatorOption(newEff,"Forster_radius",
+						    ui->r0SpinBox->value());
+			_evModel.setEvaluatorName(newEff,name.toStdString());
+			_evModel.activateEvaluator(newEff);
 		}
 	}
 	QDialog::accept();

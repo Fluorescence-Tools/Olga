@@ -13,7 +13,9 @@ RESOURCES += \
 FORMS += \
     mainwindow.ui \
     BatchLPDialog.ui \
-    BatchDistanceDialog.ui
+    BatchDistanceDialog.ui \
+    GetInformativePairsDialog.ui \
+    BatchFretEfficiencyDialog.ui
 
 HEADERS += \
     mainwindow.h \
@@ -51,7 +53,10 @@ HEADERS += \
     EvaluatorFretEfficiency.h \
     EvaluatorAvVolume.h \
     BatchLPDialog.h \
-    BatchDistanceDialog.h
+    BatchDistanceDialog.h \
+    GetInformativePairsDialog.h \
+    BatchFretEfficiencyDialog.h \
+    best_dist.h
 
 SOURCES += \
     main.cpp \
@@ -88,4 +93,6 @@ SOURCES += \
     EvaluatorFretEfficiency.cpp \
     EvaluatorAvVolume.cpp \
     BatchLPDialog.cpp \
-    BatchDistanceDialog.cpp
+    BatchDistanceDialog.cpp \
+    GetInformativePairsDialog.cpp \
+    BatchFretEfficiencyDialog.cpp
