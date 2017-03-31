@@ -6,47 +6,50 @@ build-ubuntu16.04:
   stage: compile
   image: burningdaylight/docker-ubuntu16.04-devel
   script:
-    - mkdir -p build-ubuntu16.04
-    - rm -f build-ubuntu16.04/gui/Olga build-ubuntu16.04/gui/main.o
-    - cd build-ubuntu16.04; qmake ..; make
+    - mkdir -p ${CI_BUILD_NAME}
+    - rm -f ${CI_BUILD_NAME}/gui/Olga build-ubuntu16.04/gui/main.o
+    - find ${CI_BUILD_NAME} -name "Makefile*" -delete
+    - cd ${CI_BUILD_NAME}; qmake ..; make
   cache:
     paths:
-    - build-ubuntu16.04/
+    - ${CI_BUILD_NAME}/
   artifacts:
     expire_in: 1 day
     paths:
-      - build-ubuntu16.04/gui/Olga
+      - ${CI_BUILD_NAME}/gui/Olga
 
 build-win64:
   stage: compile
   image: burningdaylight/docker-mingw-qt5
   script:
-    - mkdir -p build-win64
-    - rm -f build-win64/gui/release/Olga.exe build-win64/gui/release/main.o
-    - cd build-win64; x86_64-w64-mingw32-qmake-qt5 ..; make
+    - mkdir -p ${CI_BUILD_NAME}
+    - rm -f ${CI_BUILD_NAME}/gui/release/Olga.exe build-win64/gui/release/main.o
+    - find ${CI_BUILD_NAME} -name "Makefile*" -delete
+    - cd ${CI_BUILD_NAME}; x86_64-w64-mingw32-qmake-qt5 ..; make
   cache:
     paths:
-    - build-win64/
+    - ${CI_BUILD_NAME}/
   artifacts:
     expire_in: 1 day
     paths:
-      - build-win64/gui/release/Olga.exe
+      - ${CI_BUILD_NAME}/gui/release/Olga.exe
 
 
 build-win32:
   stage: compile
   image: burningdaylight/docker-mingw-qt5
   script:
-    - mkdir -p build-win32
-    - rm -f build-win32/gui/release/Olga.exe build-win32/gui/release/main.o
-    - cd build-win32; i686-w64-mingw32-qmake-qt5 ..; make
+    - mkdir -p ${CI_BUILD_NAME}
+    - rm -f ${CI_BUILD_NAME}/gui/release/Olga.exe build-win32/gui/release/main.o;
+    - find ${CI_BUILD_NAME} -name "Makefile*" -delete
+    - cd ${CI_BUILD_NAME}; i686-w64-mingw32-qmake-qt5 ..; make
   cache:
     paths:
-    - build-win32/
+    - ${CI_BUILD_NAME}/
   artifacts:
     expire_in: 1 day
     paths:
-      - build-win32/gui/release/Olga.exe
+      - ${CI_BUILD_NAME}/gui/release/Olga.exe
 
 pack-win64:
   stage: package
