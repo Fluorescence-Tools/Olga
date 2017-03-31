@@ -5,6 +5,7 @@
 
 #include "FrameDescriptor.h"
 #include <Eigen/Dense>
+#include <atomic>
 
 namespace Ui {
 class GetInformativePairsDialog;
@@ -32,7 +33,8 @@ private:
 	Ui::GetInformativePairsDialog *ui;
 
 	void greedySelection(const float err, const FRETEfficiencies &Eall,
-			     const Eigen::MatrixXf &RMSDs) const;
+			     const Eigen::MatrixXf &RMSDs, const int maxPairs) const;
+	mutable std::atomic<int> pairsDone{0};
 };
 
 #endif // GETINFORMATIVEPAIRSDIALOG_H

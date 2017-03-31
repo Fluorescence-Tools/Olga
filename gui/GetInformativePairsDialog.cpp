@@ -53,6 +53,7 @@ void GetInformativePairsDialog::accept()
 	QProgressDialog loadProgress("Loading structures...",QString(),0,
 				     frames.size(),this);
 	loadProgress.setWindowModality(Qt::WindowModal);
+	loadProgress.setValue(0);
 	System traj(frames[0].topologyFileName());
 	traj.keep(sel);
 	for(int i=1; i<frames.size(); ++i) {
@@ -69,16 +70,14 @@ void GetInformativePairsDialog::accept()
 				     numFrames,this);
 	rmsdProgress.setWindowModality(Qt::WindowModal);
 	for(int i=0; i<numFrames; ++i) {
+		rmsdProgress.setValue(i);
 		Selection(traj,"all").fit_trajectory(i);
 		for (int j=i; j<numFrames;++j) {
 			Selection s(traj,"all");
 			RMSDs(i,j)=RMSDs(j,i)=s.rmsd(i,j)*10.0f;
 		}
-		rmsdProgress.setValue(i);
 	}
 	rmsdProgress.setValue(numFrames);
-	dump_rmsds(RMSDs,"rmsds.dat");
-
 
 	using std::endl;
 	using std::flush;
@@ -88,23 +87,28 @@ void GetInformativePairsDialog::accept()
 	using Eigen::VectorXf;
 	using Eigen::NoChange;
 
+	const int maxPairs=std::min(Eall.distanceCount(),ui->maxPairs->value());
 	QProgressDialog selectionProgress("Greedy selection...",QString(),0,
-					  numSelectionMax,this);
+					  maxPairs,this);
 	selectionProgress.setWindowModality(Qt::WindowModal);
+	selectionProgress.setMinimumDuration(0);
 	std::future<void> selection(std::async(std::launch::async,[&,this]{
-		greedySelection(err,Eall,RMSDs);
+		greedySelection(err,Eall,RMSDs,maxPairs);
 	}));
 	std::future_status status;
 	do {
+		QApplication::processEvents();
+		selectionProgress.setValue(pairsDone-1);
 		status = selection.wait_for(std::chrono::milliseconds(20));
-		selectionProgress.setValue(1);
 	} while (status != std::future_status::ready);
-	selectionProgress.setValue(numSelectionMax);
+	selectionProgress.setValue(maxPairs);
 	QDialog::accept();
 }
 
-void GetInformativePairsDialog::greedySelection(
-		const float err,const FRETEfficiencies& Eall, const Eigen::MatrixXf& RMSDs) const
+void GetInformativePairsDialog::greedySelection(const float err,
+						const FRETEfficiencies& Eall,
+						const Eigen::MatrixXf& RMSDs,
+						const int maxPairs) const
 {
 	std::stringstream ss;
 	ss.str(std::string());
@@ -112,13 +116,12 @@ void GetInformativePairsDialog::greedySelection(
 	FRETEfficiencies E(err,Eall.conformerCount());
 
 	std::cout<<"#\tAdded distance\t<<RMSD>>\n";
-	for (int i=0; i<std::min(Eall.distanceCount(),10); ++i) {
+	for (pairsDone=0; pairsDone<maxPairs; ++pairsDone) {
 		int b=E.bestDistance(RMSDs,Eall);
-		ss<<i+1<<'\t'<<Eall.name(b);
+		ss<<pairsDone+1<<'\t'<<Eall.name(b);
 		E.addDistance(Eall,b);
 		ss<<"\t"<<std::setprecision(2)<<E.rmsdAve(RMSDs)<<std::endl;
 		std::cout<<ss.str();
 		ss.str(std::string());
 	}
 }
-
