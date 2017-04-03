@@ -3,6 +3,7 @@
 #include "best_dist.h"
 #include <pteros/pteros.h>
 #include <QProgressDialog>
+#include <QFileDialog>
 #include <future>
 
 GetInformativePairsDialog::GetInformativePairsDialog(
@@ -35,6 +36,31 @@ void dump_rmsds(const Eigen::MatrixXf& m, const std::string& fname)
 			outfile<<"\t"<<m(i,j)*0.1;
 		}
 		outfile<<"\n";
+	}
+}
+void GetInformativePairsDialog::
+dump_distList(const GetInformativePairsDialog::pair_list_type &list,
+	     const std::string &fname)
+{
+	std::stringstream ss;
+	ss<<"#\tAdded distance\t<<RMSD>>\n";
+	std::ofstream outfile;
+	ss<<std::setprecision(3);
+	for (int i=0; i<list.size(); ++i) {
+		ss<<i<<"\t"<<list[i].first<<"\t"<<list[i].second<<"\n";
+	}
+
+	if(fname.empty()) {
+		std::cout<<ss.str();
+	} else {
+		outfile.open(fname, std::ifstream::out);
+		if(!outfile.is_open())
+		{
+			std::cerr<<"Warning! could not open file for saving: "
+				   +fname+"\n"<<std::flush;
+			return;
+		}
+		outfile<<ss.str();
 	}
 }
 
@@ -76,12 +102,15 @@ Eigen::MatrixXf GetInformativePairsDialog::rmsds(const pteros::System &traj) con
 		}
 		rmsdsDone+=numFrames-i;
 	}
-	//dump_rmsds(RMSDs,"rmsds_seq.dat");*/
-	return RMSDs;
+	//dump_rmsds(RMSDs,"rmsds_seq.dat");
+	return RMSDs;*/
 }
 
 void GetInformativePairsDialog::accept()
 {
+	using std::future;
+	using std::string;
+	using std::map;
 	using Eigen::MatrixXf;
 	using std::async;
 	using namespace pteros;
@@ -133,36 +162,43 @@ void GetInformativePairsDialog::accept()
 					  maxPairs,this);
 	selectionProgress.setWindowModality(Qt::WindowModal);
 	selectionProgress.setMinimumDuration(0);
-	std::future<void> selection(async(std::launch::async,[&,this]{
-		greedySelection(err,Eall,RMSDs,maxPairs);
+	future<pair_list_type> selection(async(std::launch::async,[&,this]{
+		return greedySelection(err,Eall,RMSDs,maxPairs);
 	}));
 	do {
 		QApplication::processEvents();
 		selectionProgress.setValue(pairsDone-1);
 		status = selection.wait_for(std::chrono::milliseconds(20));
 	} while (status != std::future_status::ready);
+	pair_list_type distList=selection.get();
 	selectionProgress.setValue(maxPairs);
+
+	dump_distList(distList,ui->fileEdit->text().toStdString());
+
 	QDialog::accept();
 }
 
-void GetInformativePairsDialog::greedySelection(const float err,
+void GetInformativePairsDialog::setFileName()
+{
+	QString fileName = QFileDialog::getSaveFileName(this, tr("report file"),
+							"", tr("Text file (*.txt);;Any file (*)"));
+	ui->fileEdit->setText(fileName);
+}
+
+GetInformativePairsDialog::pair_list_type GetInformativePairsDialog::greedySelection(const float err,
 						const FRETEfficiencies& Eall,
 						const Eigen::MatrixXf& RMSDs,
 						const int maxPairs) const
 {
-	std::stringstream ss;
-	ss.str(std::string());
-
 	FRETEfficiencies E(err,Eall.conformerCount());
+	pair_list_type result;
 
-	std::cout<<"#\tAdded distance\t<<RMSD>>\n";
 	for (pairsDone=0; pairsDone<maxPairs; ++pairsDone) {
 		int b=E.bestDistance(RMSDs,Eall);
-		ss<<pairsDone+1<<'\t'<<Eall.name(b);
 		E.addDistance(Eall,b);
-		ss<<"\t"<<std::setprecision(2)<<E.rmsdAve(RMSDs)<<std::endl;
-		std::cout<<ss.str();
-		ss.str(std::string());
+		float aveRmsd=E.rmsdAve(RMSDs);
+		result.emplace_back(Eall.name(b),aveRmsd);
 	}
+	return result;
 }
 
