@@ -17,6 +17,7 @@ build-ubuntu16.04:
     expire_in: 1 day
     paths:
       - ${CI_BUILD_NAME}/gui/Olga
+      - ${CI_BUILD_NAME}/irmsd/libirmsd.so
 
 build-win64:
   stage: compile
@@ -33,6 +34,7 @@ build-win64:
     expire_in: 1 day
     paths:
       - ${CI_BUILD_NAME}/gui/release/Olga.exe
+      - ${CI_BUILD_NAME}/irmsd/release/irmsd.dll
 
 
 build-win32:
@@ -50,6 +52,7 @@ build-win32:
     expire_in: 1 day
     paths:
       - ${CI_BUILD_NAME}/gui/release/Olga.exe
+      - ${CI_BUILD_NAME}/irmsd/release/irmsd.dll
 
 pack-win64:
   stage: package
@@ -58,6 +61,7 @@ pack-win64:
     - mkdir -p ./Olga/platforms/
     - mkdir -p ./Olga/imageformats/
     - cp build-win64/gui/release/Olga.exe ./Olga/
+    - cp build-win64/irmsd/release/irmsd.dll ./Olga/
     - "cp /usr/x86_64-w64-mingw32/bin/lib{GLESv2,async++,bz2-1,freetype-6,\
 	gcc_s_seh-1,glib-2.0-0,harfbuzz-0,iconv-2,intl-8,pcre-1,pcre16-0,png16-16,\
 	pteros,pteros_analysis,stdc++-6,tng_io,winpthread-1,\
@@ -85,6 +89,7 @@ pack-win32:
     - mkdir -p ./Olga/platforms/
     - mkdir -p ./Olga/imageformats/
     - cp build-win32/gui/release/Olga.exe ./Olga/
+    - cp build-win32/irmsd/release/irmsd.dll ./Olga/
     - "cp /usr/i686-w64-mingw32/bin/lib{GLESv2,async++,bz2-1,freetype-6,\
 	gcc_s_sjlj-1,glib-2.0-0,harfbuzz-0,iconv-2,intl-8,pcre-1,pcre16-0,\
 	png16-16,pteros,pteros_analysis,stdc++-6,tng_io,winpthread-1,\
