@@ -1,6 +1,8 @@
 #include "GetInformativePairsDialog.h"
 #include "ui_GetInformativePairsDialog.h"
 #include "best_dist.h"
+#include "theobald_rmsd.h"
+#include "center.h"
 #include <pteros/pteros.h>
 #include <QProgressDialog>
 #include <QFileDialog>
@@ -52,26 +54,75 @@ list2str(const GetInformativePairsDialog::pair_list_type &list)
 	return ss.str();
 }
 
+std::vector<float> sys2xyz(const pteros::System& s)
+{
+	std::vector<float> vec;
+	vec.reserve(s.num_atoms()*s.num_frames()*3);
+	for(int fr=0; fr<s.num_frames(); ++fr) {
+		const float* beg=s.Frame_data(fr).coord.data()->data();
+		vec.insert(vec.end(),beg,beg+3*s.num_atoms());
+		/*
+		for(int at=0; at<s.num_atoms(); ++at) {
+			const float* beg=s.Frame_data(fr).coord.at(at).data();
+			vec.insert(vec.end(),beg,beg+3);
+		}*/
+	}
+	return vec;
+}
 
+/*Eigen::MatrixXf rmsds(const pteros::System& s)
+{
+	const int numFrames=s.num_frames();
+	const int nAtoms=s.num_atoms();
+	std::vector<float> xyz=sys2xyz(s);
+	std::vector<float> traces(numFrames);
+	inplace_center_and_trace_atom_major(xyz.data(),traces.data(),
+					    numFrames, nAtoms);
+	Eigen::MatrixXf RMSDs(numFrames,numFrames);
+
+	for (int fr=0; fr<numFrames; ++fr) {
+		for (int j=fr; j<numFrames;++j) {
+			float* coords_fr=xyz.data()+3*fr*nAtoms;
+			float* coords_j=xyz.data()+3*j*nAtoms;
+			RMSDs(fr,j)=msd_atom_major(nAtoms,nAtoms,
+						   coords_fr,coords_j,
+						   traces[fr], traces[j],
+						   0,nullptr);
+			RMSDs(j,fr)=RMSDs(fr,j);
+		}
+	}
+	RMSDs=RMSDs.cwiseSqrt()*10.0f;
+	//dump_rmsds(RMSDs,"rmsds_mdtraj.dat");
+	return RMSDs;
+}*/
 
 Eigen::MatrixXf GetInformativePairsDialog::rmsds(const pteros::System &traj) const
 {
-	using pteros::Selection;
 	const int numFrames=traj.num_frames();
+	const int nAtoms=traj.num_atoms();
+	std::vector<float> xyz=sys2xyz(traj);
+	std::vector<float> traces(numFrames);
+	inplace_center_and_trace_atom_major(xyz.data(),traces.data(),
+					    numFrames, nAtoms);
 	Eigen::MatrixXf RMSDs(numFrames,numFrames);
+
 	rmsdsDone=0;
 
 	std::vector<std::thread> threads(std::thread::hardware_concurrency());
 	const int grainSize=numFrames/threads.size()+1;
 	for(int t=0; t<threads.size(); ++t) {
-		threads[t]=std::thread([&RMSDs,traj,grainSize,numFrames,t,this] {
-			const pteros::System sys=traj;
+		threads[t]=std::thread([=,&RMSDs,&xyz] {
 			const int maxFr=std::min((t+1)*grainSize,numFrames);
-			Selection s(sys,"all");
 			for (int fr=t*grainSize; fr<maxFr; ++fr) {
-				s.fit_trajectory(fr,fr);
 				for (int j=fr; j<numFrames;++j) {
-					RMSDs(fr,j)=RMSDs(j,fr)=s.rmsd(fr,j)*10.0f;
+					const float* xyz_fr=xyz.data()+3*fr*nAtoms;
+					const float* xyz_j=xyz.data()+3*j*nAtoms;
+					RMSDs(fr,j)=msd_atom_major(nAtoms,nAtoms,
+								   xyz_fr,xyz_j,
+								   traces[fr],
+								   traces[j],
+								   0,nullptr);
+					RMSDs(j,fr)=RMSDs(fr,j);
 				}
 				rmsdsDone+=numFrames-fr;
 			}
@@ -81,10 +132,10 @@ Eigen::MatrixXf GetInformativePairsDialog::rmsds(const pteros::System &traj) con
 		t.join();
 	}
 
-	return RMSDs;
+	return RMSDs.cwiseSqrt()*10.0f;
 
 
-	/*Selection s(traj,"all");
+	/*pteros::Selection s(traj,"all");
 	for(int i=0; i<numFrames; ++i) {
 		s.fit_trajectory(i,i);
 		for (int j=i; j<numFrames;++j) {
@@ -132,7 +183,7 @@ void GetInformativePairsDialog::accept()
 				     numRmsds,this);
 	rmsdProgress.setWindowModality(Qt::WindowModal);
 	rmsdProgress.setMinimumDuration(0);
-	//auto start = std::chrono::system_clock::now();
+//	auto start = std::chrono::system_clock::now();
 	std::future<MatrixXf> fRmsds(async(std::launch::async,[&,this]{
 		return rmsds(traj);
 	}));
@@ -143,8 +194,8 @@ void GetInformativePairsDialog::accept()
 		status = fRmsds.wait_for(std::chrono::milliseconds(20));
 	} while (status != std::future_status::ready);
 	MatrixXf RMSDs=fRmsds.get();
-	/*std::chrono::duration<double> diff = std::chrono::system_clock::now()-start;
-	std::cout<<"\n\nrmsds/s: "+std::to_string(numRmsds/diff.count())<<std::endl;*/
+//	std::chrono::duration<double> diff = std::chrono::system_clock::now()-start;
+//	std::cout<<"\n\nrmsds/s: "+std::to_string(numRmsds/diff.count())<<std::endl;
 	rmsdProgress.setValue(numRmsds);
 
 	const int maxPairs=std::min(Eall.distanceCount(),numPairsMax);

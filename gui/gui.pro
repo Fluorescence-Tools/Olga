@@ -7,6 +7,16 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = Olga
 TEMPLATE = app
 
+
+INCLUDEPATH += $$PWD/irmsd
+DEPENDPATH += $$PWD/irmsd
+DEPENDPATH += . ../irmsd
+INCLUDEPATH += ../irmsd
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../irmsd/release/ -lirmsd
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../irmsd/debug/ -lirmsd
+else:unix: LIBS += -L$$OUT_PWD/../irmsd/ -lirmsd
+
 RESOURCES += \
     icons.qrc
 

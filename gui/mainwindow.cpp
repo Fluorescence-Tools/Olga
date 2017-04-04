@@ -580,6 +580,9 @@ void MainWindow::pasteText(QAbstractItemView *view) const
 		cells.pop_back(); // strip empty trailing tokens
 
 	int rows = text.count(QLatin1Char('\n'));
+	if (rows==0) {
+		return;
+	}
 	int cols = cells.size() / rows;
 
 	if (cells.size() % rows != 0) {
