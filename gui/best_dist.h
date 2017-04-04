@@ -33,6 +33,75 @@ void printTimes()
 	std::cout<<"total: "<<tot<<std::endl;
 }
 
+Eigen::VectorXf marginalP(const Eigen::VectorXf& X, const float width)
+{
+	const float minX=X.minCoeff();
+	const float maxX=X.maxCoeff();
+	const int binsX=(maxX-minX)/width+1;
+	Eigen::VectorXf pX(binsX);
+	pX.setZero();
+	const int sizeX=X.size();
+	for(int i=0; i<sizeX; ++i) {
+		const int ix=(X[i]-minX)/width;
+		++pX(ix);
+	}
+	return pX/pX.sum();
+}
+Eigen::MatrixXf jointP(const Eigen::VectorXf& X, const Eigen::VectorXf& Y, const float width)
+{
+	const float minX=X.minCoeff();
+	const float maxX=X.maxCoeff();
+	const float minY=Y.minCoeff();
+	const float maxY=Y.maxCoeff();
+	const int binsX=(maxX-minX)/width+1;
+	const int binsY=(maxY-minY)/width+1;
+
+	Eigen::MatrixXf pXY(binsX,binsY);
+	pXY.setZero();
+	for (int i=0; i<X.size(); ++i) {
+		int x=(X[i]-minX)/width;
+		int y=(Y[i]-minY)/width;
+		++pXY(x,y);
+	}
+	return pXY/pXY.sum();
+}
+
+float MI(const Eigen::VectorXf& X, const Eigen::VectorXf& Y, const float width)
+{
+	Eigen::VectorXf pX=marginalP(X,width), pY=marginalP(Y,width);
+	Eigen::MatrixXf pXY=jointP(X,Y,width);
+	const int binsX=pX.size();
+	const int binsY=pY.size();
+
+	using std::log2;
+	float mi=0.0f;
+	for (int y=0; y<binsY; ++y) {
+		for (int x=0; x<binsX; ++x) {
+			const float& pxy=pXY(x,y);
+			mi+=pxy>0.0f?pxy*log2(pxy/(pX(x)*pY(y))):0.0f;
+		}
+	}
+	return mi;
+}
+
+float Hcond(const Eigen::VectorXf& Y, const Eigen::VectorXf& X, const float width)
+{
+	Eigen::VectorXf pX=marginalP(X,width);
+	Eigen::MatrixXf pXY=jointP(X,Y,width);
+	const int binsX=pXY.rows();
+	const int binsY=pXY.cols();
+
+	using std::log2;
+	float hc=0.0f;
+	for (int y=0; y<binsY; ++y) {
+		 for (int x=0; x<binsX; ++x) {
+			const float& pxy=pXY(x,y);
+			hc+=pxy>0.0f?pxy*log2(pX(x)/pxy):0.0f;
+		}
+	}
+	return hc;
+}
+
 double chi2CdfApprox(const unsigned ndof, const double chi2)
 {
 	using boost::math::chi_squared;
@@ -139,6 +208,16 @@ public:
 		_chi2.setZero();
 		_nPoints.setZero();
 	}
+	std::string testMI(int c1, int c2)
+	{
+		const VectorXf& X=E.col(c1);
+		const VectorXf& Y=E.col(c2);
+		std::stringstream ss;
+		ss<<"\nX:\n"<<X.transpose()<<"\nY:\n"<<Y.transpose()
+		 <<"\nMI: "<<MI(X,Y,0.06)<<"\nHcond: "<<Hcond(Y,X,0.06);
+		return ss.str();
+	}
+
 	void dumpState(const string& fname) const
 	{
 		std::ofstream os;
@@ -230,6 +309,44 @@ public:
 		MatrixXf chi2=_chi2;
 		chi2.triangularView<Eigen::StrictlyLower>().setZero();
 		os<<chi2;
+	}
+	int bestDistanceMI(const FRETEfficiencies& Eall) const
+	{
+		if(E.cols()==0) {
+			return -1;
+		}
+		const int numColsTest=Eall.E.cols();
+		const int numColsCurrent=E.cols();
+		Eigen::MatrixXf hc(numColsCurrent,numColsTest);
+		for(int dTest=0; dTest<numColsTest; ++dTest) {
+			for (int dCur=0; dCur<numColsCurrent; ++dCur) {
+				hc(dCur,dTest)=Hcond(Eall.E.col(dTest),E.col(dCur),err);
+			}
+		}
+
+		Eigen::VectorXf::Index maxIndex;
+		hc.colwise().minCoeff().maxCoeff(&maxIndex);
+
+		/*std::stringstream ss;
+		ss<<"\nHC:\n";
+		for (int dTest=0; dTest<numColsTest; ++dTest) {
+			ss<<Eall.name(dTest)<<"\t";
+		}
+		ss<<"\n";
+		for (int dCur=0; dCur<numColsCurrent; ++dCur) {
+			ss<<name(dCur);
+			for(int dTest=0; dTest<numColsTest; ++dTest)
+				ss<<"\t"<<hc(dCur,dTest);
+			ss<<"\n";
+		}
+		ss<<"selected: "<<Eall.name(maxIndex)<<"\n"<<Eall.E.col(maxIndex).transpose();
+		ss<<"\nHc:\n";
+		for(int i=0; i<numColsCurrent; ++i) {
+			ss<<name(i)<<"\t"<<hc(i,maxIndex)<<"\n";
+		}
+		std::cout<<ss.str();*/
+
+		return maxIndex;
 	}
 	int bestDistance(const Eigen::MatrixXf& rmsds, const FRETEfficiencies& Eall) const
 	{

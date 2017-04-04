@@ -38,9 +38,8 @@ void dump_rmsds(const Eigen::MatrixXf& m, const std::string& fname)
 		outfile<<"\n";
 	}
 }
-void GetInformativePairsDialog::
-dump_distList(const GetInformativePairsDialog::pair_list_type &list,
-	     const std::string &fname)
+std::string GetInformativePairsDialog::
+list2str(const GetInformativePairsDialog::pair_list_type &list)
 {
 	std::stringstream ss;
 	ss<<"#\tAdded distance\t<<RMSD>>\n";
@@ -50,19 +49,10 @@ dump_distList(const GetInformativePairsDialog::pair_list_type &list,
 		ss<<i<<"\t"<<list[i].first<<"\t"<<list[i].second<<"\n";
 	}
 
-	if(fname.empty()) {
-		std::cout<<ss.str();
-	} else {
-		outfile.open(fname, std::ifstream::out);
-		if(!outfile.is_open())
-		{
-			std::cerr<<"Warning! could not open file for saving: "
-				   +fname+"\n"<<std::flush;
-			return;
-		}
-		outfile<<ss.str();
-	}
+	return ss.str();
 }
+
+
 
 Eigen::MatrixXf GetInformativePairsDialog::rmsds(const pteros::System &traj) const
 {
@@ -172,8 +162,28 @@ void GetInformativePairsDialog::accept()
 	} while (status != std::future_status::ready);
 	pair_list_type distList=selection.get();
 	selectionProgress.setValue(maxPairs);
+	std::string selReport=list2str(distList);
 
-	dump_distList(distList,ui->fileEdit->text().toStdString());
+	distList=miSelection(err,Eall,RMSDs,maxPairs);
+	std::string miReport=list2str(distList);
+
+	std::string fname=ui->fileEdit->text().toStdString();
+	auto report="Greedy selection:\n"+selReport
+		    +"\nMutual Information selection:\n"+miReport;
+
+	if(fname.empty()) {
+		std::cout<<report;
+	} else {
+		std::ofstream outfile(fname, std::ifstream::out);
+		if(!outfile.is_open())
+		{
+			std::cerr<<"Warning! could not open file for saving: "
+				   +fname+"\n"<<std::flush;
+			return;
+		}
+		outfile<<report;
+	}
+
 
 	QDialog::accept();
 }
@@ -186,9 +196,9 @@ void GetInformativePairsDialog::setFileName()
 }
 
 GetInformativePairsDialog::pair_list_type GetInformativePairsDialog::greedySelection(const float err,
-						const FRETEfficiencies& Eall,
-						const Eigen::MatrixXf& RMSDs,
-						const int maxPairs) const
+										     const FRETEfficiencies& Eall,
+										     const Eigen::MatrixXf& RMSDs,
+										     const int maxPairs) const
 {
 	FRETEfficiencies E(err,Eall.conformerCount());
 	pair_list_type result;
@@ -202,3 +212,23 @@ GetInformativePairsDialog::pair_list_type GetInformativePairsDialog::greedySelec
 	return result;
 }
 
+GetInformativePairsDialog::pair_list_type GetInformativePairsDialog::
+miSelection(const float err, const FRETEfficiencies &Eall,
+	    const Eigen::MatrixXf &RMSDs, const int maxPairs) const
+{
+	FRETEfficiencies E(err,Eall.conformerCount());
+	pair_list_type result;
+
+	int b=E.bestDistance(RMSDs,Eall);
+	E.addDistance(Eall,b);
+	float aveRmsd=E.rmsdAve(RMSDs);
+	result.emplace_back(Eall.name(b),aveRmsd);
+
+	for (int i=1; i<maxPairs; ++i) {
+		b=E.bestDistanceMI(Eall);
+		E.addDistance(Eall,b);
+		float aveRmsd=E.rmsdAve(RMSDs);
+		result.emplace_back(Eall.name(b),aveRmsd);
+	}
+	return result;
+}
