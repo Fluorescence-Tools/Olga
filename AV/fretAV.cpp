@@ -262,7 +262,7 @@ path2points(const std::vector<float>& pathL,
 			}
 		}
 	}
-	if (contactR>0.0 &&  trappedFrac>=0.0) {
+	if (points.size()>0 && contactR>0.0 &&  trappedFrac>=0.0) {
 		const float freeFrac=1.0f-trappedFrac;
 		const float volTrapped=trappedPointIndexes.size();
 		const float volFree=points.size()-volTrapped;
