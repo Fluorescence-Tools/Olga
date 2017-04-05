@@ -297,8 +297,17 @@
     <addaction name="actionAddEfficiencyBatch"/>
     <addaction name="actionGetInformativePairs"/>
    </widget>
+   <widget class="QMenu" name="menuExtras">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="title">
+     <string>Extras</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuWizards"/>
+   <addaction name="menuExtras"/>
   </widget>
   <widget class="QDockWidget" name="infologDockWidget">
    <property name="windowTitle">

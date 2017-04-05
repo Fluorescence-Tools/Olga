@@ -43,6 +43,12 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 
 	ui->setupUi(this);
 
+	ui->menuExtras->menuAction()->setVisible(false);
+	if(QFileInfo("enableExtras").exists()) {
+		ui->menuExtras->menuAction()->setVisible(true);
+		ui->menuExtras->setEnabled(true);
+	}
+
 	ui->evalTypeAddComboBox->addItems(_storage.supportedTypes());
 
 	evaluatorsDelegate = new EvaluatorDelegate(ui->evaluatorsTreeView);
