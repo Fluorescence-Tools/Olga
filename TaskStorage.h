@@ -175,7 +175,7 @@ public:
 	QStringList supportedTypes() const;
 	std::vector<MutableEvalPtr> loadEvaluators(const QVariantMap& settings);
 	bool ready() const {
-		return _requests.empty();
+		return !(tasksPendingCount()+tasksRunningCount());
 	}
 	Pause pause() const {
 		return Pause(*this);

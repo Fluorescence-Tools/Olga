@@ -736,7 +736,7 @@ void MainWindow::getInfromativePairs()
 			return;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(25));
-	} while(_storage.tasksPendingCount());
+	} while(!_storage.ready());
 	progress.setValue(tasksCount);
 
 	Eigen::MatrixXf effs(frames.size(),evalIds.size());
