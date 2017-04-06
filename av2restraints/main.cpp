@@ -371,17 +371,9 @@ int main(int argc, char *argv[])
 
 	//get all the AV and Distance Evaluator ids.
 	vector<EvalId> avs, distances;
-	for(const auto& pair:storage.evals()) {
-		if(storage.isStub(pair.first)) {
-			continue;
-		}
-		if(pair.second->className()=="Distances") {
-			distances.push_back(pair.first);
-		}
-		if(pair.second->className()=="Positions") {
-			avs.push_back(pair.first);
-		}
-	}
+	avs=storage.evalIds<EvaluatorPositionSimulation>();
+	distances=storage.evalIds<EvaluatorDistance>();
+
 	const int numDUAtoms=selDU.size();
 	std::cout<<numDUAtoms<<" DU atoms, "<<avs.size()<<" positions and "<<distances.size()<<" distances"<<std::endl;
 

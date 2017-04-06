@@ -105,7 +105,8 @@ public:
 		std::vector<EvalId> list;
 		//T eval(_storage,"none");
 		for(const auto& pair:_evals) {
-			if(pair.first<=_maxStubEval) {
+
+			if(isStub(pair.first)) {
 				continue;
 			}
 			if(dynamic_cast<const T*>(pair.second.get())) {
