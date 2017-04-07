@@ -188,18 +188,17 @@ bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
 	return false;
 }
 
-QByteArray TrajectoriesTreeModel::tabSeparatedData() const
+void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream& out) const
 {
-	QString tsv;
 	QModelIndex start=index(0,0);
 	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1,
 					Qt::MatchWildcard|Qt::MatchRecursive);
 	int numCols=columnCount();
 	for(int c=0;c<numCols; c++)
 	{
-		tsv+=headerData(c,Qt::Horizontal).toString()+"\t";
+		out<<headerData(c,Qt::Horizontal).toString()+"\t";
 	}
-	tsv+="\n";
+	out<<"\n";
 	for(const auto& idx:indexes)
 	{
 		TrajectoriesTreeItem *parentItem;
@@ -207,14 +206,13 @@ QByteArray TrajectoriesTreeModel::tabSeparatedData() const
 		if(parentItem->nesting()<2) {
 			continue;
 		}
-		tsv+=data(parent(idx)).toString()+" ";
+		out<<data(parent(idx)).toString()+" ";
 		for(int c=0;c<numCols; c++)
 		{
-			tsv+=data(idx.sibling(idx.row(),c)).toString()+"\t";
+			out<<data(idx.sibling(idx.row(),c)).toString()+"\t";
 		}
-		tsv+="\n";
+		out<<"\n";
 	}
-	return tsv.toUtf8();
 }
 
 const TrajectoriesTreeItem* TrajectoriesTreeModel::childItem(const TrajectoriesTreeItem *parent, unsigned childRow) const

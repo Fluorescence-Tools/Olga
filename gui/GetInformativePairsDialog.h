@@ -30,7 +30,7 @@ public Q_SLOTS:
 	void setFileName();
 private:
 	const std::vector<FrameDescriptor> frames;
-	const Eigen::MatrixXf effs;
+	const Eigen::MatrixXf& effs;
 	const std::vector<std::string> evalNames;
 	Ui::GetInformativePairsDialog *ui;
 

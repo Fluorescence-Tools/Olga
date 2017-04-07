@@ -47,7 +47,7 @@ public:
 	{
 		return QStringList();//TODO: implement
 	}
-	QByteArray tabSeparatedData() const;
+	void dumpTabSeparatedData(QTextStream& out) const;
 	int tasksRunningCount() const
 	{
 		return _storage.tasksRunningCount();

@@ -376,8 +376,8 @@ bool MainWindow::exportData(const QString &fileName)
 				     .arg(file.errorString()));
 		return false;
 	}
-
-	file.write(trajectoriesModel.tabSeparatedData());
+	QTextStream out(&file);
+	trajectoriesModel.dumpTabSeparatedData(out);
 	statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
 	return true;
 }

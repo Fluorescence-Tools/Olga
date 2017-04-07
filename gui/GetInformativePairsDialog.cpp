@@ -193,7 +193,7 @@ void GetInformativePairsDialog::accept()
 		rmsdProgress.setValue(rmsdsDone-1);
 		status = fRmsds.wait_for(std::chrono::milliseconds(20));
 	} while (status != std::future_status::ready);
-	MatrixXf RMSDs=fRmsds.get();
+	const MatrixXf& RMSDs=fRmsds.get();
 //	std::chrono::duration<double> diff = std::chrono::system_clock::now()-start;
 //	std::cout<<"\n\nrmsds/s: "+std::to_string(numRmsds/diff.count())<<std::endl;
 	rmsdProgress.setValue(numRmsds);
