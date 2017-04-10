@@ -24,7 +24,7 @@ CONFIG(release, debug|release): DEFINES+=NDEBUG
 QMAKE_CXXFLAGS += -std=c++11 -fext-numeric-literals -Wextra -Winit-self -Wold-style-cast \
 -Woverloaded-virtual -Wuninitialized -Winit-self -pedantic-errors -Wno-attributes#-Werror
 
-LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io #-lyomm11
+LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io -ltcmalloc #-lyomm11
 
 INCLUDEPATH += $$PWD
 VPATH += $$PWD

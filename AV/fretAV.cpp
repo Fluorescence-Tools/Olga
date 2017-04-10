@@ -191,10 +191,18 @@ std::vector<float> pathLength(const std::vector<bool>& occupancyVdWL)
 	vector<float> pathL(occupancyVdWL.size(), std::numeric_limits<float>::max());
 	pathL[sourceVertex] = 0;
 
+
+	using queue_entry_t=std::pair<float, int> ;
+
+	std::vector<queue_entry_t> queContainer;
+	queContainer.reserve(8192);
+	std::priority_queue<queue_entry_t, std::vector<queue_entry_t>, std::greater<queue_entry_t>> que (
+	    std::greater<queue_entry_t>(), std::move(queContainer));
+
 	//it is possible to improve performance 10-20%
 	//by using more efficient heap/queue implementation like radix heap
-	using queue_entry_t=std::pair<float, int> ;
-	std::priority_queue<queue_entry_t, vector<queue_entry_t>, std::greater<queue_entry_t>> que;
+
+	//std::priority_queue<queue_entry_t, vector<queue_entry_t>, std::greater<queue_entry_t>> que;
 	que.emplace(0.0f, sourceVertex);
 	std::vector<edge_t> neigbours;
 	while (!que.empty()) {
