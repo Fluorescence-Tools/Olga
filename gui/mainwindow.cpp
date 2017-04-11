@@ -327,7 +327,9 @@ void MainWindow::loadEvaluators(const QString &fileName)
 	}
 
 	auto pause=_storage.pause();
+	QApplication::setOverrideCursor(Qt::WaitCursor);
 	evalsModel.loadEvaluators(evalsData);
+	QApplication::restoreOverrideCursor();
 
 	/*QJsonObject positionsListObj=docObj.value("Positions").toObject();
 		   positionsModel.load(positionsListObj);
@@ -430,7 +432,6 @@ bool MainWindow::saveJson()
 {
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Settings"), "untitled.fps.json",
 							tr("FPS settings (*.fps.json);;Any file (*)"));
-
 	if (fileName.isEmpty()) {
 		return false;
 	}
