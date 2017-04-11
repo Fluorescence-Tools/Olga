@@ -4,6 +4,7 @@
 
 #include <QFileInfo>
 #include <QTimer>
+#include <QProgressDialog>
 
 #include "TrajectoriesTreeModel.h"
 #include "EvaluatorTrasformationMatrix.h"
@@ -168,6 +169,9 @@ int TrajectoriesTreeModel::columnCount(const QModelIndex &/*parent*/) const
 
 bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
 {
+	if (fileName.isEmpty()) {
+		return false;
+	}
 	MolecularTrajectory tmpTrj;
 	auto fileNamePtr=std::make_shared<std::string>(fileName.toStdString());
 	tmpTrj.setTopology(fileNamePtr);
@@ -186,6 +190,64 @@ bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
 		return true;
 	}
 	return false;
+}
+
+void TrajectoriesTreeModel::loadSystems(const QStringList &fileNames)
+{
+	/*		auto now=chrono::steady_clock::now();
+		auto diff = now - prevUpd;
+		if(chrono::duration <double, milli> (diff).count()>20) {
+			progress.setValue(i);
+			prevUpd=now;
+		}*/
+	const int rawSize=fileNames.size();
+	QProgressDialog progress("Checking files...","Cancel",0,rawSize);
+	progress.setWindowModality(Qt::WindowModal);
+
+	//prepare trajectories
+	QVector<MolecularTrajectory> tmpTrajVec;
+	for(int i=0; i<rawSize; ++i) {
+		const QString& fileName=fileNames[i];
+		if(fileName.isEmpty()) {
+			continue;
+		}
+		MolecularTrajectory tmpTrj;
+		auto fileNamePtr=std::make_shared<std::string>(fileName.toStdString());
+		tmpTrj.setTopology(fileNamePtr);
+		if(tmpTrj.addPdbChunk(fileNamePtr)) {
+			tmpTrajVec.push_back(tmpTrj);
+		}
+		progress.setValue(i);
+	}
+
+	//insert Rows
+	const int size=tmpTrajVec.size();
+	progress.setLabelText("Inserting rows");
+	progress.setValue(0);
+	progress.setMaximum(size);
+
+	const int firstTraj=_molTrajs.size();
+	const int lastTraj=_molTrajs.size()+size-1;
+	beginInsertRows(QModelIndex(),firstTraj,lastTraj);
+	_molTrajs.append(std::move(tmpTrajVec));
+	endInsertRows();
+
+	//evaluate
+	progress.setLabelText("Submitting jobs");
+	progress.setValue(0);
+	progress.setMaximum(size);
+
+	std::set<EvalId> evIds;
+	for(const CalcColumn& cc:_columns) {
+		EvalId evId=cc.first;
+		evIds.emplace(evId);
+	}
+	for(int i=firstTraj; i<=lastTraj; ++i) {
+		_storage.evaluate(_molTrajs[i].descriptor(0,0),
+				  std::vector<EvalId>(evIds.begin(),evIds.end()));
+		progress.setValue(i-firstTraj);
+	}
+	progress.setValue(size);
 }
 
 void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream& out) const

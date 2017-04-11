@@ -38,6 +38,7 @@ public:
 	int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
 	bool loadSystem(const QString& fileName);
+	void loadSystems(const QStringList& fileNames);
 	bool exportSystem(int row, const QString& filename)
 	{
 		(void)row; (void)filename;
