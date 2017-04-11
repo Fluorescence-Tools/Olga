@@ -101,7 +101,6 @@ const TaskStorage::Task& TaskStorage::makeTask(const CacheKey &key, bool persist
 	assert(tid==std::this_thread::get_id());
 	//append a new job
 	Task& task=_tasks.emplace(key,eval(key.second).makeTask(key.first)).first->second;
-
 	pushTask(key);
 	_tasksRunning++;
 
@@ -110,6 +109,7 @@ const TaskStorage::Task& TaskStorage::makeTask(const CacheKey &key, bool persist
 		if(persistent) {
 			try{
 				_results.insert(key,tres.get());
+
 			}
 			catch (...) {
 				std::cerr<<"ERROR! Task is invalid (exception): "
@@ -373,6 +373,10 @@ EvalId TaskStorage::addEvaluator(EvalUPtr evptr)
 	_evals.emplace(++_currentId,std::move(evptr));
 	_evalNames.emplace(eval(_currentId).name(),_currentId);
 	Q_EMIT evaluatorAdded(_currentId);
+	_tasksRingBufSize=std::max(_tasksRingBufSize,_evals.size()*2);
+	if(_tasksRingBufSize>_tasksRingBuf.size()) {
+		_tasksRingBuf.resize(_tasksRingBufSize);
+	}
 	return _currentId;
 }
 

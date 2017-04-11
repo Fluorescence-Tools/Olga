@@ -238,7 +238,7 @@ private:
 	const int _maxRunningCount=_minRunningCount*2;
 	mutable std::unordered_map<CacheKey,Task> _tasks;
 	mutable std::atomic<int> _tasksRunning{0};
-	const size_t _tasksRingBufSize=_maxRunningCount*3;
+	size_t _tasksRingBufSize=_maxRunningCount*3;
 	mutable std::vector<CacheKey> _tasksRingBuf;
 	mutable size_t _tasksRBpos=0;
 
