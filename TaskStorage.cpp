@@ -60,6 +60,9 @@ TaskStorage::~TaskStorage()
 {
 	_runRequests.clear();
 	_runRequestsThread.join();
+	while(tasksRunningCount()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(25));
+	}
 }
 
 //must only run in worker thread
