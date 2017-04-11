@@ -524,7 +524,7 @@ QVariantMap EvaluatorsTreeModel::evaluators() const
 		const QString& className=QString::fromStdString(eval->className());
 		QVariantMap props=_storage.propMap(*eval);
 		props["isDraft"]=true;
-		classMap[className][evName]=_storage.propMap(*eval);
+		classMap[className][evName]=props;
 	}
 	QVariantMap settings;
 	QMap<QString,QVariantMap>::const_iterator i = classMap.constBegin();
