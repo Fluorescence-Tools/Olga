@@ -237,11 +237,13 @@ path2points(const std::vector<float>& pathL,
 	const int vol=std::pow(edgeL,3);
 	const int center=edgeL2center(edgeL);
 
-	auto contactNeis=deltaIlist(contactR/discretizationStep,edgeL);
-	std::vector<int> trappedPointIndexes;
+	const auto contactNeis=deltaIlist(contactR/discretizationStep,edgeL);
+	vector<int> trappedPointIndexes;
+	trappedPointIndexes.reserve(vol/8);
 
 	const float maxVerthexL=maxRealLength/discretizationStep;
 	vector<Vector4f> points;
+	points.reserve(vol/4);
 	int vertex=0;
 	for (int x=0; x<edgeL; ++x) {
 		for (int y=0; y<edgeL; ++y) {
@@ -260,7 +262,7 @@ path2points(const std::vector<float>& pathL,
 						if(nei>=0 && nei<vol) {
 							if(occupancyVdWDye[nei]==true) {
 								//r[3]=contactW;
-								trappedPointIndexes.push_back(points.size()-1);
+								trappedPointIndexes.emplace_back(points.size()-1);
 								break;
 							}
 						}

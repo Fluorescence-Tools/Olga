@@ -9,7 +9,7 @@ QMAKE_CXXFLAGS_RELEASE -= -std=c++0x
 QMAKE_CXXFLAGS_RELEASE *= -O2 -march=native -flto #-fwhole-program
 QMAKE_LFLAGS -= -O1
 QMAKE_LFLAGS -= -std=c++0x
-QMAKE_LFLAGS *= -O2 -flto #-fwhole-program
+QMAKE_LFLAGS *= -ltcmalloc_minimal -O2 -flto #-fwhole-program
 
 COMMIT_DATE = $$system(git show -s --pretty='%ci')
 COMMIT_DATE = $$first(COMMIT_DATE)
@@ -24,7 +24,7 @@ CONFIG(release, debug|release): DEFINES+=NDEBUG
 QMAKE_CXXFLAGS += -std=c++11 -fext-numeric-literals -Wextra -Winit-self -Wold-style-cast \
 -Woverloaded-virtual -Wuninitialized -Winit-self -pedantic-errors -Wno-attributes#-Werror
 
-LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io -ltcmalloc_minimal #-lyomm11
+LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io #-lyomm11
 
 INCLUDEPATH += $$PWD
 VPATH += $$PWD

@@ -6,7 +6,7 @@ std::shared_ptr<AbstractCalcResult> EvaluatorPositionSimulation::calculate(const
 	PositionSimulationResult res=_position.calculate(system);
 	if(res.empty()) {
 		std::cerr<<frame.fullName()+" simulation "+_position.name()+" failed: empty AV\n";
-		std::cerr.flush();
+		//std::cerr.flush();
 	}
 	/*std::string fname=_position.name();
 	std::replace(fname.begin(),fname.end(),'/','_');
