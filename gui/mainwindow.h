@@ -57,6 +57,8 @@ private Q_SLOTS:
 	void addDistanceBatch();
 	void addEfficiencyBatch();
 	void getInfromativePairs();
+
+	void setPaused(bool state=true);
 private:
 	QString timespan(unsigned seconds);
 
@@ -70,8 +72,7 @@ private:
 
 	void loadStructuresFolder(const QString& path);
 	void loadEvaluators(const QString& fileName);
-	bool exportData(const QString& fileName)
-;
+	bool exportData(const QString& fileName);
 
 private:
 	Ui::MainWindow *ui;
@@ -89,6 +90,8 @@ private:
 	//DistanceDelegate distanceDelegate;
 
 	QLabel tasksStatus;
+
+	std::unique_ptr<TaskStorage::Pause> _pause;
 
 };
 

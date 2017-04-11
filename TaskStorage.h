@@ -75,15 +75,14 @@ class TaskStorage:public QObject
 	//TODO: specify functions instead;
 
 	mutable std::atomic<int> _pauseCount{0};
+public:
 	class Pause {
 		friend class TaskStorage;
-	private:
-		const TaskStorage& _storage;
-		Pause(const TaskStorage& storage):_storage(storage){++_storage._pauseCount;}
 	public:
-		~Pause(){--_storage._pauseCount;}
+		const TaskStorage& _storage;
+		Pause(const TaskStorage& storage):_storage(storage){++_storage._pauseCount; std::cout<<"paused: "+std::to_string(_storage._pauseCount)+"\n"<<std::flush;}
+		~Pause(){--_storage._pauseCount; std::cout<<"pause released: "+std::to_string(_storage._pauseCount)+"\n"<<std::flush;}
 	};
-public:
 	TaskStorage();
 	~TaskStorage();
 	using CacheKey=::CacheKey;
@@ -180,6 +179,9 @@ public:
 	}
 	Pause pause() const {
 		return Pause(*this);
+	}
+	std::unique_ptr<Pause> pausePtr() const {
+		return std::make_unique<Pause>(*this);
 	}
 
 Q_SIGNALS:

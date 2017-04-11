@@ -94,6 +94,7 @@
    <addaction name="actionLoadSettings"/>
    <addaction name="actionSaveSettings"/>
    <addaction name="actionExportData"/>
+   <addaction name="actionPauseExecution"/>
    <addaction name="separator"/>
    <addaction name="actionAbout"/>
   </widget>
@@ -505,6 +506,18 @@
     <string>Add multiple FRET efficiencies</string>
    </property>
   </action>
+  <action name="actionPauseExecution">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/pause.svg</normaloff>:/icons/pause.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Pause execution</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
@@ -747,6 +760,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionPauseExecution</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>setPaused(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>356</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>loadEvaluators()</slot>
@@ -762,5 +791,6 @@
   <slot>addDistanceBatch()</slot>
   <slot>getInfromativePairs()</slot>
   <slot>addEfficiencyBatch()</slot>
+  <slot>setPaused(bool)</slot>
  </slots>
 </ui>

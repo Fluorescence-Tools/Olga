@@ -259,6 +259,7 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
 void MainWindow::loadMolecules(const QStringList &fileNames)
 {
 	using namespace std;
+	auto pause=_storage.pause();
 	const int size=fileNames.size();
 	QProgressDialog progress("Opening files...","Cancel",0,size,this);
 	progress.setWindowModality(Qt::WindowModal);
@@ -337,7 +338,7 @@ void MainWindow::loadEvaluators(const QString &fileName)
 		evalsData=doc.toVariant().toMap();
 	}
 
-
+	auto pause=_storage.pause();
 	evalsModel.loadEvaluators(evalsData);
 
 	/*QJsonObject positionsListObj=docObj.value("Positions").toObject();
@@ -380,6 +381,16 @@ bool MainWindow::exportData(const QString &fileName)
 	trajectoriesModel.dumpTabSeparatedData(out);
 	statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
 	return true;
+}
+
+void MainWindow::setPaused(bool state)
+{
+
+	if(state) {
+		_pause=_storage.pausePtr();
+	} else if(_pause){
+		_pause.reset();
+	}
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
