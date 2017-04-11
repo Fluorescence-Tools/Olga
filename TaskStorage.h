@@ -185,8 +185,13 @@ public:
 	}
 	std::string bufferStats() const {
 		std::string sz;
-		sz+="_requests:\n"+mapStats(_requests);
-		sz+="_results:\n"+mapStats(_results);
+		sz+="_requests:\n"+cuckooMapStats(_requests);
+		sz+="\n_results:\n"+cuckooMapStats(_results);
+		sz+="\n_tasks:\n"+uoMapStats(_tasks);
+		sz+="\n_sysCache:\n"+uoMapStats(_sysCache);
+		sz+="\n_tasksRingBuf\n"+vectorStats(_tasksRingBuf);
+		sz+="\n_sysRingBuf\n"+vectorStats(_sysRingBuf);
+		sz+="\n_requestQueue.size_approx() = "+std::to_string(_requestQueue.size_approx());
 		return sz;
 	}
 
@@ -195,7 +200,7 @@ Q_SIGNALS:
 	void evaluatorIsGoingToBeRemoved(EvalId evId);
 private:
 	template<typename T>
-	static std::string mapStats(const T& map) {
+	static std::string cuckooMapStats(const T& map) {
 		std::string sz;
 		using std::to_string;
 		sz+="size() = "+to_string(map.size())+"\n";
@@ -205,7 +210,23 @@ private:
 		sz+="slot_per_bucket() = "+to_string(map.slot_per_bucket())+"\n";
 		return sz;
 	}
-
+	template<typename T>
+	static std::string uoMapStats(const T& map) {
+		std::string sz;
+		using std::to_string;
+		sz+="size() = "+to_string(map.size())+"\n";
+		sz+="bucket_count() = "+to_string(map.bucket_count())+"\n";
+		sz+="load_factor() = "+to_string(map.load_factor())+"\n";
+		return sz;
+	}
+	template<typename T>
+	static std::string vectorStats(const T& vec) {
+		std::string sz;
+		using std::to_string;
+		sz+="size() = "+to_string(vec.size())+"\n";
+		sz+="capacity() = "+to_string(vec.capacity())+"\n";
+		return sz;
+	}
 	void removeResults(const EvalId& id) {
 		//TODO:implement
 	}
