@@ -634,9 +634,23 @@ void MainWindow::expand(const QModelIndex &parentIndex, int first, int last)
 }
 void MainWindow::showAbout()
 {
-	QMessageBox::about(this, "SRHDDumpReader",
-			   QString("Olga v. %1\nMykola Dimura, dimura@hhu.de\n")
-			   .arg(QApplication::applicationVersion()));
+	QMessageBox about(this);
+	about.setWindowTitle("Olga");
+	about.setTextFormat(Qt::RichText);
+	about.setStandardButtons(QMessageBox::Ok);
+	QString msg="Olga v. %1<br>"
+		    "Mykola Dimura, dimura@hhu.de<br>"
+		    "If you use this software for scientific purposes,<br>"
+		    "please cite:<br>"
+		    "Dimura, M., Peulen, T.O., Hanke, C.A., Prakash, A.,<br>"
+		    "Gohlke, H. and Seidel, C.A., 2016.<br>"
+		    "Current Opinion in Structural Biology, 40, pp.163-185.<br>"
+		    "<a href='http://doi.org/10.1016/j.sbi.2016.11.012'>"
+		    "doi:10.1016/j.sbi.2016.11.012</a>";
+	msg=msg.arg(QApplication::applicationVersion());
+	about.setText(msg);
+	about.exec();
+//	QMessageBox::about(this, "Olga",msg);
 }
 
 void MainWindow::addLpBatch()
