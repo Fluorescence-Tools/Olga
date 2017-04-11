@@ -80,8 +80,8 @@ public:
 		friend class TaskStorage;
 	public:
 		const TaskStorage& _storage;
-		Pause(const TaskStorage& storage):_storage(storage){++_storage._pauseCount; std::cout<<"paused: "+std::to_string(_storage._pauseCount)+"\n"<<std::flush;}
-		~Pause(){--_storage._pauseCount; std::cout<<"pause released: "+std::to_string(_storage._pauseCount)+"\n"<<std::flush;}
+		Pause(const TaskStorage& storage):_storage(storage){++_storage._pauseCount; }
+		~Pause(){--_storage._pauseCount; }
 	};
 	TaskStorage();
 	~TaskStorage();

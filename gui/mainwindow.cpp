@@ -59,6 +59,7 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 	ui->evalPropDockWidget->close();
 
 	ui->mainTreeView->setModel(&trajectoriesModel);
+	ui->mainTreeView->setUniformRowHeights(true);
 
 	ui->evaluatorsTreeView->setModel(&evalsModel);
 	ui->evaluatorsTreeView->expandAll();
@@ -261,13 +262,18 @@ void MainWindow::loadMolecules(const QStringList &fileNames)
 	using namespace std;
 	auto pause=_storage.pause();
 	trajectoriesModel.loadSystems(fileNames);
-	//TODO: This is a hack. It prevents from lags when scrolling
-	/*int vPos=ui->mainTreeView->verticalScrollBar()->value();
-	ui->mainTreeView->scrollToBottom();
-	QCoreApplication::processEvents();
-	ui->mainTreeView->scrollToTop();
-	QCoreApplication::processEvents();
-	ui->mainTreeView->verticalScrollBar()->setValue(vPos);*/
+
+	/*//This is a hack. It prevents from lags when scrolling
+	const int vPosStart=ui->mainTreeView->verticalScrollBar()->value();
+	const int maxScroll=ui->mainTreeView->verticalScrollBar()->maximum();
+	QProgressDialog progress("Updating the view...","",0,maxScroll);
+	for (int i=0; i<maxScroll; ++i) {
+		ui->mainTreeView->verticalScrollBar()->setValue(i);
+		progress.setValue(i);
+	}
+	ui->mainTreeView->verticalScrollBar()->setValue(vPosStart);
+	progress.setValue(maxScroll);*/
+
 	statusBar()->showMessage(tr("Loaded %1 frames").arg(fileNames.size()), 5000);
 }
 
