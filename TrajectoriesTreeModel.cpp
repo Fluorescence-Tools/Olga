@@ -202,7 +202,7 @@ void TrajectoriesTreeModel::loadSystems(const QStringList &fileNames)
 		}*/
 	const int rawSize=fileNames.size();
 	QProgressDialog progress("Checking files...","Cancel",0,rawSize);
-	progress.setWindowModality(Qt::WindowModal);
+	progress.setWindowModality(Qt::ApplicationModal);
 
 	//prepare trajectories
 	QVector<MolecularTrajectory> tmpTrajVec;
