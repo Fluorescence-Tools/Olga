@@ -383,6 +383,15 @@ void MainWindow::setPaused(bool state)
 	}
 }
 
+void MainWindow::showBuffersStats()
+{
+	QMessageBox about(this);
+	about.setWindowTitle("Info");
+	about.setStandardButtons(QMessageBox::Ok);
+	about.setText(QString::fromStdString(_storage.bufferStats()));
+	about.exec();
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	/*if (maybeSave()) {

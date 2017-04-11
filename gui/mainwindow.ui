@@ -305,6 +305,7 @@
     <property name="title">
      <string>Extras</string>
     </property>
+    <addaction name="actionBuffersStats"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuWizards"/>
@@ -516,6 +517,15 @@
    </property>
    <property name="text">
     <string>Pause execution</string>
+   </property>
+  </action>
+  <action name="actionBuffersStats">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/help-about.svgz</normaloff>:/icons/help-about.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>Buffers stats</string>
    </property>
   </action>
  </widget>
@@ -776,6 +786,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionBuffersStats</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>showBuffersStats()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>356</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>loadEvaluators()</slot>
@@ -792,5 +818,6 @@
   <slot>getInfromativePairs()</slot>
   <slot>addEfficiencyBatch()</slot>
   <slot>setPaused(bool)</slot>
+  <slot>showBuffersStats()</slot>
  </slots>
 </ui>

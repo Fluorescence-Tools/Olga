@@ -16,8 +16,8 @@ TrajectoriesTreeModel::
 TrajectoriesTreeModel(const TaskStorage &storage, QObject *parent) :
 	QAbstractItemModel(parent),_storage(storage)
 {
-	connect(&_storage,&TaskStorage::evaluatorAdded,
-		[this](const EvalId& id){evaluatorAdded(id);});
+	connect(&_storage,&TaskStorage::evaluatorAdded,this,
+		[this](const EvalId& id){evaluatorAdded(id);},Qt::QueuedConnection);
 	connect(&_storage,&TaskStorage::evaluatorIsGoingToBeRemoved,
 		[this](const EvalId& id){evaluatorRemove(id);});
 

@@ -16,9 +16,9 @@
 EvaluatorsTreeModel::EvaluatorsTreeModel(TaskStorage &storage, QObject *parent):
 	QAbstractItemModel(parent),_storage(storage)
 {
-	connect(&_storage,&TaskStorage::evaluatorAdded,[this](const EvalId& id){
+	connect(&_storage,&TaskStorage::evaluatorAdded,this,[this](const EvalId& id){
 		loadEvaluator(id);
-	});
+	},Qt::QueuedConnection);
 }
 
 QVariant EvaluatorsTreeModel::data(const QModelIndex &index, int role) const

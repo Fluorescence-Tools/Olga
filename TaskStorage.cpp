@@ -158,7 +158,7 @@ void TaskStorage::runRequests() const
 			if(_requestQueue.try_dequeue(key)) {
 				getTask(key,true);
 			} else {
-				_requests.reserve(0);
+				_requests.reserve(64);
 				/*auto locked=_requests.lock_table();
 				std::string str;
 				for(auto pair:locked) {

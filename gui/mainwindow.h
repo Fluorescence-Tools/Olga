@@ -59,6 +59,8 @@ private Q_SLOTS:
 	void getInfromativePairs();
 
 	void setPaused(bool state=true);
+
+	void showBuffersStats();
 private:
 	QString timespan(unsigned seconds);
 

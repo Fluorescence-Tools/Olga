@@ -183,11 +183,29 @@ public:
 	std::unique_ptr<Pause> pausePtr() const {
 		return std::make_unique<Pause>(*this);
 	}
+	std::string bufferStats() const {
+		std::string sz;
+		sz+="_requests:\n"+mapStats(_requests);
+		sz+="_results:\n"+mapStats(_results);
+		return sz;
+	}
 
 Q_SIGNALS:
 	void evaluatorAdded(EvalId evId);
 	void evaluatorIsGoingToBeRemoved(EvalId evId);
 private:
+	template<typename T>
+	static std::string mapStats(const T& map) {
+		std::string sz;
+		using std::to_string;
+		sz+="size() = "+to_string(map.size())+"\n";
+		sz+="bucket_count() = "+to_string(map.bucket_count())+"\n";
+		sz+="load_factor() = "+to_string(map.load_factor())+"\n";
+		sz+="capacity() = "+to_string(map.capacity())+"\n";
+		sz+="slot_per_bucket() = "+to_string(map.slot_per_bucket())+"\n";
+		return sz;
+	}
+
 	void removeResults(const EvalId& id) {
 		//TODO:implement
 	}
