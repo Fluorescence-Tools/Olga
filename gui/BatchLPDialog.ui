@@ -53,6 +53,30 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>strip mask:</string>
+       </property>
+       <property name="buddy">
+        <cstring>nameTemplateEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="stripTemplateEdit">
+       <property name="text">
+        <string>resid {resid} and not name CA CB C N O</string>
+       </property>
+       <property name="placeholderText">
+        <string>{resid}</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
       <widget class="QLabel" name="label_3">

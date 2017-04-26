@@ -61,12 +61,19 @@ void BatchLPDialog::accept()
 		QString chain(std::get<2>(_residues[i]));
 		chain=(chain==" ")?"":chain;
 		auto index=_evModel.duplicateEvaluator(rootEval);
+
 		QString nameTemplate=ui->nameTemplateEdit->text();
 		auto name=nameTemplate.replace("{resid}",QString::number(resi));
 		_evModel.setEvaluatorName(index,name.toStdString());
+
 		_evModel.setEvaluatorOption(index,"residue_seq_number",resi);
 		_evModel.setEvaluatorOption(index,"residue_name",resname);
 		_evModel.setEvaluatorOption(index,"chain_identifier",chain);
+
+		QString stripTemplate=ui->stripTemplateEdit->text();
+		auto strip=stripTemplate.replace("{resid}",QString::number(resi));
+		_evModel.setEvaluatorOption(index,"strip_mask",strip);
+
 		_evModel.activateEvaluator(index);
 	}
 	QDialog::accept();
