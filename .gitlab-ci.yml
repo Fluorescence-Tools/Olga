@@ -9,7 +9,7 @@ build-ubuntu16.04:
     - mkdir -p ${CI_BUILD_NAME}
     - rm -f ${CI_BUILD_NAME}/gui/Olga build-ubuntu16.04/gui/main.o
     - find ${CI_BUILD_NAME} -name "Makefile*" -delete
-    - cd ${CI_BUILD_NAME}; qmake ..; make
+    - cd ${CI_BUILD_NAME}; qmake ..; make -j8
   cache:
     paths:
     - ${CI_BUILD_NAME}/
@@ -26,7 +26,7 @@ build-win64:
     - mkdir -p ${CI_BUILD_NAME}
     - rm -f ${CI_BUILD_NAME}/gui/release/Olga.exe build-win64/gui/release/main.o
     - find ${CI_BUILD_NAME} -name "Makefile*" -delete
-    - cd ${CI_BUILD_NAME}; x86_64-w64-mingw32-qmake-qt5 ..; make
+    - cd ${CI_BUILD_NAME}; x86_64-w64-mingw32-qmake-qt5 ..; make -j8
   cache:
     paths:
     - ${CI_BUILD_NAME}/
@@ -44,7 +44,7 @@ build-win32:
     - mkdir -p ${CI_BUILD_NAME}
     - rm -f ${CI_BUILD_NAME}/gui/release/Olga.exe build-win32/gui/release/main.o;
     - find ${CI_BUILD_NAME} -name "Makefile*" -delete
-    - cd ${CI_BUILD_NAME}; i686-w64-mingw32-qmake-qt5 ..; make
+    - cd ${CI_BUILD_NAME}; i686-w64-mingw32-qmake-qt5 ..; make -j8
   cache:
     paths:
     - ${CI_BUILD_NAME}/
