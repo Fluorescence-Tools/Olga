@@ -728,6 +728,35 @@ void MainWindow::addEfficiencyBatch()
 	dialog.exec();
 }
 
+void MainWindow::removeNanEffs()
+{
+	std::vector<FrameDescriptor> frames=trajectoriesModel.frames();
+	std::vector<EvalId> evalIds=_storage.evalIds<EvaluatorFretEfficiency>();
+
+	if(frames.empty()) {
+		QMessageBox::warning(this,tr("No structures loaded"),
+				     tr("No structures loaded.\n"
+					"Load some, please."));
+		return;
+	}
+	if(evalIds.empty()) {
+		QMessageBox::warning(this,tr("Can not find EvaluatorFretEfficiency"),
+				     tr("Could not find any efficiency evaluators "
+					"\nCreate/load some, please."));
+		return;
+	}
+
+	const auto& fr=frames[0];
+	for(int iEv=0; iEv<evalIds.size(); ++iEv) {
+		TaskStorage::Result res=_storage.getResult(fr,evalIds[iEv]);
+		auto dRes=std::static_pointer_cast<CalcResult<double>>(res);
+		const double eff=dRes->get();
+		if(std::isnan(eff)) {
+			evalsModel.removeEvaluator(evalIds[iEv]);
+		}
+	}
+}
+
 void MainWindow::getInfromativePairs()
 {
 	std::vector<FrameDescriptor> frames=trajectoriesModel.frames();
@@ -765,9 +794,9 @@ void MainWindow::getInfromativePairs()
 	Eigen::MatrixXf effs(frames.size(),evalIds.size());
 	for (int iFrame=0; iFrame<frames.size(); ++iFrame) {
 		const auto& fr=frames[iFrame];
-		for(int iEv=0; iEv<evalIds.size(); ++iEv) {
-			TaskStorage::Result res=_storage.getResult(fr,evalIds[iEv]);
-			auto dRes=std::static_pointer_cast<CalcResult<double>>(res);
+	for(int iEv=0; iEv<evalIds.size(); ++iEv) {
+		TaskStorage::Result res=_storage.getResult(fr,evalIds[iEv]);
+		auto dRes=std::static_pointer_cast<CalcResult<double>>(res);
 			effs(iFrame,iEv)=dRes->get();
 		}
 	}

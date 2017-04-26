@@ -352,6 +352,18 @@ void EvaluatorsTreeModel::removeEvaluator(const QModelIndex &index) {
 	}
 }
 
+void EvaluatorsTreeModel::removeEvaluator(const EvalId &ev)
+{
+	const QModelIndex& parent = classRowIndex(ev);
+	const int row = evalRow(ev);
+	const int cRow = classRow(ev);
+	beginRemoveRows(parent,row,row);
+	auto& evVec=evals[cRow-1].second;
+	evVec.erase(evVec.begin()+row);
+	endRemoveRows();
+	_storage.removeEvaluator(ev);
+}
+
 EvaluatorsTreeModel::MutableEvalPtr EvaluatorsTreeModel::removeEvaluator(int evRow) {
 
 	auto parent=index(0,0,QModelIndex());

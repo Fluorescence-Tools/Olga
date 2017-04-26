@@ -61,6 +61,7 @@ private Q_SLOTS:
 	void setPaused(bool state=true);
 
 	void showBuffersStats();
+	void removeNanEffs();
 private:
 	QString timespan(unsigned seconds);
 

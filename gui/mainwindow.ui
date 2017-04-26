@@ -306,6 +306,7 @@
      <string>Extras</string>
     </property>
     <addaction name="actionBuffersStats"/>
+    <addaction name="actionRemoveNanEffs"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuWizards"/>
@@ -526,6 +527,18 @@
    </property>
    <property name="text">
     <string>Buffers stats</string>
+   </property>
+  </action>
+  <action name="actionRemoveNanEffs">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/application-exit.svgz</normaloff>:/icons/application-exit.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>Remove NaN efficiencies</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove efficiencies that result in Not-a-Number for the first structure.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
  </widget>
@@ -819,5 +832,6 @@
   <slot>addEfficiencyBatch()</slot>
   <slot>setPaused(bool)</slot>
   <slot>showBuffersStats()</slot>
+  <slot>removeNanEffs()</slot>
  </slots>
 </ui>

@@ -98,6 +98,7 @@ public:
 		return QModelIndex();
 	}
 	void removeEvaluator(const QModelIndex& index);
+	void removeEvaluator(const EvalId& ev);
 	MutableEvalPtr removeEvaluator(int evRow);
 	void setEvaluatorName(const QModelIndex& index, const std::string &name);
 	std::string evalName(const QModelIndex& index);
