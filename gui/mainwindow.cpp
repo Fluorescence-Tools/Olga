@@ -439,17 +439,17 @@ void MainWindow::loadEvaluators()
 
 bool MainWindow::saveJson()
 {
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Settings"), "untitled.fps.json",
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Settings"), "untitled",
 							tr("FPS settings (*.fps.json);;Any file (*)"));
 	if (fileName.isEmpty()) {
 		return false;
 	}
 
-	/*QFileInfo fileInfo( fileName );
+	QFileInfo fileInfo( fileName );
 	if (fileInfo.suffix().isEmpty())
 	{
 		fileName += ".fps.json";
-	}*/
+	}
 
 	QFile file(fileName);
 
