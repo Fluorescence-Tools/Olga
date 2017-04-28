@@ -38,7 +38,8 @@ HEADERS += \
     EvaluatorChi2r.h \
     EvaluatorAvFile.h \
     EvaluatorFretEfficiency.h \
-    EvaluatorAvVolume.h
+    EvaluatorAvVolume.h \
+    split_string.h
 
 SOURCES += \
     AV/fretAV.cpp \

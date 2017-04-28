@@ -66,7 +66,8 @@ HEADERS += \
     BatchDistanceDialog.h \
     GetInformativePairsDialog.h \
     BatchFretEfficiencyDialog.h \
-    best_dist.h
+    best_dist.h \
+    split_string.h
 
 SOURCES += \
     main.cpp \

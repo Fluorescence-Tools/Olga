@@ -62,6 +62,8 @@ private Q_SLOTS:
 
 	void showBuffersStats();
 	void removeNanEffs();
+
+	void loadResults();
 private:
 	QString timespan(unsigned seconds);
 

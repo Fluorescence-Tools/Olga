@@ -307,6 +307,7 @@
     </property>
     <addaction name="actionBuffersStats"/>
     <addaction name="actionRemoveNanEffs"/>
+    <addaction name="actionLoadResults"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuWizards"/>
@@ -539,6 +540,15 @@
    </property>
    <property name="toolTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove efficiencies that result in Not-a-Number for the first structure.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </action>
+  <action name="actionLoadResults">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/document-import.svgz</normaloff>:/icons/document-import.svgz</iconset>
+   </property>
+   <property name="text">
+    <string>load results</string>
    </property>
   </action>
  </widget>
@@ -831,6 +841,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionLoadResults</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>loadResults()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>356</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>loadEvaluators()</slot>
@@ -849,5 +875,6 @@
   <slot>setPaused(bool)</slot>
   <slot>showBuffersStats()</slot>
   <slot>removeNanEffs()</slot>
+  <slot>loadResults()</slot>
  </slots>
 </ui>

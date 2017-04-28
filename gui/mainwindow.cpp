@@ -757,6 +757,14 @@ void MainWindow::removeNanEffs()
 	}
 }
 
+void MainWindow::loadResults()
+{
+	QString fileName = QFileDialog::getOpenFileName(this,
+							tr("Open data File"), "",
+							tr("tab-separated data (*.ha4);;All Files (*)"));
+	_storage.setResults(fileName.toStdString(),trajectoriesModel.frames());
+}
+
 void MainWindow::getInfromativePairs()
 {
 	std::vector<FrameDescriptor> frames=trajectoriesModel.frames();

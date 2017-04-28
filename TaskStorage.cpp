@@ -15,6 +15,10 @@
 #include "EvaluatorAvVolume.h"
 
 #include "AV/Position.h"
+#include "CalcResult.h"
+#include "split_string.h"
+
+#include <QFileInfo>
 
 const int TaskStorage::evalType=QVariant::fromValue(EvalId()).userType();
 const int TaskStorage::simulationType=QVariant::fromValue(Position::SimulationType()).userType();
@@ -414,4 +418,53 @@ TaskStorage::Result TaskStorage::getResult(const FrameDescriptor &frame, const E
 	Result result;
 	_results.find(key,result);
 	return result;
+}
+
+void TaskStorage::setResults(const std::string &fName,
+			     const std::vector<FrameDescriptor>& frames)
+{
+	using std::string;
+	using std::vector;
+
+	auto p=pause();
+	std::ifstream infile;
+
+	infile.open(fName, std::ifstream::in);
+	if(!infile.is_open())
+	{
+	    std::cerr<<"could not open the file: "+fName+"\n"<<std::flush;
+	    return;
+	}
+
+	string str;
+	getline(infile,str);
+	vector<string> evNames=split(str,'\t');
+	evNames.erase(evNames.begin());
+	vector<EvalId> evIds;
+	for(const auto& name:evNames) {
+		evIds.push_back(evalId(name));
+	}
+
+	std::unordered_map<string,FrameDescriptor> frameMap;
+	for(const FrameDescriptor& frame: frames) {
+		QString shortName;
+		shortName=QString::fromStdString(frame.topologyFileName());
+		shortName=QFileInfo(shortName).fileName()+" #0";
+		frameMap[shortName.toStdString()]=frame;
+	}
+
+	while(getline(infile,str)) {
+		vector<string> values=split(str,'\t');
+		FrameDescriptor frame=frameMap.at(values[0]);
+		for(int i=1; i<values.size();++i) {
+			if (values[i].empty()) {
+				continue;
+			}
+			const EvalId evId=evIds[i-1];
+			CacheKey key=CacheKey(frame,evId);
+			double val=std::atof(values[i].c_str());
+			Result res=std::make_shared<CalcResult<double>>(val);
+			_results.insert(key,res);
+		}
+	}
 }

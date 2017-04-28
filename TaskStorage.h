@@ -92,6 +92,8 @@ public:
 	std::string getString(const FrameDescriptor &frame, const EvalId& evId, int col,
 			      bool persistent=true) const;
 	Result getResult(const FrameDescriptor &frame, const EvalId& evId) const;
+	void setResults(const std::string& fName,
+			const std::vector<FrameDescriptor> &frames);
 	const PterosSysTask& getSysTask(const FrameDescriptor &frame) const;
 	std::string getColumnName(const EvalId& id, int col) const;
 	const AbstractEvaluator& eval(EvalId id) const
