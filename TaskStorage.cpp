@@ -465,6 +465,7 @@ void TaskStorage::setResults(const std::string &fName,
 			double val=std::atof(values[i].c_str());
 			Result res=std::make_shared<CalcResult<double>>(val);
 			_results.insert(key,res);
+			_requests.erase(key);
 		}
 	}
 }
