@@ -42,5 +42,5 @@ EvaluatorAvFile::calculate(const PositionSimulationResult &av,
 	if(_openDX) {
 		return std::make_shared<CalcResult<bool>>(av.dump_dxmap(fname+".dx"));
 	}
-	return std::make_shared<CalcResult<bool>>(av.dumpXyz(fname));
+	return std::make_shared<CalcResult<bool>>(av.dumpXyz(fname+".xyz"));
 }
