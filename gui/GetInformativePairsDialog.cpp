@@ -160,8 +160,24 @@ void GetInformativePairsDialog::accept()
 	const int numPairsMax=ui->maxPairs->value();
 	const size_t numFrames=frames.size();
 
-	FRETEfficiencies Eall(err,effs.rows());
-	Eall.setFromEffMatrix(effs,evalNames);
+	QProgressDialog setEffProgress("Initializing E matrix...",QString(),0,
+				     effs.rows(),this);
+	setEffProgress.setWindowModality(Qt::WindowModal);
+	setEffProgress.setMinimumDuration(0);
+	setEffProgress.setValue(0);
+	std::future<FRETEfficiencies> fEall(async(std::launch::async,[&,this]{
+		FRETEfficiencies Eall(err,effs.rows());
+		Eall.setFromEffMatrix(effs,evalNames);
+		return Eall;
+	}));
+	std::future_status status;
+	do {
+		QApplication::processEvents();
+		setEffProgress.setValue(0);
+		status = fEall.wait_for(std::chrono::milliseconds(20));
+	} while (status != std::future_status::ready);
+	const FRETEfficiencies& Eall=fEall.get();
+	setEffProgress.setValue(effs.rows());
 
 	QProgressDialog loadProgress("Building trajectory...",QString(),0,
 				     numFrames,this);
@@ -173,10 +189,22 @@ void GetInformativePairsDialog::accept()
 		const FrameDescriptor& fr=frames[i];
 		System system(fr.topologyFileName());
 		system.keep(sel);
-		traj.frame_append(system.Frame_data(0));
+		if(traj.num_atoms()==system.num_atoms()) {
+			traj.frame_append(system.Frame_data(0));
+		} else {
+			std::cerr<<"ERROR! frame number does not match "
+				   +fr.topologyFileName()
+				   +" atoms: "+std::to_string(system.num_atoms())
+				   +"/"+std::to_string(traj.num_atoms())+"\n"<<std::flush;
+		}
 		loadProgress.setValue(i);
 	}
 	loadProgress.setValue(numFrames);
+	if(numFrames!=traj.num_frames()) {
+		std::cout<<"total frames loaded "+std::to_string(traj.num_frames())
+			   +"/"+std::to_string(numFrames)+"\n"<<std::flush;
+		return;
+	}
 
 	const size_t numRmsds=numFrames*numFrames/2;
 	QProgressDialog rmsdProgress("Calculating RMSD...",QString(),0,
@@ -187,13 +215,17 @@ void GetInformativePairsDialog::accept()
 	std::future<MatrixXf> fRmsds(async(std::launch::async,[&,this]{
 		return rmsds(traj);
 	}));
-	std::future_status status;
 	do {
 		QApplication::processEvents();
 		rmsdProgress.setValue(rmsdsDone-1);
 		status = fRmsds.wait_for(std::chrono::milliseconds(20));
 	} while (status != std::future_status::ready);
 	const MatrixXf& RMSDs=fRmsds.get();
+	if(RMSDs.hasNaN()) {
+		std::cerr<<"RMSDs has NAN!\n"<<std::flush;
+		return;
+	}
+	//dump_rmsds(RMSDs,"state_rmsds.dat");
 //	std::chrono::duration<double> diff = std::chrono::system_clock::now()-start;
 //	std::cout<<"\n\nrmsds/s: "+std::to_string(numRmsds/diff.count())<<std::endl;
 	rmsdProgress.setValue(numRmsds);
@@ -213,17 +245,18 @@ void GetInformativePairsDialog::accept()
 	} while (status != std::future_status::ready);
 	pair_list_type distList=selection.get();
 	selectionProgress.setValue(maxPairs);
-	std::string selReport=list2str(distList);
 
-	distList=miSelection(err,Eall,RMSDs,maxPairs);
-	std::string miReport=list2str(distList);
+	std::string selReport=list2str(distList);
+	auto report="Greedy selection:\n"+selReport;
+	if(false) {
+		distList=miSelection(err,Eall,RMSDs,maxPairs);
+		std::string miReport=list2str(distList);
+		report+="\nMutual Information selection:\n"+miReport;
+	}
 
 	std::string fname=ui->fileEdit->text().toStdString();
-	auto report="Greedy selection:\n"+selReport
-		    +"\nMutual Information selection:\n"+miReport;
-
 	if(fname.empty()) {
-		std::cout<<report;
+		std::cout<<report<<std::flush;
 	} else {
 		std::ofstream outfile(fname, std::ifstream::out);
 		if(!outfile.is_open())
@@ -235,9 +268,9 @@ void GetInformativePairsDialog::accept()
 		outfile<<report;
 	}
 
-
 	QDialog::accept();
 }
+
 
 void GetInformativePairsDialog::setFileName()
 {
