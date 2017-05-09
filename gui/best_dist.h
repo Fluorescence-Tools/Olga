@@ -8,8 +8,6 @@
 #include <map>
 #include <unordered_set>
 
-#include <chrono>
-
 #include <Eigen/Dense>
 #include <boost/math/distributions/chi_squared.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -96,7 +94,7 @@ float Hcond(const Eigen::VectorXf& Y, const Eigen::VectorXf& X, const float widt
 	using std::log2;
 	float hc=0.0f;
 	for (int y=0; y<binsY; ++y) {
-		 for (int x=0; x<binsX; ++x) {
+		for (int x=0; x<binsX; ++x) {
 			const float& pxy=pXY(x,y);
 			hc+=pxy>0.0f?pxy*log2(pX(x)/pxy):0.0f;
 		}
@@ -142,7 +140,8 @@ public:
 		iMax=0;
 		step=1.0f;
 		for(int it=0; it<numSplines; ++it) {
-			k[iMax].a=k[iMax].b=k[iMax].c=0.0f;
+			k[iMax].a=1.0f;
+			k[iMax].b=k[iMax].c=0.0f;
 		}
 	}
 
@@ -199,7 +198,7 @@ private:
 	const float err=0.058f;
 	const int _numFitParams=1;
 
-	mutable std::vector<InterpChi2sf> sfs;
+	mutable std::vector<InterpChi2sf> interpVec;
 public:
 	FRETEfficiencies(const float err, const int numConf):err(err)
 	{
@@ -354,24 +353,23 @@ public:
 	{
 		//const int numConf=Eall.conformerCount();
 		const int numCols=Eall.E.cols();
-		std::vector<float> rowAvRmsd(numCols);
+		std::vector<float> rowAvRmsd(numCols,-1.0f);
 
-		initChi2sfs(distanceCount()+1,std::min(_numFitParams,distanceCount()));
+		initPValInterp(distanceCount()+1,std::min(_numFitParams,distanceCount()));
 
 		std::vector<std::thread> threads(std::thread::hardware_concurrency());
+		//std::vector<std::thread> threads(1);
 		const int grainSize=numCols/threads.size()+1;
 		for(int t=0; t<threads.size(); ++t) {
 			threads[t]=std::thread([&,t,this] {
-				MatrixXf chi2=_chi2, nPoints=_nPoints;
 				const int maxD=std::min((t+1)*grainSize,numCols);
+				MatrixXf dChi2, dNp;
 				for (int d=t*grainSize; d<maxD; ++d) {
-					const auto& dChi2=deltaChi2(Eall.E.col(d),Eall.validity.col(d));
-					const auto& dNp=deltaNumPoints(Eall.validity.col(d));
-					chi2.noalias()+=dChi2;
-					nPoints.noalias()+=dNp;
-					rowAvRmsd[d]=rmsdAve(rmsds,chi2,nPoints);
-					chi2.noalias()-=dChi2;
-					nPoints.noalias()-=dNp;
+					dChi2=deltaChi2(Eall.E.col(d),Eall.validity.col(d));
+					dNp=deltaNumPoints(Eall.validity.col(d));
+					dChi2.noalias()+=_chi2;
+					dNp.noalias()+=_nPoints;
+					rowAvRmsd[d]=rmsdAve(rmsds,dChi2,dNp);
 				}
 			});
 		}
@@ -433,7 +431,7 @@ public:
 		E.conservativeResize(Eigen::NoChange,lastCol);
 		validity.conservativeResize(Eigen::NoChange,lastCol);
 		distNames.resize(lastCol);
-		initChi2sfs(E.cols(),std::min(int(E.cols()-1),_numFitParams));
+		initPValInterp(E.cols(),std::min(int(E.cols()-1),_numFitParams));
 	}
 
 	/*void initMatrices(const int numConf)
@@ -463,7 +461,7 @@ public:
 
 		E.col(lastCol)=Eall.E.col(col);
 		validity.col(lastCol)=Eall.validity.col(col);
-		initChi2sfs(E.cols(),std::min(int(E.cols()-1),_numFitParams));
+		initPValInterp(E.cols(),std::min(int(E.cols()-1),_numFitParams));
 	}
 	int addDistance(const FRETEfficiencies& Eall,const std::string& dist)
 	{
@@ -477,16 +475,21 @@ public:
 	}
 
 private:
-	void initChi2sfs(const int numDist, const int numFitParams) const
+	void initPValInterp(const int numDist, const int numFitParams) const
 	{
-		sfs.clear();
-		sfs.reserve(numDist+numFitParams+1);
-		for(int i=0;i<numFitParams+1;++i) {
-			sfs.push_back(InterpChi2sf());
+		interpVec.clear();
+		interpVec.reserve(numFitParams+numDist+1);
+		interpVec.push_back(InterpChi2sf());
+		for (int numPoints=1; numPoints<numFitParams+1; ++numPoints) {
+			interpVec.push_back(InterpChi2sf(1));
 		}
-		for(int i=1; i<=numDist; ++i) {
+		for (int numPoints=numFitParams+1; numPoints<=numFitParams+numDist; ++numPoints) {
+			interpVec.push_back(InterpChi2sf(numPoints-numFitParams));
+		}
+
+		/*for(int i=0; i<=numDist; ++i) {
 			try {
-				sfs.push_back(InterpChi2sf(i));
+				pValComp.push_back(InterpChi2sf(i));
 			} catch (std::exception &e) {
 				std::cerr<<"ERROR! This should never happen! std::exception: " << e.what() << std::endl;
 			} catch (boost::exception& e) {
@@ -494,7 +497,7 @@ private:
 			} catch (...) {
 				std::cerr<<"ERROR! This should never happen! exception unknown" << std::endl;
 			}
-		}
+		}*/
 	}
 
 	float rmsdAve(const MatrixXf& rmsds,
@@ -503,7 +506,7 @@ private:
 	{
 		const auto& WM=weights(chi2,nPoints);
 		VectorXf normVec=WM.rowwise().sum().unaryExpr(
-				       [](const float& v) {return v==0.0f?0.0f:1.0f/v;});
+					 [](const float& v) {return v==0.0f?0.0f:1.0f/v;});
 		MatrixXf normW(WM.rows(),WM.cols());
 		normW.noalias()=normVec.asDiagonal()*WM;
 		float nsum=normW.sum();
@@ -523,21 +526,34 @@ private:
 	}
 	void chi2()
 	{
+		using MatrixXfrm=Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>;
 		const int numECols=E.cols();
 		const int numConf=E.rows();
-		const auto& Es=E.leftCols(numECols);
-		const auto& valSel=validity.leftCols(numECols);
+		const MatrixXfrm& Es=E.leftCols(numECols);
+		const MatrixXfrm& valSel=validity.leftCols(numECols);
 
-		MatrixXf chi2(numConf,numConf);
+		MatrixXfrm chi2(numConf,numConf);
 		chi2.setZero();
-		VectorXf validRow(numECols),contribs(numECols);
 		const float invErr=1.0f/err;
-		for (int iRef=0; iRef<numConf; ++iRef) {
-			for (int j=iRef; j<numConf; ++j) {
-				validRow=valSel.row(j).cwiseProduct(valSel.row(iRef));
-				contribs=((Es.row(iRef)-Es.row(j))*invErr).cwiseAbs2();
-				chi2(iRef,j)=contribs.cwiseProduct(validRow).sum();
-			}
+
+		std::vector<std::thread> threads(std::thread::hardware_concurrency());
+		const int grainSize=numConf/threads.size()+1;
+		for(int t=0; t<threads.size(); ++t) {
+			threads[t]=std::thread([=,&valSel,&Es,&chi2]{
+				VectorXf validRow(numECols),contribs(numECols);
+				const int maxRef=std::min((t+1)*grainSize,numConf);
+				for (int iRef=t*grainSize; iRef<maxRef; ++iRef) {
+					for (int j=iRef; j<numConf; ++j) {
+						validRow=valSel.row(j).cwiseProduct(valSel.row(iRef));
+						contribs=((Es.row(iRef)-Es.row(j))*invErr).cwiseAbs2();
+						chi2(iRef,j)=contribs.cwiseProduct(validRow).sum();
+					}
+				}
+			});
+		}
+
+		for(auto&& t : threads) {
+			t.join();
 		}
 		_chi2 = std::move(chi2);
 	}
@@ -557,17 +573,28 @@ private:
 	}
 	void numPoints()
 	{
+		using MatrixXfrm=Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>;
 		const int numECols=E.cols();
-		const MatrixXf& valSel=validity.leftCols(numECols);
+		const MatrixXfrm& valSel=validity.leftCols(numECols);
 		const int numConf=validity.rows();
-		MatrixXf numPoints(numConf,numConf);
+		MatrixXfrm numPoints(numConf,numConf);
 		numPoints.setZero();
-		VectorXf validRow;
-		for (int iRef=0; iRef<numConf; ++iRef) {
-			for (int j=iRef; j<numConf; ++j) {
-				validRow=valSel.row(j).cwiseProduct(valSel.row(iRef));
-				numPoints(iRef,j) = std::lround(validRow.sum());
-			}
+		std::vector<std::thread> threads(std::thread::hardware_concurrency());
+		const int grainSize=numConf/threads.size()+1;
+		for(int t=0; t<threads.size(); ++t) {
+			threads[t]=std::thread([=,&valSel,&numPoints]{
+				VectorXf validRow;
+				const int maxRef=std::min((t+1)*grainSize,numConf);
+				for (int iRef=t*grainSize; iRef<maxRef; ++iRef) {
+					for (int j=iRef; j<numConf; ++j) {
+						validRow=valSel.row(j).cwiseProduct(valSel.row(iRef));
+						numPoints(iRef,j) = std::lround(validRow.sum());
+					}
+				}
+			});
+		}
+		for(auto&& t : threads) {
+			t.join();
 		}
 		_nPoints = std::move(numPoints);
 	}
@@ -575,24 +602,28 @@ private:
 	{
 		return std::move(valCol*valCol.transpose());
 	}
+	float inline pValCompInterp(const float& chi2, const int& numPoints)
+	{
+		return interpVec[numPoints].value(chi2);
+	}
+	float pValComp(const float chi2, const int numPoints) {
+		if(numPoints==0) {
+			return 1.0f;
+		}
+		const int ndof=std::max(numPoints-_numFitParams,1);
+		//return 1.0f-float(boost::math::cdf(boost::math::chi_squared(ndof),chi2));
+		return 1.0f-float(chi2CdfApprox(ndof,chi2));
+	}
 
 	MatrixXf weights(const MatrixXf& chi2,const MatrixXf& numPoints) const
 	{
 		const int numConf=chi2.rows();
 		MatrixXf W(numConf,numConf);
-		W.triangularView<Eigen::Upper>()=chi2.binaryExpr(numPoints,
-								 [this](const float& c2, const float& np) {
-			if(std::lround(np)==0) {
-				return 1.0f;
-			}
-			int ndof=std::lround(np)-_numFitParams;
-			ndof=std::max(ndof,1);
-			//return 1.0f-float(boost::math::cdf(boost::math::chi_squared(ndof),c2));
-			return 1.0f-float(chi2CdfApprox(ndof,c2));
-
-			//TODO: implement fast calculation
-			//return sfs[std::lround(np)].value(c2);
-
+		W.triangularView<Eigen::Upper>()
+				=chi2.binaryExpr(numPoints,
+						 [this](const float& chi2, const float& np) {
+			return pValCompInterp(chi2,np+0.5f);
+			//return pValComp(chi2,np+0.5f);
 		});
 		return std::move(W.selfadjointView<Eigen::Upper>());
 	}
@@ -640,7 +671,7 @@ void FRETEfficiencies::readFromDistances(const std::string &fileName/*,const std
 		}
 	}*/
 	const int numDist=distNames.size();
-	initChi2sfs(numDist,_numFitParams);
+	initPValInterp(numDist,_numFitParams);
 
 	char c;
 	std::vector<Eigen::VectorXf> rows;
@@ -682,7 +713,7 @@ void FRETEfficiencies::setFromEffMatrix(const FRETEfficiencies::MatrixXf &m, con
 
 	distNames=names;
 	const int numDist=distNames.size();
-	initChi2sfs(numDist,_numFitParams);
+	initPValInterp(numDist,_numFitParams);
 
 	E=m.unaryExpr([](float val) { return std::isnan(val)?0.0f:val;});
 	validity=m.unaryExpr([](float val) { return std::isnan(val)?0.0f:1.0f; });
