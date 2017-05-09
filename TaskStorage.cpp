@@ -455,6 +455,10 @@ void TaskStorage::setResults(const std::string &fName,
 
 	while(getline(infile,str)) {
 		vector<string> values=split(str,'\t');
+		if(frameMap.count(values[0])==0) {
+			std::cout<<"Not found: "+values[0]+"\n"<<std::flush;
+			continue;
+		}
 		FrameDescriptor frame=frameMap.at(values[0]);
 		for(int i=1; i<values.size();++i) {
 			if (values[i].empty()) {
