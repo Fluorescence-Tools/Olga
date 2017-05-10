@@ -44,7 +44,7 @@ private:
 	pair_list_type greedySelection(const float err, const FRETEfficiencies &Eall,
 				       const Eigen::MatrixXf &RMSDs,
 				       const int maxPairs) const;
-	mutable std::atomic<int> pairsDone{0};
+	mutable std::atomic<int> percDone{0};
 
 	Eigen::MatrixXf rmsds(const pteros::System& traj) const;
 	mutable std::atomic<int> rmsdsDone{0};

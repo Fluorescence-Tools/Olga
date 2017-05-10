@@ -161,23 +161,34 @@ void GetInformativePairsDialog::accept()
 	const size_t numFrames=frames.size();
 
 	QProgressDialog setEffProgress("Initializing E matrix...",QString(),0,
-				     effs.rows(),this);
+				     100,this);
 	setEffProgress.setWindowModality(Qt::WindowModal);
 	setEffProgress.setMinimumDuration(0);
 	setEffProgress.setValue(0);
-	std::future<FRETEfficiencies> fEall(async(std::launch::async,[&,this]{
+	std::future<FRETEfficiencies> fEall(async(std::launch::async,[&,this] {
 		FRETEfficiencies Eall(err,effs.rows());
+
+		std::thread th=std::thread([&]{
+			while(percDone<100) {
+				percDone.store(Eall.percDone-1);
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			}
+		});
+
 		Eall.setFromEffMatrix(effs,evalNames);
+		//TODO:this is a hack
+		Eall.percDone=percDone=101;
+		th.join();
 		return Eall;
 	}));
 	std::future_status status;
 	do {
 		QApplication::processEvents();
-		setEffProgress.setValue(0);
+		setEffProgress.setValue(percDone);
 		status = fEall.wait_for(std::chrono::milliseconds(20));
 	} while (status != std::future_status::ready);
 	const FRETEfficiencies& Eall=fEall.get();
-	setEffProgress.setValue(effs.rows());
+	setEffProgress.setValue(100);
 
 	QProgressDialog loadProgress("Building trajectory...",QString(),0,
 				     numFrames,this);
@@ -232,7 +243,7 @@ void GetInformativePairsDialog::accept()
 
 	const int maxPairs=std::min(Eall.distanceCount(),numPairsMax);
 	QProgressDialog selectionProgress("Greedy selection...",QString(),0,
-					  maxPairs,this);
+					  100,this);
 	selectionProgress.setWindowModality(Qt::WindowModal);
 	selectionProgress.setMinimumDuration(0);
 	future<pair_list_type> selection(async(std::launch::async,[&,this]{
@@ -240,11 +251,11 @@ void GetInformativePairsDialog::accept()
 	}));
 	do {
 		QApplication::processEvents();
-		selectionProgress.setValue(pairsDone-1);
+		selectionProgress.setValue(percDone);
 		status = selection.wait_for(std::chrono::milliseconds(20));
 	} while (status != std::future_status::ready);
 	pair_list_type distList=selection.get();
-	selectionProgress.setValue(maxPairs);
+	selectionProgress.setValue(100);
 
 	std::string selReport=list2str(distList);
 	auto report="Greedy selection:\n"+selReport;
@@ -287,12 +298,22 @@ GetInformativePairsDialog::pair_list_type GetInformativePairsDialog::greedySelec
 	FRETEfficiencies E(err,Eall.conformerCount());
 	pair_list_type result;
 
+	std::atomic<int> pairsDone{0};
+
+	std::thread th=std::thread([&]{
+		while(pairsDone<maxPairs) {
+			percDone=100*pairsDone/maxPairs+E.percDone/maxPairs;
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}
+	});
+
 	for (pairsDone=0; pairsDone<maxPairs; ++pairsDone) {
 		int b=E.bestDistance(RMSDs,Eall);
 		E.addDistance(Eall,b);
 		float aveRmsd=E.rmsdAve(RMSDs);
 		result.emplace_back(Eall.name(b),aveRmsd);
 	}
+	th.join();
 	return result;
 }
 

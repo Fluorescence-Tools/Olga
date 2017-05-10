@@ -200,6 +200,15 @@ private:
 
 	mutable std::vector<InterpChi2sf> interpVec;
 public:
+	mutable std::atomic<int> percDone{0};
+	FRETEfficiencies(FRETEfficiencies&& o): interpVec(std::move(o.interpVec)),
+		E(std::move(o.E)), validity(std::move(o.validity)),
+		_chi2(std::move(o._chi2)),_nPoints(std::move(o._nPoints)),
+		distNames(std::move(o.distNames)) {}
+	FRETEfficiencies(const FRETEfficiencies& o): interpVec(o.interpVec),
+		E(o.E), validity(o.validity),
+		_chi2(o._chi2),_nPoints(o._nPoints),
+		distNames(o.distNames) {}
 	FRETEfficiencies(const float err, const int numConf):err(err)
 	{
 		E.resize(numConf,0);
@@ -349,6 +358,7 @@ public:
 
 		return maxIndex;
 	}
+
 	int bestDistance(const Eigen::MatrixXf& rmsds, const FRETEfficiencies& Eall) const
 	{
 		//const int numConf=Eall.conformerCount();
@@ -357,8 +367,10 @@ public:
 
 		initPValInterp(distanceCount()+1,std::min(_numFitParams,distanceCount()));
 
-		std::vector<std::thread> threads(std::thread::hardware_concurrency());
-		//std::vector<std::thread> threads(1);
+		percDone=0;
+		std::atomic<int> rmsdsDone{0};
+		//std::vector<std::thread> threads(std::thread::hardware_concurrency());
+		std::vector<std::thread> threads(1);
 		const int grainSize=numCols/threads.size()+1;
 		for(int t=0; t<threads.size(); ++t) {
 			threads[t]=std::thread([&,t,this] {
@@ -370,6 +382,8 @@ public:
 					dChi2.noalias()+=_chi2;
 					dNp.noalias()+=_nPoints;
 					rowAvRmsd[d]=rmsdAve(rmsds,dChi2,dNp);
+					++rmsdsDone;
+					percDone=100*rmsdsDone/numCols;
 				}
 			});
 		}
@@ -536,10 +550,11 @@ private:
 		chi2.setZero();
 		const float invErr=1.0f/err;
 
+		std::atomic<int> refDone{0};
 		std::vector<std::thread> threads(std::thread::hardware_concurrency());
 		const int grainSize=numConf/threads.size()+1;
 		for(int t=0; t<threads.size(); ++t) {
-			threads[t]=std::thread([=,&valSel,&Es,&chi2]{
+			threads[t]=std::thread([=,&valSel,&Es,&chi2,&refDone]{
 				VectorXf validRow(numECols),contribs(numECols);
 				const int maxRef=std::min((t+1)*grainSize,numConf);
 				for (int iRef=t*grainSize; iRef<maxRef; ++iRef) {
@@ -548,6 +563,8 @@ private:
 						contribs=((Es.row(iRef)-Es.row(j))*invErr).cwiseAbs2();
 						chi2(iRef,j)=contribs.cwiseProduct(validRow).sum();
 					}
+					++refDone;
+					percDone=100*refDone/numConf;
 				}
 			});
 		}
@@ -579,10 +596,12 @@ private:
 		const int numConf=validity.rows();
 		MatrixXfrm numPoints(numConf,numConf);
 		numPoints.setZero();
+
+		std::atomic<int> refDone{0};
 		std::vector<std::thread> threads(std::thread::hardware_concurrency());
 		const int grainSize=numConf/threads.size()+1;
 		for(int t=0; t<threads.size(); ++t) {
-			threads[t]=std::thread([=,&valSel,&numPoints]{
+			threads[t]=std::thread([=,&valSel,&numPoints,&refDone]{
 				VectorXf validRow;
 				const int maxRef=std::min((t+1)*grainSize,numConf);
 				for (int iRef=t*grainSize; iRef<maxRef; ++iRef) {
@@ -590,6 +609,8 @@ private:
 						validRow=valSel.row(j).cwiseProduct(valSel.row(iRef));
 						numPoints(iRef,j) = std::lround(validRow.sum());
 					}
+					++refDone;
+					percDone=100*refDone/numConf;
 				}
 			});
 		}
@@ -733,7 +754,7 @@ void greedyElimination(const FRETEfficiencies& Eall, const Eigen::MatrixXf& RMSD
 	using Eigen::VectorXf;
 	using Eigen::NoChange;
 
-	FRETEfficiencies E=Eall;
+	FRETEfficiencies E(Eall);
 
 	cout<<"#\tRemoved distance\t<<RMSD>>\n";
 	cout<<E.distanceCount()<<"\tNONE\t"<<E.rmsdAve(RMSDs)<<endl;
