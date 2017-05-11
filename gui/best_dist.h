@@ -361,7 +361,7 @@ public:
 
 	int bestDistance(const Eigen::MatrixXf& rmsds, const FRETEfficiencies& Eall) const
 	{
-		//const int numConf=Eall.conformerCount();
+		const uint64_t numConf=Eall.conformerCount();
 		const int numCols=Eall.E.cols();
 		std::vector<float> rowAvRmsd(numCols,-1.0f);
 
@@ -369,8 +369,13 @@ public:
 
 		percDone=0;
 		std::atomic<int> rmsdsDone{0};
+
+		const uint64_t maxRam=(numConf/1024ull+1ull)*1024ull*1024ull*1024ull;
+		unsigned numThreads=maxRam/(60ull*numConf*numConf);
+		numThreads=std::min(std::thread::hardware_concurrency(),numThreads);
+		numThreads=std::max(numThreads,1u);
 		//std::vector<std::thread> threads(std::thread::hardware_concurrency());
-		std::vector<std::thread> threads(1);
+		std::vector<std::thread> threads(numThreads);
 		const int grainSize=numCols/threads.size()+1;
 		for(int t=0; t<threads.size(); ++t) {
 			threads[t]=std::thread([&,t,this] {
