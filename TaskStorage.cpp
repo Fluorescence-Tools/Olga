@@ -139,11 +139,9 @@ void TaskStorage::runRequests() const
 		while(_pauseCount) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
-		if(_tasksRunning<_minRunningCount) {
-			waitms=1+waitms/2;
+		if(_tasksRunning<_minRunningCount && tasksPendingCount()>0) {
 			if (_tasksRunning<_minRunningCount/2) {
-				waitms=0;
-				if (_requestQueue.size_approx()>1 && waitms<20u) {
+				if (waitms<20u) {
 					std::cout<<"Number of tasks running ("
 						   +std::to_string(_tasksRunning)+
 						   ") is too low, this might "
@@ -152,7 +150,9 @@ void TaskStorage::runRequests() const
 						   +std::to_string(waitms)
 						   +")\n"<<std::flush;
 				}
+				waitms=0;
 			}
+			waitms=1+waitms/2;
 		} else {
 			waitms=std::min(20u,++waitms);
 			std::this_thread::sleep_for(std::chrono::milliseconds(waitms));
