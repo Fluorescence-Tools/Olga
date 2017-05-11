@@ -623,11 +623,12 @@ private:
 	{
 		return std::move(valCol*valCol.transpose());
 	}
-	float inline pValCompInterp(const float& chi2, const int& numPoints)
+	float inline pValCompInterp(const float& chi2, const int& numPoints) const
 	{
 		return interpVec[numPoints].value(chi2);
 	}
-	float pValComp(const float chi2, const int numPoints) {
+	float pValComp(const float chi2, const int numPoints) const
+	{
 		if(numPoints==0) {
 			return 1.0f;
 		}
