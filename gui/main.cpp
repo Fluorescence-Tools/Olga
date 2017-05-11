@@ -47,10 +47,13 @@ int main(int argc, char *argv[])
 		return a.exec();
 	} catch (std::exception &e) {
 		dumpException(std::string("std::exception: ") + e.what());
+		return 2;
 	} catch (boost::exception& e) {
 		dumpException("boost::exception: " + boost::diagnostic_information(e));
+		return 3;
 	} catch (...) {
 		dumpException("exception type: unknown");
+		return 4;
 	}
 	return 1;
 }
