@@ -129,19 +129,21 @@ const TaskStorage::Task& TaskStorage::makeTask(const CacheKey &key, bool persist
 
 void TaskStorage::runRequests() const
 {
+	static auto tid=std::this_thread::get_id();
+	assert(tid==std::this_thread::get_id());
 	_runRequests.test_and_set();
-	unsigned waitms=200;
+	unsigned waitms=20u;
 	while(_runRequests.test_and_set())
 	{
-		static auto tid=std::this_thread::get_id();
-		assert(tid==std::this_thread::get_id());
+
 		while(_pauseCount) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 		if(_tasksRunning<_minRunningCount) {
-			waitms=waitms/4;
+			waitms=1+waitms/2;
 			if (_tasksRunning<_minRunningCount/2) {
-				/*if (_requestQueue.size_approx()>1) {
+				waitms=0;
+				if (_requestQueue.size_approx()>1 && waitms<20u) {
 					std::cout<<"Number of tasks running ("
 						   +std::to_string(_tasksRunning)+
 						   ") is too low, this might "
@@ -149,12 +151,11 @@ void TaskStorage::runRequests() const
 						   "(waitms="
 						   +std::to_string(waitms)
 						   +")\n"<<std::flush;
-				}*/
-				waitms=0;
+				}
 			}
 		} else {
-			waitms=1+waitms*1.2;
-			waitms=std::min(200u,waitms);
+			waitms=std::min(20u,++waitms);
+			std::this_thread::sleep_for(std::chrono::milliseconds(waitms));
 		}
 		CacheKey key;
 		while(_tasksRunning<_maxRunningCount)//consume
@@ -163,6 +164,7 @@ void TaskStorage::runRequests() const
 				getTask(key,true);
 			} else {
 				_requests.reserve(64);
+				waitms=20u;
 				/*auto locked=_requests.lock_table();
 				std::string str;
 				for(auto pair:locked) {
@@ -174,11 +176,9 @@ void TaskStorage::runRequests() const
 					std::cout<<"Residual requests: \n"+str
 						<<std::flush;
 				}*/
-				waitms=1000u;
 				break;
 			}
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(waitms));
 	}
 }
 
