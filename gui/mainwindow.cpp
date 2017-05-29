@@ -30,7 +30,7 @@
 
 
 
-MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString ha4Out, QWidget *parent) :
+MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString ha4Out, const QString selPairs, QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
 {
@@ -98,8 +98,11 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 	connect(&trajectoriesModel, SIGNAL(rowsInserted(QModelIndex, int, int)),
 		this, SLOT(expand(const QModelIndex &, int, int)));
 	if(json.size()>0 && pdbsDir.size()>0 && ha4Out.size() >0) {
-		loadStructuresFolder(pdbsDir);
 		loadEvaluators(json);
+		if(!selPairs.isEmpty()) {
+			autoSelectPairs(selPairs);
+		}
+		loadStructuresFolder(pdbsDir);
 		QTimer* timer=new QTimer(this);
 		timer->setSingleShot(false);
 		connect(timer, &QTimer::timeout, [=](){
@@ -108,7 +111,7 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 			}
 			timer->stop();
 			exportData(ha4Out);
-			close();
+			//close();
 		});
 		timer->start(1000);
 	}
@@ -371,6 +374,25 @@ bool MainWindow::exportData(const QString &fileName)
 	trajectoriesModel.dumpTabSeparatedData(out);
 	statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
 	return true;
+}
+
+void MainWindow::autoSelectPairs(const QString &fileName)
+{
+	QStringList list;
+	list<<fileName;
+	loadMolecules(list);
+	QApplication::processEvents();
+	addLpBatch(true);
+	QApplication::processEvents();
+	addEfficiencyBatch(true);
+	QApplication::processEvents();
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	QApplication::processEvents();
+	while (!_storage.ready()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(25));
+		QApplication::processEvents();
+	}
+	removeNanEffs();
 }
 
 void MainWindow::setPaused(bool state)
@@ -662,7 +684,7 @@ void MainWindow::showAbout()
 //	QMessageBox::about(this, "Olga",msg);
 }
 
-void MainWindow::addLpBatch()
+void MainWindow::addLpBatch(bool all)
 {
 
 	BatchLPDialog dialog(this,evalsModel);
@@ -692,7 +714,11 @@ void MainWindow::addLpBatch()
 		return;
 	}
 	dialog.setResidueList(residues);
-	dialog.exec();
+	if (all) {
+		dialog.autoAccept();
+	} else {
+		dialog.exec();
+	}
 }
 
 void MainWindow::addDistanceBatch()
@@ -715,7 +741,7 @@ void MainWindow::addDistanceBatch()
 	dialog.exec();
 }
 
-void MainWindow::addEfficiencyBatch()
+void MainWindow::addEfficiencyBatch(bool all)
 {
 	if(evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>().empty()) {
 		QMessageBox::warning(this,tr("Can not add distances"),
@@ -725,7 +751,11 @@ void MainWindow::addEfficiencyBatch()
 		return;
 	}
 	BatchFretEfficiencyDialog dialog(this,evalsModel);
-	dialog.exec();
+	if (all) {
+		dialog.autoAccept();
+	} else {
+		dialog.exec();
+	}
 }
 
 void MainWindow::removeNanEffs()

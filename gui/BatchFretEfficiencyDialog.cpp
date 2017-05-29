@@ -92,3 +92,14 @@ void BatchFretEfficiencyDialog::accept()
 	addProgress.setValue(numEffs);
 	QDialog::accept();
 }
+
+void BatchFretEfficiencyDialog::autoAccept()
+{
+	for(int i=0;  i<ui->lpList1->count(); ++i) {
+		ui->lpList1->item(i)->setCheckState(Qt::Checked);
+	}
+	for(int j=0;  j<ui->lpList2->count(); ++j) {
+		ui->lpList2->item(j)->setCheckState(Qt::Checked);
+	}
+	accept();
+}

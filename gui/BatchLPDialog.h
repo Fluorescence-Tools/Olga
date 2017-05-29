@@ -21,6 +21,7 @@ public Q_SLOTS:
 	{
 		QDialog::reject();
 	}
+	void autoAccept();
 	virtual void accept() override;
 private:
 	std::vector<std::tuple<int, std::string,char> > _residues;//resid, resname, chain

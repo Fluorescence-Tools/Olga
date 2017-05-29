@@ -21,6 +21,7 @@ public Q_SLOTS:
 		QDialog::reject();
 	}
 	virtual void accept() override;
+	void autoAccept();
 private:
 	EvaluatorsTreeModel& _evModel;
 	QList<QModelIndex> lpIndexes;

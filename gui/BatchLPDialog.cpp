@@ -35,14 +35,22 @@ void BatchLPDialog::setResidueList(const std::vector<std::tuple<int, std::string
 {
 	for (const auto& tup:residues) {
 		QString str = QString::number(std::get<0>(tup)) + " (chain "
-			    + QString(std::get<2>(tup)) + ", "
-			    + QString::fromStdString(std::get<1>(tup)) + ")";
+			      + QString(std::get<2>(tup)) + ", "
+			      + QString::fromStdString(std::get<1>(tup)) + ")";
 		QListWidgetItem* item=new QListWidgetItem(std::move(str));
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 		item->setCheckState(Qt::Unchecked);
 		ui->residuesWidget->addItem(item);
 	}
 	_residues=residues;
+}
+
+void BatchLPDialog::autoAccept()
+{
+	for(int i=0;  i<ui->residuesWidget->count(); ++i) {
+		ui->residuesWidget->item(i)->setCheckState(Qt::Checked);
+	}
+	accept();
 }
 
 void BatchLPDialog::accept()
