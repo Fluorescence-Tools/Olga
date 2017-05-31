@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	if(!dirPath.isEmpty()) {
 		QDir dir(dirPath);
 		for (const QString& path:dir.entryList({"*.pdb"})) {
-			auto pdbFnamePtr=std::make_shared<const std::string>(path.toStdString());
+			auto pdbFnamePtr=std::make_shared<const std::string>((dirPath+'/'+path).toStdString());
 			frames.emplace_back(pdbFnamePtr,pdbFnamePtr);
 		}
 	}
