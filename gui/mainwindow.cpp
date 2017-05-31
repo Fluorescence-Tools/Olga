@@ -30,7 +30,7 @@
 
 
 
-MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString ha4Out, const QString selPairs, QWidget *parent) :
+MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString ha4Out, const QString selPairs, const QString dumpJsonPath, QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
 {
@@ -111,6 +111,9 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 			}
 			timer->stop();
 			exportData(ha4Out);
+			if(!dumpJsonPath.isEmpty()) {
+				saveJson(dumpJsonPath);
+			}
 			close();
 		});
 		timer->start(1000);
@@ -459,22 +462,13 @@ void MainWindow::loadEvaluators()
 
 }
 
-bool MainWindow::saveJson()
+bool MainWindow::saveJson(const QString &fileName)
 {
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Settings"), "untitled",
-							tr("FPS settings (*.fps.json);;Any file (*)"));
 	if (fileName.isEmpty()) {
 		return false;
 	}
 
-	QFileInfo fileInfo( fileName );
-	if (fileInfo.suffix().isEmpty())
-	{
-		fileName += ".fps.json";
-	}
-
 	QFile file(fileName);
-
 	if (!file.open(QFile::WriteOnly | QFile::Text)) {
 		QMessageBox::warning(this, tr("Application"),
 				     tr("Cannot write file %1:\n%2.")
@@ -489,6 +483,18 @@ bool MainWindow::saveJson()
 	file.close();
 	statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
 	return true;
+}
+
+bool MainWindow::saveJson()
+{
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Settings"), "untitled",
+							tr("FPS settings (*.fps.json);;Any file (*)"));
+	QFileInfo fileInfo( fileName );
+	if (fileInfo.suffix().isEmpty())
+	{
+		fileName += ".fps.json";
+	}
+	return saveJson(fileName);
 }
 
 bool MainWindow::exportData()
@@ -794,6 +800,7 @@ void MainWindow::loadResults()
 							tr("tab-separated data (*.ha4);;All Files (*)"));
 	_storage.setResults(fileName.toStdString(),trajectoriesModel.frames());
 }
+
 
 void MainWindow::getInfromativePairs()
 {

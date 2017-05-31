@@ -21,7 +21,7 @@ class MainWindow : public QMainWindow
 	Q_OBJECT
 
 public:
-	explicit MainWindow(const QString json, const QString pdbsDir, const QString ha4Out, const QString selPairs="", QWidget *parent = 0);
+	explicit MainWindow(const QString json, const QString pdbsDir, const QString ha4Out, const QString selPairs, const QString dumpJsonPath, QWidget *parent = 0);
 	~MainWindow();
 
 protected:
@@ -65,6 +65,7 @@ private Q_SLOTS:
 
 	void loadResults();
 private:
+	bool saveJson(const QString& fileName);
 	QString timespan(unsigned seconds);
 
 	void readSettings();

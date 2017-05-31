@@ -33,7 +33,8 @@ int main(int argc, char *argv[])
 				   "setting file describing labelig positions and distances", "file"},
 				  {{"o","out"},
 				   "results .ha4 filename", "file"},
-				  {"selectpairs","source PDB file","path"}
+				  {"selectpairs","source PDB file","path"},
+				  {"savejson","save generated evaluators","path"},
 			  });
 	QCommandLineOption quietOption("quiet", "quiet");
 	parser.addOption(quietOption);
@@ -43,7 +44,8 @@ int main(int argc, char *argv[])
 	QString resultsFileName=parser.value("o");
 	bool quiet=parser.isSet(quietOption);
 	QString selectpairs=parser.value("selectpairs");
-	MainWindow w(settingsFileName,pdbsDirPath,resultsFileName,selectpairs);
+	QString savejson=parser.value("savejson");
+	MainWindow w(settingsFileName,pdbsDirPath,resultsFileName,selectpairs,savejson);
 	try {
 		if(!quiet) {w.show();}
 		return a.exec();
