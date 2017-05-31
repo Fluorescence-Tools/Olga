@@ -111,7 +111,7 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 			}
 			timer->stop();
 			exportData(ha4Out);
-			//close();
+			close();
 		});
 		timer->start(1000);
 	}

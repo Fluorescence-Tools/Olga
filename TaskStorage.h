@@ -149,11 +149,14 @@ public:
 	{
 		return _requests.size();
 	}
-	void evaluate(const FrameDescriptor& frame, const std::vector<EvalId>& evIds) const {
+	void evaluate(const FrameDescriptor& frame, const std::vector<EvalId>& evIds) const
+	{
 		for(const auto& evId:evIds) {
-			getString(frame,evId,true);
+			getString(frame,evId,0);
 		}
 	}
+	std::unordered_map<std::string,std::string> getStrings(const FrameDescriptor& frame) const;
+	void evaluate(const FrameDescriptor& frame) const;
 	const std::unordered_map<EvalId,EvalUPtr>& evals() const {
 		static auto tid=std::this_thread::get_id();
 		assert(tid==std::this_thread::get_id());

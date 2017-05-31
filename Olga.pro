@@ -2,6 +2,7 @@ TEMPLATE = subdirs
 
 SUBDIRS = gui \
 	  av2restraints \
-    irmsd
+    irmsd \
+    screen-nox
 
  gui.depends = irmsd

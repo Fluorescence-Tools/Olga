@@ -372,6 +372,34 @@ std::string TaskStorage::evalName(const EvalId &id) const
 	return eval(id).name();
 }
 
+std::unordered_map<std::string, std::string> TaskStorage::getStrings(const FrameDescriptor &frame) const
+{
+	using std::string;
+	std::unordered_map<string,string> res;
+	for(const auto& pair:_evals) {
+		if(isStub(pair.first)) {
+			continue;
+		}
+		const AbstractEvaluator& ev=*pair.second;
+		for(int c=0; c<ev.columnCount(); ++c) {
+			res[ev.columnName(c)]=getString(frame,pair.first,c);
+		}
+	}
+	return res;
+}
+
+void TaskStorage::evaluate(const FrameDescriptor &frame) const
+{
+	for(const auto& pair:_evals) {
+		if(isStub(pair.first)) {
+			continue;
+		}
+		if(pair.second->columnCount()>0) {
+			getString(frame,pair.first,0);
+		}
+	}
+}
+
 EvalId TaskStorage::addEvaluator(EvalUPtr evptr)
 {
 	_evals.emplace(++_currentId,std::move(evptr));
