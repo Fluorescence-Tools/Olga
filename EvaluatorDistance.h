@@ -92,7 +92,7 @@ public:
 		{
 			auto tmpId=val.value<EvalId>();
 			if (tmpId==EvalId(-1)) {
-				std::cerr<<"Can not set position_1\n"<<std::flush;
+				std::cerr<<"Can not set position_1: "+name()+"\n"<<std::flush;
 				return;
 			}
 			_av1=tmpId;
@@ -105,7 +105,7 @@ public:
 		{
 			auto tmpId=val.value<EvalId>();
 			if (tmpId==EvalId(-1)) {
-				std::cerr<<"Can not set position_2\n"<<std::flush;
+				std::cerr<<"Can not set position_2: "+name()+"\n"<<std::flush;
 				return;
 			}
 			_av2=tmpId;
