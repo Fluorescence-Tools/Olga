@@ -9,6 +9,7 @@
 
 #include <QVariant>
 #include <QJsonDocument>
+#include <QCoreApplication>
 
 Position::Position()
 {
@@ -84,10 +85,12 @@ QMap<QString,double> loadvdWRadii(const QString& fileName)
 				  {"P",0.1}};
 	QFile file(fileName);
 	if (!file.open(QIODevice::ReadOnly|QIODevice::Text)) {
+		std::cerr<<"could not load "+fileName.toStdString()+"\n"<<std::endl;
 		return map;
 	}
 	QJsonDocument doc=QJsonDocument::fromJson(file.readAll());
 	if(doc.isNull()) {
+		std::cerr<<"could parse "+fileName.toStdString()+"\n"<<std::endl;
 		return map;
 	}
 	QVariantMap varMap=doc.toVariant().toMap();
@@ -101,7 +104,8 @@ QMap<QString,double> loadvdWRadii(const QString& fileName)
 float pterosVDW(const pteros::System &system, int i)
 {
 	//TODO: This is a hack. One should define a corresponding function in pteros::System
-	static QMap<QString,double> vdWRMap=loadvdWRadii("vdWRadii.json");
+	QString path=QCoreApplication::applicationDirPath()+"/vdWRadii.json";
+	static QMap<QString,double> vdWRMap=loadvdWRadii(path);
 	return vdWRMap.value(QString::fromStdString(system.Atom_data(i).name),0.15);
 }
 
@@ -126,14 +130,14 @@ PositionSimulationResult Position::calculate(const pteros::System &system) const
 {
 	std::vector<Eigen::Vector4f> xyzW;
 	Eigen::Vector3f refPos=atomXYZ(system);
-	if (_stripMask.empty()) {
+	std::string stripExpr=stripExpression();
+	if (stripExpr.empty()) {
 		xyzW=coordsVdW(system);
 	} else {
 		try {
 			pteros::System stripped=system;
-			stripped.remove(_stripMask);
+			stripped.remove(stripExpr);
 			xyzW=coordsVdW(stripped);
-
 		} catch (pteros::Pteros_error err) {
 			std::cerr<<"stripping failed: "+err.what()+"\n"<<std::flush;
 			xyzW=coordsVdW(system);
@@ -162,6 +166,8 @@ std::pair<QString,QVariant> Position::setting(int row) const
 	case 5:
 		return Setting{"strip_mask",QString::fromStdString(_stripMask)};
 	case 6:
+		return Setting{"allowed_sphere_radius",_allowedSphereRadius};
+	case 7:
 		return Setting{"anchor_atoms",QString::fromStdString(_anchorAtoms)};
 	default:
 		return _simulation->setting(row-_localSettingCount);
@@ -192,6 +198,9 @@ void Position::setSetting(int row, const QVariant &val)
 		_stripMask=val.toString().toStdString();
 		return;
 	case 6:
+		_allowedSphereRadius=val.toDouble();
+		return;
+	case 7:
 		_anchorAtoms=val.toString().toStdString();
 		return;
 	default:
@@ -292,20 +301,11 @@ std::vector<Position> Position::fromLegacy(const std::string &labelingFileName, 
 
 Eigen::Vector3f Position::atomXYZ(const pteros::System &system) const
 {
-	std::string selectionExpression;
-	if(_chainIdentifier!=""){
-		selectionExpression+="chain "+_chainIdentifier+" and ";
-	}
-	selectionExpression+="resid "+std::to_string(_residueSeqNumber)+" and ";
-	if(_residueName!="")
-	{
-		selectionExpression+="resname "+_residueName+" and ";
-	}
-	selectionExpression+="name "+_atomName+" ";
+
 	pteros::Selection select;
 	try
 	{
-		select.modify(system,selectionExpression);
+		select.modify(system,selectionExpression());
 	}
 	catch(const pteros::Pteros_error &err)
 	{
@@ -319,8 +319,8 @@ Eigen::Vector3f Position::atomXYZ(const pteros::System &system) const
 		std::cerr <<"Position \""+ _name +
 			    "\". Attachment atom could not be selected. Specified selection defines "+
 			    std::to_string(selectedCount)+
-			    " atoms instead of one: " +
-			    selectionExpression +'\n'<< std::flush;
+			    " atoms instead of one: '" +
+			    selectionExpression() +"'\n"<< std::flush;
 		const double nan=std::numeric_limits<float>::quiet_NaN();
 		return Eigen::Vector3f(nan,nan,nan);
 	}
@@ -368,6 +368,34 @@ void Position::setFromLegacy(const std::string &entry, const std::string &pdbFil
 			stream>>_residueSeqNumber;
 		}
 	}
+}
+
+std::string Position::selectionExpression() const
+{
+	std::string expr;
+	if(_chainIdentifier!=""){
+		expr+="chain "+_chainIdentifier+" and ";
+	}
+	expr+="resid "+std::to_string(_residueSeqNumber)+" and ";
+	if(_residueName!="")
+	{
+		expr+="resname "+_residueName+" and ";
+	}
+	expr+="name "+_atomName+" ";
+	return expr;
+}
+
+std::string Position::stripExpression() const
+{
+	if (_allowedSphereRadius<=0.0) {
+		return _stripMask;
+	}
+	std::string expr="(within "+std::to_string(_allowedSphereRadius*0.1)
+			 +" noself of ("+selectionExpression()+"))";
+	if(!_stripMask.empty()) {
+		expr+=" or ("+_stripMask+")";
+	}
+	return expr;
 }
 
 void Position::setChainIdentifier(const std::string &chainIdentifier)

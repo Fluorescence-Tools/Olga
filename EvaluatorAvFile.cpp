@@ -11,6 +11,10 @@ AbstractEvaluator::Task EvaluatorAvFile::makeTask(const FrameDescriptor &frame) 
 	using result_t=Task;
 	return av.then(
 				[this,trajFname,posName](result_t result){
+		if(!result.valid()) {
+			auto res=std::make_shared<CalcResult<bool>>(false);
+			return std::shared_ptr<AbstractCalcResult>(res);
+		}
 		auto ptrAv=result.get();
 		auto resAv=dynamic_cast<CalcResult<PositionSimulationResult>*>(ptrAv.get());
 		PositionSimulationResult av=resAv->get();
@@ -42,5 +46,6 @@ EvaluatorAvFile::calculate(const PositionSimulationResult &av,
 	if(_openDX) {
 		return std::make_shared<CalcResult<bool>>(av.dump_dxmap(fname+".dx"));
 	}
+
 	return std::make_shared<CalcResult<bool>>(av.dumpXyz(fname+".xyz"));
 }

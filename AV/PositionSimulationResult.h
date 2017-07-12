@@ -93,7 +93,7 @@ public:
 	}
 
 protected:
-	typedef boost::multi_array<bool, 3> densityArray_t;
+	typedef boost::multi_array<float, 3> densityArray_t;
 	typedef densityArray_t::extent_range densityArrayRange_t;
 	//Maps a vector of points to 3-dimensional density grid with
 	//A layer of empty cells around the grid, which is added to avoid boundary-check

@@ -48,7 +48,7 @@ public:
 	Setting setting(int row) const;
 	virtual void setSetting(int row, const QVariant& val);
 	virtual int settingsCount() const {
-		return 12;
+		return 9;
 	}
 	virtual PositionSimulation *Clone(){
 		return new PositionSimulationAV3(*this);
@@ -61,9 +61,6 @@ private:
 	double linkerLength=0.0;
 	double linkerWidth=0.0;
 	float radius[3]={0.0,0.0,0.0};
-	double allowedSphereRadius=0.5;
-	double allowedSphereRadiusMin=0.5;
-	double allowedSphereRadiusMax=2.0;
 	double minVolumeSphereFraction=0.0;
 	double contactR=0.0;
 	double trappedFrac=-1.0;
@@ -74,7 +71,12 @@ private:
 class PositionSimulationAV1: public PositionSimulation
 {
 public:
-	PositionSimulationAV1()=default;
+	PositionSimulationAV1()
+	{
+		if(weightingFunctions.empty()) {
+			weightingFunctions=loadWeightingFunctions();
+		}
+	}
 	int loadLegacy(std::istream& is){
 		int pdbId;
 		is >> linkerLength >> linkerWidth >> radius >>pdbId;
@@ -84,7 +86,7 @@ public:
 	Setting setting(int row) const;
 	virtual void setSetting(int row, const QVariant& val);
 	virtual int settingsCount() const {
-		return 10;
+		return 8;
 	}
 	virtual PositionSimulation *Clone(){
 		return new PositionSimulationAV1(*this);
@@ -96,14 +98,17 @@ private:
 	double linkerLength=0.0;
 	double linkerWidth=0.0;
 	double radius=0.0;
-	double allowedSphereRadius=0.5;
-	double allowedSphereRadiusMin=0.5;
-	double allowedSphereRadiusMax=2.0;
 	double minVolumeSphereFraction=0.0;
 	double contactR=0.0;
 	double trappedFrac=-1.0;
+	bool chainWeighting=false;
 
 	const int linknodes=3;
+
+	mutable TabulatedFunction weightingFunction;
+	static std::map<double, TabulatedFunction> loadWeightingFunctions();
+	static std::map<double,TabulatedFunction> weightingFunctions;
+	void setWeightingFunction() const;
 };
 
 class PositionSimulationAtom: public PositionSimulation

@@ -228,7 +228,7 @@ path2points(const std::vector<float>& pathL,
 	    const std::vector<bool>& occupancyVdWDye,
 	    const Eigen::Vector4f& rSource,
 	    const float& maxRealLength, const float& discretizationStep,
-	    const float contactR, const float trappedFrac)
+	    const float contactR, const float trappedFrac, const TabulatedFunction& weighting)
 {
 	//check dye Clashes and convert weights grid to a point array
 	using Eigen::Vector4f;
@@ -247,14 +247,15 @@ path2points(const std::vector<float>& pathL,
 	int vertex=0;
 	for (int x=0; x<edgeL; ++x) {
 		for (int y=0; y<edgeL; ++y) {
-			for (int z=0; z<edgeL; ++z) {
+			for (int z=0; z<edgeL; ++z,++vertex) {
 				if(pathL[vertex]<=maxVerthexL &&
 				   occupancyVdWDye[vertex]==false) {
 					Vector4f r(x-center,y-center,
 						   z-center,0.0f);
 					r*=discretizationStep;
 					r+=rSource;
-					r[3]=1.0f;
+					float realL=pathL[vertex]*discretizationStep;
+					r[3]=weighting.value(realL);
 					points.push_back(std::move(r));
 					for (const auto& pair: contactNeis) {
 						const int& di=pair.first;
@@ -268,7 +269,6 @@ path2points(const std::vector<float>& pathL,
 						}
 					}
 				}
-				++vertex;
 			}
 		}
 	}
@@ -321,7 +321,8 @@ void savePoints(const std::vector<bool>& arr, const Eigen::Vector4f& rSource,
 std::vector<Eigen::Vector4f> calculateAV(const std::vector<Eigen::Vector4f> &xyzR,
 					 Eigen::Vector4f rSource, float linkerLength,
 					 float linkerWidth, float dyeRadius,
-					 float discretizationStep,float contactR, float trappedFrac)
+					 float discretizationStep, float contactR,
+					 float trappedFrac, const TabulatedFunction &weighting)
 {
 	using std::vector;
 	using Eigen::Vector4f;
@@ -341,7 +342,7 @@ std::vector<Eigen::Vector4f> calculateAV(const std::vector<Eigen::Vector4f> &xyz
 	auto occupancyVdWDye=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,
 					    discretizationStep,dyeRadius);
 	auto ret=path2points(pathL,occupancyVdWDye,rSource,linkerLength,
-			     discretizationStep,contactR,trappedFrac);
+			     discretizationStep,contactR,trappedFrac,weighting);
 	return std::move(ret);
 }
 
@@ -360,15 +361,25 @@ std::vector<Eigen::Vector4f> calculateAV3(const std::vector<Eigen::Vector4f> &xy
 	blockOutside(occupancyVdWL,linkerLength/discretizationStep);
 	const auto& pathL=pathLength(occupancyVdWL);
 
+	TabulatedFunction f(0.0, linkerLength+100.0, Eigen::VectorXd::Constant(2,1.0));
+
 	std::vector<Eigen::Vector4f> points;
 	for(int i=0; i<3; i++) {
 		float dyeR=dyeRadii[i];
 		auto occupancyVdWDye=xyzr2occupancy(xyzR,rSource,linkerLength+maxR,
 						    discretizationStep,dyeR);
 		auto cur=path2points(pathL,occupancyVdWDye,rSource,
-				     linkerLength,discretizationStep, contactR, trappedFrac);
+				     linkerLength,discretizationStep, contactR,
+				     trappedFrac,f);
 		points.reserve(points.size()+cur.size());
 		std::move(cur.begin(),cur.end(),std::back_inserter(points));
 	}
 	return std::move(points);
+}
+
+std::vector<Eigen::Vector4f> calculateAV(const std::vector<Eigen::Vector4f> &xyzR, Eigen::Vector4f rSource, float linkerLength, float linkerWidth, float dyeRadius, float discretizationStep, float contactR, float trappedFrac)
+{
+	TabulatedFunction f(0.0, linkerLength+100.0, Eigen::VectorXd::Constant(2,1.0));
+	return calculateAV(xyzR, rSource, linkerLength, linkerWidth, dyeRadius,
+			   discretizationStep, contactR, trappedFrac,f);
 }

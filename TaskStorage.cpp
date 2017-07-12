@@ -113,7 +113,6 @@ const TaskStorage::Task& TaskStorage::makeTask(const CacheKey &key, bool persist
 		if(persistent) {
 			try{
 				_results.insert(key,tres.get());
-
 			}
 			catch (...) {
 				std::cerr<<"ERROR! Task is invalid (exception): "

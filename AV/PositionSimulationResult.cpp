@@ -218,8 +218,17 @@ std::ostream &PositionSimulationResult::dump_xyz(std::ostream &os) const
 	os.flags(osflags);
 	return os;
 }
+
+/*std::ostream &PositionSimulationResult::dump_pdb(std::ostream &os) const
+{
+
+}*/
+
 std::ostream &PositionSimulationResult::dump_dxmap(std::ostream &os) const
 {
+	if(size()==0) {
+		return os;
+	}
 	const float res=2.0f;
 	densityArray_t density=pointsToDensity(res);
 	int iMin = density.index_bases()[0];
@@ -229,7 +238,7 @@ std::ostream &PositionSimulationResult::dump_dxmap(std::ostream &os) const
 	int jMax = jMin + density.shape()[1];
 	int kMax = kMin + density.shape()[2];
 
-	os<<"# TEST\nobject 1 class gridpositions counts "
+	os<<"# AV\nobject 1 class gridpositions counts "
 	 <<iMax-iMin<<' '<<jMax-jMin<<' '<<kMax-kMin<<'\n'
 	<<"origin "<<res*iMin<<' '<<res*jMin<<' '<<res*kMin<<'\n'
 	<<"delta "<<res<<" 0 0\n"
@@ -337,11 +346,11 @@ PositionSimulationResult::densityArray_t PositionSimulationResult::pointsToDensi
 	densityArrayRange_t rangeK(minLWD(2)/res-1,maxLWD(2)/res+1);
 	auto extents=boost::extents[rangeI][rangeJ][rangeK];
 	densityArray_t density(extents);
-	std::fill(density.data(), density.data() + density.num_elements(), false);
+	std::fill(density.data(), density.data() + density.num_elements(), 0.0f);
 	for(const auto& point: _points)
 	{
 		Eigen::Vector3i xyz=(point/res).head(3).cast<int>();
-		density[xyz(0)][xyz(1)][xyz(2)]=true;
+		density[xyz(0)][xyz(1)][xyz(2)]+=point[3];
 	}
 	return density;
 }

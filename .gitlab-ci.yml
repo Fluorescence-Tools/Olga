@@ -72,6 +72,7 @@ pack-win64:
     - "cp /usr/x86_64-w64-mingw32/lib/qt/plugins/imageformats/\
 	{qsvg,qico,qtiff,qjpeg}.dll ./Olga/imageformats/"
     - cp ./*.json ./Olga/
+    - cp ./weighting_function.csv ./Olga/
     - cp -r ./examples ./Olga/
     - cp -r ./doc ./Olga/
   dependencies:
@@ -100,6 +101,7 @@ pack-win32:
     - "cp /usr/i686-w64-mingw32/lib/qt/plugins/imageformats/\
 	{qsvg,qico,qtiff,qjpeg}.dll ./Olga/imageformats/"
     - cp ./*.json ./Olga/
+    - cp ./weighting_function.csv ./Olga/
     - cp -r ./examples ./Olga/
     - cp -r ./doc ./Olga/
   dependencies:

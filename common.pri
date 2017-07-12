@@ -44,4 +44,5 @@ DISTFILES += \
     examples/Atlastin/0_C3_3q5e_fixed.pdb \
     $$PWD/doc/GUI-description.png \
     $$PWD/doc/containers.ods \
-    $$PWD/LICENSE
+    $$PWD/LICENSE \
+    $$PWD/weighting_function.csv

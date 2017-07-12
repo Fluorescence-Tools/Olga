@@ -100,7 +100,8 @@ public:
 	void setFromLegacy(const std::string& entry,const std::string &pdbFileName);
 private:
 	//Eigen::Vector3f atomXYZ(BALL::System &system) const;
-
+	std::string selectionExpression() const;
+	std::string stripExpression() const;
 	PositionSimulationResult calculate(const Eigen::Vector3f& attachmentAtomPos,
 					   const std::vector<Eigen::Vector4f>& store) const;
 
@@ -112,8 +113,9 @@ private:
 	std::string _atomName;
 	std::string _stripMask;
 	std::string _anchorAtoms;
+	double _allowedSphereRadius=0.0;
 	SimulationType _simulationType=SimulationType::AV1;
-	const int _localSettingCount=7;
+	const int _localSettingCount=8;
 	PositionSimulation* _simulation=nullptr;
 };
 Q_DECLARE_METATYPE(Position::SimulationType)

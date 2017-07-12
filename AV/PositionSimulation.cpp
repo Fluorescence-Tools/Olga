@@ -1,6 +1,9 @@
 #include "PositionSimulation.h"
 #include "fretAV.h"
 #include "Position.h"
+#include <QTextStream>
+#include <QFile>
+#include <QCoreApplication>
 
 PositionSimulation::PositionSimulation()
 {
@@ -41,16 +44,10 @@ PositionSimulation::Setting PositionSimulationAV3::setting(int row) const
 	case 5:
 		return Setting{"radius3",radius[2]};
 	case 6:
-		return Setting{"allowed_sphere_radius",allowedSphereRadius};
-	case 7:
-		return Setting{"allowed_sphere_radius_min",allowedSphereRadiusMin};
-	case 8:
-		return Setting{"allowed_sphere_radius_max",allowedSphereRadiusMax};
-	case 9:
 		return Setting{"min_sphere_volume_fraction",minVolumeSphereFraction};
-	case 10:
+	case 7:
 		return Setting{"contact_volume_thickness",contactR};
-	case 11:
+	case 8:
 		return Setting{"contact_volume_trapped_fraction",trappedFrac};
 	}
 	return Setting();
@@ -79,21 +76,12 @@ void PositionSimulationAV3::setSetting(int row, const QVariant &val)
 		radius[2]=val.toDouble();
 		return;
 	case 6:
-		allowedSphereRadius=val.toDouble();
-		return;
-	case 7:
-		allowedSphereRadiusMin=val.toDouble();
-		return;
-	case 8:
-		allowedSphereRadiusMax=val.toDouble();
-		return;
-	case 9:
 		minVolumeSphereFraction=val.toDouble();
 		return;
-	case 10:
+	case 7:
 		contactR=val.toDouble();
 		return;
-	case 11:
+	case 8:
 		trappedFrac=val.toDouble();
 		return;
 	}
@@ -130,7 +118,7 @@ PositionSimulationAV3::calculate(unsigned atom_i,
 	std::vector<Eigen::Vector4f> res=
 			calculateAV3(xyzW,xyzW[atom_i],linkerLength,
 				     linkerWidth,{radius[0],radius[1],radius[2]},
-		     gridResolution,contactR,trappedFrac);
+				     gridResolution,contactR,trappedFrac);
 	double volfrac=res.size()/(4.0/3.0*3.14159*std::pow(linkerLength/gridResolution,3.0));
 	if (minVolumeSphereFraction>volfrac) {
 		res.clear();
@@ -151,17 +139,13 @@ PositionSimulation::Setting PositionSimulationAV1::setting(int row) const
 	case 3:
 		return Setting{"radius1",radius};
 	case 4:
-		return Setting{"allowed_sphere_radius",allowedSphereRadius};
-	case 5:
-		return Setting{"allowed_sphere_radius_min",allowedSphereRadiusMin};
-	case 6:
-		return Setting{"allowed_sphere_radius_max",allowedSphereRadiusMax};
-	case 7:
 		return Setting{"min_sphere_volume_fraction",minVolumeSphereFraction};
-	case 8:
+	case 5:
 		return Setting{"contact_volume_thickness",contactR};
-	case 9:
+	case 6:
 		return Setting{"contact_volume_trapped_fraction",trappedFrac};
+	case 7:
+		return Setting{"chain_weighting",chainWeighting};
 	}
 	return Setting();
 }
@@ -175,6 +159,7 @@ void PositionSimulationAV1::setSetting(int row, const QVariant &val)
 		return;
 	case 1:
 		linkerLength=val.toDouble();
+		setWeightingFunction();
 		return;
 	case 2:
 		linkerWidth=val.toDouble();
@@ -183,33 +168,101 @@ void PositionSimulationAV1::setSetting(int row, const QVariant &val)
 		radius=val.toDouble();
 		return;
 	case 4:
-		allowedSphereRadius=val.toDouble();
-		return;
-	case 5:
-		allowedSphereRadiusMin=val.toDouble();
-		return;
-	case 6:
-		allowedSphereRadiusMax=val.toDouble();
-		return;
-	case 7:
 		minVolumeSphereFraction=val.toDouble();
 		return;
-	case 8:
+	case 5:
 		contactR=val.toDouble();
 		return;
-	case 9:
+	case 6:
 		trappedFrac=val.toDouble();
+		return;
+	case 7:
+		chainWeighting=val.toBool();
+		setWeightingFunction();
 		return;
 	}
 }
 
 PositionSimulationResult PositionSimulationAV1::calculate(unsigned atom_i, const std::vector<Eigen::Vector4f> &xyzW)
 {
-	std::vector<Eigen::Vector4f> res=calculateAV(xyzW,xyzW[atom_i],linkerLength,linkerWidth,
-		     radius,gridResolution,contactR,trappedFrac);
+	std::vector<Eigen::Vector4f> res;
+	res=calculateAV(xyzW,xyzW[atom_i],linkerLength,linkerWidth,
+			radius,gridResolution,contactR,trappedFrac,weightingFunction);
 	double volfrac=res.size()/(4.0/3.0*3.14159*std::pow(linkerLength/gridResolution,3.0));
 	if (minVolumeSphereFraction>volfrac) {
 		res.clear();
 	}
 	return PositionSimulationResult(std::move(res));
+}
+std::map<double, TabulatedFunction> PositionSimulationAV1::weightingFunctions{};
+std::map<double, TabulatedFunction> PositionSimulationAV1::loadWeightingFunctions()
+{
+	std::map<double, TabulatedFunction> functions;
+	Eigen::VectorXd y0=Eigen::VectorXd::Constant(2,1.0);
+	//default function
+	functions[0.0]=TabulatedFunction(0.0, std::numeric_limits<double>::max(), y0);
+
+	QString path=QCoreApplication::applicationDirPath()+"/weighting_function.csv";
+	QFile file(path);
+	if (! file.open(QIODevice::ReadOnly)) {
+		std::cerr<<"could not open "+path.toStdString()+"\n"<<std::flush;
+		return functions;
+	}
+	std::vector<double> lengthList;
+	QStringList lines=QTextStream(&file).readAll().remove('\r').split('\n');
+	QStringList wordList=lines.first().split('\t');
+	wordList.removeFirst();//X column
+	for(const QString& word:wordList) {
+		bool ok=false;
+		double length=word.toDouble(&ok);
+		if (ok) {
+			lengthList.push_back(length);
+		} else {
+			std::cerr<<"wrong file format. Header must only contain real numbers."
+				   +path.toStdString()+"\n"<<std::flush;
+			return functions;
+		}
+	}
+	lines.removeFirst();//header
+	if(lines.last().isEmpty()) {
+		lines.removeLast();
+	}
+	Eigen::MatrixXd y=Eigen::MatrixXd::Zero(lines.size(),lengthList.size());
+	Eigen::VectorXd x(lines.size());
+	for(int row=0; row<y.rows(); ++row) {
+		QString& line=lines[row];
+		QTextStream in(&line);
+		in>>x[row];
+		for(int c=0; c<y.cols(); ++c) {
+			in >> y(row,c);
+		}
+	}
+	double xMin=x.minCoeff();
+	double xMax=x.maxCoeff();
+	if(xMin!=x[0] || xMax!=x[x.size()-1]) {
+		std::cerr<<"Wrong file format, Rda values do not increase monotonically. "
+			   +path.toStdString()+"\n"<<std::flush;
+		return functions;
+	}
+	for (int col=0; col<y.cols(); ++col) {
+		functions[lengthList[col]]=TabulatedFunction(xMin,xMax,y.col(col));
+	}
+	return functions;
+}
+
+void PositionSimulationAV1::setWeightingFunction() const
+{
+	if (!chainWeighting) {
+		weightingFunction=weightingFunctions.at(0.0);
+		return;
+	}
+	auto it=weightingFunctions.lower_bound(linkerLength);
+	if (it==weightingFunctions.end()) {
+		weightingFunction=weightingFunctions.at(0);
+		std::cerr<<"could not find a weighting fucntion for linker length of "
+			   +std::to_string(linkerLength)+" Angstrom.\n"
+			<<std::flush;
+		return;
+	}
+	weightingFunction=it->second;
 }
