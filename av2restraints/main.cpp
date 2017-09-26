@@ -486,7 +486,13 @@ int main(int argc, char *argv[])
 		using std::to_string;
 		std::string anchStr;
 		anchStr=static_cast<const EvaluatorPositionSimulation&>(storage.eval(avId)).anchorAtoms();
-		auto sel=sys.select(anchStr);
+		pteros::Selection sel;
+		try {
+			sel=sys.select(anchStr);
+		} catch (pteros::Pteros_error err) {
+			std::cerr<<err.what()<<std::endl;
+		}
+
 		auto anchXYZf=sel.get_xyz();
 		auto anchXYZd=anchXYZf.cast<double>()*10.0;
 		vector<int> resids=sel.get_resid();
