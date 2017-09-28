@@ -90,7 +90,6 @@
    </attribute>
    <addaction name="actionLoadStructures"/>
    <addaction name="actionLoadStructuresFolder"/>
-   <addaction name="actionExportStructures"/>
    <addaction name="actionLoadSettings"/>
    <addaction name="actionSaveSettings"/>
    <addaction name="actionExportData"/>
@@ -431,18 +430,6 @@
     <string>Export Structures</string>
    </property>
   </action>
-  <action name="actionExportCylinders">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/cylinders.png</normaloff>:/icons/cylinders.png</iconset>
-   </property>
-   <property name="text">
-    <string>Export cylinders</string>
-   </property>
-   <property name="toolTip">
-    <string>Export cylinders domain representation for pymol</string>
-   </property>
-  </action>
   <action name="actionAbout">
    <property name="icon">
     <iconset resource="icons.qrc">
@@ -654,22 +641,6 @@
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
    <slot>exportStructures()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>372</x>
-     <y>290</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionExportCylinders</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>exportCylinders()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>

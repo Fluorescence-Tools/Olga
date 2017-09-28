@@ -34,7 +34,6 @@ private Q_SLOTS:
 	void loadEvaluators();
 	bool saveJson();
 	bool exportData();
-	bool exportCylinders();
 	bool exportStructures();
 	void addEvaluator();
 

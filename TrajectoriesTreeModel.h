@@ -44,10 +44,6 @@ public:
 		(void)row; (void)filename;
 		return false;//TODO: implement
 	}
-	QStringList cylinders() const
-	{
-		return QStringList();//TODO: implement
-	}
 	void dumpTabSeparatedData(QTextStream& out) const;
 	int tasksRunningCount() const
 	{

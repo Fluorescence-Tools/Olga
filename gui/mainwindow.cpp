@@ -505,42 +505,6 @@ bool MainWindow::exportData()
 	return exportData(fileName);
 }
 
-bool MainWindow::exportCylinders()
-{
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Export cylinders for pymol"),
-							"", tr("Python script (*.py);;Any file (*)"));
-
-	if (fileName.isEmpty()) {
-		return false;
-	}
-
-	/*QFileInfo fileInfo( fileName );
-	   if (fileInfo.suffix().isEmpty())
-	   {
-	   fileName += ".csv";
-	   }*/
-
-	QFile file(fileName);
-
-	if (!file.open(QFile::WriteOnly | QFile::Text)) {
-		QMessageBox::warning(this, tr("Application"),
-				     tr("Cannot write file %1:\n%2.")
-				     .arg(fileName)
-				     .arg(file.errorString()));
-		return false;
-	}
-
-	file.write("from pymol.cgo import *\nfrom pymol import cmd\nobj = [\n");
-
-	for (const QString & str : trajectoriesModel.cylinders()) {
-		file.write((str + '\n').toUtf8());
-	}
-
-	file.write("]\ncmd.load_cgo(obj,'cylinders')");
-	statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
-	return true;
-}
-
 bool MainWindow::exportStructures()
 {
 	QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
