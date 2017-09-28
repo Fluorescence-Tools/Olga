@@ -1,0 +1,63 @@
+{
+    "AV File": {
+        "A": {
+            "only_shell": false,
+            "openDX": true,
+            "position_name": "A:ALA1088",
+            "write_dir": ""
+        },
+        "B": {
+            "only_shell": false,
+            "openDX": true,
+            "position_name": "B:ALA1088",
+            "write_dir": ""
+        }
+    },
+    "Distances": {
+        "A:ARG1101-B:ARG1101": {
+            "Forster_radius": 52,
+            "distance": 0,
+            "distance_type": "RDAMeanE",
+            "error_neg": 1,
+            "error_pos": 1,
+            "position1_name": "A:ALA1088",
+            "position2_name": "B:ALA1088"
+        }
+    },
+    "Positions": {
+        "A:ALA1088": {
+            "allowed_sphere_radius": 15,
+            "atom_name": "CA",
+            "chain_identifier": "A",
+            "chain_weighting": true,
+            "contact_volume_thickness": 0,
+            "contact_volume_trapped_fraction": -1,
+            "linker_length": 249.4,
+            "linker_width": 7,
+            "min_sphere_volume_fraction": 0,
+            "radius1": 20,
+            "residue_name": "ALA",
+            "residue_seq_number": 1088,
+            "simulation_grid_resolution": 2,
+            "simulation_type": "AV1",
+            "strip_mask": ""
+        },
+        "B:ALA1088": {
+            "allowed_sphere_radius": 15,
+            "atom_name": "CA",
+            "chain_identifier": "B",
+            "chain_weighting": true,
+            "contact_volume_thickness": 0,
+            "contact_volume_trapped_fraction": -1,
+            "linker_length": 249.4,
+            "linker_width": 7,
+            "min_sphere_volume_fraction": 0,
+            "radius1": 20,
+            "residue_name": "ALA",
+            "residue_seq_number": 1088,
+            "simulation_grid_resolution": 2,
+            "simulation_type": "AV1",
+            "strip_mask": ""
+        }
+    }
+}
