@@ -139,7 +139,8 @@ PositionSimulationResult Position::calculate(const pteros::System &system) const
 			stripped.remove(stripExpr);
 			xyzW=coordsVdW(stripped);
 		} catch (pteros::Pteros_error err) {
-			std::cerr<<"stripping failed: "+err.what()+"\n"<<std::flush;
+			std::cerr<<"stripping failed: "+std::string(err.what())
+				   +"\n"<<std::flush;
 			xyzW=coordsVdW(system);
 		}
 	}
