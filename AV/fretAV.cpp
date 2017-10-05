@@ -197,7 +197,7 @@ std::vector<float> pathLength(const std::vector<bool>& occupancyVdWL)
 	std::vector<queue_entry_t> queContainer;
 	queContainer.reserve(8192);
 	std::priority_queue<queue_entry_t, std::vector<queue_entry_t>, std::greater<queue_entry_t>> que (
-	    std::greater<queue_entry_t>(), std::move(queContainer));
+				std::greater<queue_entry_t>(), std::move(queContainer));
 
 	//it is possible to improve performance 10-20%
 	//by using more efficient heap/queue implementation like radix heap
@@ -280,8 +280,10 @@ path2points(const std::vector<float>& pathL,
 		/*std::cout<<"trappedFrac = "+std::to_string(trappedFrac)
 			   +"; contactRho = "+std::to_string(contactRho)+"\n";*/
 		if (contactRho>=0.0f) {
-			for (const int i: trappedPointIndexes) {
-				points[i][3]=contactRho;
+			if (volFree>0.0f) {
+				for (const int i: trappedPointIndexes) {
+					points[i][3]=contactRho;
+				}
 			}
 		} else {
 			std::cerr<<"WARNING! contactRho="
