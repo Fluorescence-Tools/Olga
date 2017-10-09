@@ -2,7 +2,29 @@
 
 #include "EvaluatorAvFile.h"
 #include "CalcResult.h"
+#include <QDir>
 
+
+std::string stripSpecial(const std::string& name)
+{
+	std::string res=name;
+	static const bool forbidden[128]={1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+					  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+					  1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1,
+					  1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0,
+					  0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+					  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+					  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+					  1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+					  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+					  0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1};
+	for (char& c:res) {
+		if (c<0 || forbidden[c]) {
+			c='_';
+		}
+	}
+	return res;
+}
 AbstractEvaluator::Task EvaluatorAvFile::makeTask(const FrameDescriptor &frame) const noexcept
 {
 	Task av=getTask(frame,_av,false);
@@ -24,12 +46,22 @@ AbstractEvaluator::Task EvaluatorAvFile::makeTask(const FrameDescriptor &frame) 
 		if (_writeDirInfo.isAbsolute()) {
 			fname=_writeDirPath+'/'
 			      +trajInfo.baseName().toStdString()
-			      +"_"+posName;
+			      +"_"+stripSpecial(posName);
 		} else {
 			fname=trajInfo.absolutePath().toStdString()
 			      +'/'+_writeDirPath
 			      +'/'+trajInfo.baseName().toStdString()
-			      +"_"+posName;
+			      +"_"+stripSpecial(posName);
+		}
+		QFileInfo fileInfo(QString::fromStdString(fname));
+		if (QFileInfo(fileInfo.absolutePath()).isFile()) {
+			std::cerr<<_writeDirPath+" is not a directory!\n";
+			auto res=std::make_shared<CalcResult<bool>>(false);
+			return std::shared_ptr<AbstractCalcResult>(res);
+		}
+		if (!fileInfo.absoluteDir().exists()) {
+			std::cout<<_writeDirPath+" does not exist, creating.\n";
+			QDir().mkpath(fileInfo.absolutePath());
 		}
 		return calculate(av,fname);
 	}).share();
@@ -40,12 +72,13 @@ EvaluatorAvFile::calculate(const PositionSimulationResult &av,
 			   const std::string& fname) const
 {
 	//std::cout<<"Dumping: "+fname+"\n"<<std::flush;
+	bool isSaved=false;
 	if (_onlyShell) {
-		return std::make_shared<CalcResult<bool>>(av.dumpShellXyz(fname+".xyz"));
+		isSaved=av.dumpShellXyz(fname+".xyz");
+	} else if(_openDX) {
+		isSaved=av.dump_dxmap(fname+".dx");
+	} else {
+		isSaved=av.dumpXyz(fname+".xyz");
 	}
-	if(_openDX) {
-		return std::make_shared<CalcResult<bool>>(av.dump_dxmap(fname+".dx"));
-	}
-
-	return std::make_shared<CalcResult<bool>>(av.dumpXyz(fname+".xyz"));
+	return std::make_shared<CalcResult<bool>>(isSaved);
 }

@@ -270,8 +270,8 @@ bool PositionSimulationResult::dump_dxmap(const std::string &fileName) const
 {
 	std::ofstream outfile;
 	outfile.open(fileName, std::ifstream::out);
-	if(!outfile.is_open())
-	{
+	if(!outfile.is_open()) {
+		std::cerr<<"could not open the file for writing: "+fileName+"\n";
 		return false;
 	}
 	dump_dxmap(outfile);
@@ -309,8 +309,8 @@ std::ostream &PositionSimulationResult::dumpShellXyz(std::ostream &os) const
 bool PositionSimulationResult::dumpXyz(const std::string &fileName) const {
 	std::ofstream outfile;
 	outfile.open(fileName, std::ifstream::out);
-	if(!outfile.is_open())
-	{
+	if(!outfile.is_open()) {
+		std::cerr<<"could not open the file for writing: "+fileName+"\n";
 		return false;
 	}
 	dump_xyz(outfile);
@@ -321,8 +321,8 @@ bool PositionSimulationResult::dumpXyz(const std::string &fileName) const {
 bool PositionSimulationResult::dumpShellXyz(const std::string &fileName) const {
 	std::ofstream outfile;
 	outfile.open(fileName, std::ifstream::out);
-	if(!outfile.is_open())
-	{
+	if(!outfile.is_open()) {
+		std::cerr<<"could not open the file for writing: "+fileName+"\n";
 		return false;
 	}
 	dumpShellXyz(outfile);
