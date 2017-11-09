@@ -37,9 +37,11 @@ int main(int argc, char *argv[])
 		       <<jsonPath.toStdString()<<std::endl;
 		return 1;
 	}
-	QJsonDocument doc = QJsonDocument::fromJson(jsonFile.readAll());
+	QJsonParseError jsonErr;
+	QJsonDocument doc = QJsonDocument::fromJson(jsonFile.readAll(),&jsonErr);
 	if (doc.isNull()) {
 		std::cerr<<"Invalid json file"<<std::endl;
+		std::cerr<<jsonErr.errorString().toStdString()<<std::endl;
 		return 2;
 	}
 	QVariantMap evalsData=doc.toVariant().toMap();
