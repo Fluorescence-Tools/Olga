@@ -41,7 +41,8 @@ int main(int argc, char *argv[])
 	QJsonDocument doc = QJsonDocument::fromJson(jsonFile.readAll(),&jsonErr);
 	if (doc.isNull()) {
 		std::cerr<<"Invalid json file"<<std::endl;
-		std::cerr<<jsonErr.errorString().toStdString()<<std::endl;
+		std::cerr<<jsonErr.errorString().toStdString()+" ("
+			+std::to_string(jsonErr.offset)+")"<<std::endl;
 		return 2;
 	}
 	QVariantMap evalsData=doc.toVariant().toMap();
