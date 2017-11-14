@@ -29,7 +29,7 @@
      <item>
       <widget class="QLineEdit" name="nameTemplateEdit">
        <property name="text">
-        <string>{resid}</string>
+        <string>{chainID}{resID}</string>
        </property>
        <property name="placeholderText">
         <string>{resid}</string>
@@ -67,7 +67,7 @@
      <item>
       <widget class="QLineEdit" name="stripTemplateEdit">
        <property name="text">
-        <string>resid {resid} and not name CA CB C N O</string>
+        <string>chain {chainID} and resid {resID} and not name CA CB C N O</string>
        </property>
        <property name="placeholderText">
         <string>{resid}</string>

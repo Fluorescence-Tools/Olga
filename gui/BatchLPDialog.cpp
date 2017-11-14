@@ -71,7 +71,9 @@ void BatchLPDialog::accept()
 		auto index=_evModel.duplicateEvaluator(rootEval);
 
 		QString nameTemplate=ui->nameTemplateEdit->text();
-		auto name=nameTemplate.replace("{resid}",QString::number(resi));
+		QString name=nameTemplate;
+		name=name.replace("{resID}",QString::number(resi),Qt::CaseInsensitive);
+		name=name.replace("{chainID}",chain,Qt::CaseInsensitive);
 		_evModel.setEvaluatorName(index,name.toStdString());
 
 		_evModel.setEvaluatorOption(index,"residue_seq_number",resi);
@@ -79,7 +81,9 @@ void BatchLPDialog::accept()
 		_evModel.setEvaluatorOption(index,"chain_identifier",chain);
 
 		QString stripTemplate=ui->stripTemplateEdit->text();
-		auto strip=stripTemplate.replace("{resid}",QString::number(resi));
+		QString strip=stripTemplate;
+		strip=strip.replace("{resID}",QString::number(resi),Qt::CaseInsensitive);
+		strip=strip.replace("{chainID}",chain,Qt::CaseInsensitive);
 		_evModel.setEvaluatorOption(index,"strip_mask",strip);
 
 		_evModel.activateEvaluator(index);
