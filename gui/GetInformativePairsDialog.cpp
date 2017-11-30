@@ -158,10 +158,11 @@ void GetInformativePairsDialog::accept()
 	const std::string sel=ui->selectionEdit->text().toStdString();
 	const double err=ui->errorSpinBox->value();
 	const int numPairsMax=ui->maxPairs->value();
+	const int numFitParams=ui->numFitParams->value();
 	const size_t numFrames=frames.size();
 
 	QProgressDialog setEffProgress("Initializing E matrix...",QString(),0,
-				     100,this);
+				       100,this);
 	setEffProgress.setWindowModality(Qt::WindowModal);
 	setEffProgress.setMinimumDuration(0);
 	setEffProgress.setValue(0);
@@ -222,7 +223,7 @@ void GetInformativePairsDialog::accept()
 				     numRmsds,this);
 	rmsdProgress.setWindowModality(Qt::WindowModal);
 	rmsdProgress.setMinimumDuration(0);
-//	auto start = std::chrono::system_clock::now();
+	//	auto start = std::chrono::system_clock::now();
 	std::future<MatrixXf> fRmsds(async(std::launch::async,[&,this]{
 		return rmsds(traj);
 	}));
@@ -237,8 +238,8 @@ void GetInformativePairsDialog::accept()
 		return;
 	}
 	//dump_rmsds(RMSDs,"state_rmsds.dat");
-//	std::chrono::duration<double> diff = std::chrono::system_clock::now()-start;
-//	std::cout<<"\n\nrmsds/s: "+std::to_string(numRmsds/diff.count())<<std::endl;
+	//	std::chrono::duration<double> diff = std::chrono::system_clock::now()-start;
+	//	std::cout<<"\n\nrmsds/s: "+std::to_string(numRmsds/diff.count())<<std::endl;
 	rmsdProgress.setValue(numRmsds);
 
 	const int maxPairs=std::min(Eall.distanceCount(),numPairsMax);
@@ -247,7 +248,7 @@ void GetInformativePairsDialog::accept()
 	selectionProgress.setWindowModality(Qt::WindowModal);
 	selectionProgress.setMinimumDuration(0);
 	future<pair_list_type> selection(async(std::launch::async,[&,this]{
-		return greedySelection(err,Eall,RMSDs,maxPairs);
+		return greedySelection(err,Eall,RMSDs,maxPairs,numFitParams);
 	}));
 	do {
 		QApplication::processEvents();
@@ -290,12 +291,12 @@ void GetInformativePairsDialog::setFileName()
 	ui->fileEdit->setText(fileName);
 }
 
-GetInformativePairsDialog::pair_list_type GetInformativePairsDialog::greedySelection(const float err,
-										     const FRETEfficiencies& Eall,
-										     const Eigen::MatrixXf& RMSDs,
-										     const int maxPairs) const
+GetInformativePairsDialog::pair_list_type GetInformativePairsDialog::
+greedySelection(const float err, const FRETEfficiencies& Eall,
+		const Eigen::MatrixXf& RMSDs, const int maxPairs,
+		const int fitParams) const
 {
-	FRETEfficiencies E(err,Eall.conformerCount());
+	FRETEfficiencies E(err,Eall.conformerCount(),fitParams);
 	pair_list_type result;
 
 	std::atomic<int> pairsDone{0};

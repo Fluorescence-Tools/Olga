@@ -196,7 +196,7 @@ private:
 
 	const float R0=52.0f;
 	const float err=0.058f;
-	const int _numFitParams=1;
+	const int _numFitParams;
 
 	mutable std::vector<InterpChi2sf> interpVec;
 public:
@@ -204,12 +204,13 @@ public:
 	FRETEfficiencies(FRETEfficiencies&& o): interpVec(std::move(o.interpVec)),
 		E(std::move(o.E)), validity(std::move(o.validity)),
 		_chi2(std::move(o._chi2)),_nPoints(std::move(o._nPoints)),
-		distNames(std::move(o.distNames)) {}
+		distNames(std::move(o.distNames)),_numFitParams(o._numFitParams) {}
 	FRETEfficiencies(const FRETEfficiencies& o): interpVec(o.interpVec),
 		E(o.E), validity(o.validity),
 		_chi2(o._chi2),_nPoints(o._nPoints),
-		distNames(o.distNames) {}
-	FRETEfficiencies(const float err, const int numConf):err(err)
+		distNames(o.distNames),_numFitParams(o._numFitParams) {}
+	FRETEfficiencies(const float err, const int numConf, const int numFitParams=1):
+		err(err),_numFitParams(numFitParams)
 	{
 		E.resize(numConf,0);
 		validity.resize(numConf,0);
