@@ -375,7 +375,6 @@ public:
 		unsigned numThreads=maxRam/(60ull*numConf*numConf);
 		numThreads=std::min(std::thread::hardware_concurrency(),numThreads);
 		numThreads=std::max(numThreads,1u);
-		//std::vector<std::thread> threads(std::thread::hardware_concurrency());
 		std::vector<std::thread> threads(numThreads);
 		const int grainSize=numCols/threads.size()+1;
 		for(int t=0; t<threads.size(); ++t) {
