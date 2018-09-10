@@ -286,7 +286,12 @@ int EvaluatorsTreeModel::rowCount(const QModelIndex &parent) const
 	// number of  settings in the evaluator
 	if (parentItem.isEvaluatorsClass()) {
 		if (parentItem.classRow() == 0) {
-			return pendingEvals[parent.row()]->settingsCount();
+			if (parent.row() < pendingEvals.size()) {
+				return pendingEvals[parent.row()]
+					->settingsCount();
+			} else {
+				return 0; // TODO: this should never happen
+			}
 		}
 		const EvalId &id =
 			evals[parentItem.classRow() - 1].second[parent.row()];

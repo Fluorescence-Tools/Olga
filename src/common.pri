@@ -33,19 +33,7 @@ SRC_DIR = $$PWD
 DISTFILES += \
     .gitignore \
     .gitlab-ci.yml \
-    vdWRadii.json \
-    doc/legacy_to_json.ods \
-    doc/radix_dejkstra.ods \
+    .clang-format \
+    src/vdWRadii.json \
     README.md \
-    examples/Atlastin/C1-3_AV_5-10-20-30d.fps.json \
-    examples/Atlastin/C1-3_AV_5-10-20-30d_savexyz.fps.json \
-    examples/Atlastin/0_C1_3q5d_fixed.pdb \
-    examples/Atlastin/0_C2_4idn_fixed.pdb \
-    examples/Atlastin/0_C3_3q5e_fixed.pdb \
-    doc/GUI-description.png \
-    doc/containers.ods \
-    LICENSE \
-    weighting_function.csv \
-    examples/TGR5/TGR5_A-B.fps.json \
-    examples/TGR5/distance.ha4 \
-    examples/TGR5/TGR5-GProt_dimer1-8_mem.pdb
+    LICENSE 

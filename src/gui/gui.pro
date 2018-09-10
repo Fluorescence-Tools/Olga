@@ -8,8 +8,6 @@ TARGET = Olga
 TEMPLATE = app
 
 
-INCLUDEPATH += $$PWD/irmsd
-DEPENDPATH += $$PWD/irmsd
 DEPENDPATH += . ../irmsd
 INCLUDEPATH += ../irmsd
 

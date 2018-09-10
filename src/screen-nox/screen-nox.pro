@@ -21,7 +21,7 @@ INCLUDEPATH += ../
 VPATH += ../
 
 SOURCES += \
-	main.cpp \
+    main.cpp \
     AV/fretAV.cpp \
     AV/Distance.cpp \
     AV/MolecularSystemDomain.cpp \
