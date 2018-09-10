@@ -29,11 +29,3 @@ LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io #-lyomm11
 INCLUDEPATH += $$PWD
 VPATH += $$PWD
 SRC_DIR = $$PWD
-
-DISTFILES += \
-    .gitignore \
-    .gitlab-ci.yml \
-    .clang-format \
-    src/vdWRadii.json \
-    README.md \
-    LICENSE 

@@ -9,3 +9,11 @@ av2restraints.subdir = src/av2restraints
 irmsd.subdir = src/irmsd
 screen-nox.subdir = src/screen-nox
 gui.depends = irmsd
+
+DISTFILES += \
+    .gitignore \
+    .gitlab-ci.yml \
+    .clang-format \
+    src/vdWRadii.json \
+    README.md \
+    LICENSE
