@@ -6,7 +6,7 @@ Software for FRET-based screening of conformations and experiment planning
 # Installation
 Windows version of Olga software can be downloaded from the release section of this repository. In order to install Olga software on Windows it is enough to extract the [Olga_win64_*.zip][1] archive. Olga can then be started from `Olga.exe` executable file.
 
-# Usage
+# Documentation
 Documentation, usage examples and demos are available in the [doc](/doc/) folder of this repository. The documentaion covers several common use cases:
 
  * FRET-screening with organic dyes (e.g. Alexa and Cy5)
