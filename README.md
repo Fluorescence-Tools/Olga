@@ -33,5 +33,5 @@ If you have used LabelLib in a scientific publication, we would appreciate citat
 
 See the [page of C. Seidel research group](http://www.mpc.hhu.de/) for more fluorescence-related software and additional information.
 
-[1]: https://github.com/Fluorescence-Tools/Olga/releases/download/master-20171130/Olga_win64_master-3dd9922.zip
+[1]: https://github.com/Fluorescence-Tools/Olga/releases/download/master-20171130/Olga_master-20171130_win64_3dd9922.zip
 [2]: https://doi.org/10.1038/nmeth.2222
