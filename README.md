@@ -7,21 +7,21 @@ Software for FRET-based screening of conformations and experiment planning
 Windows version of Olga software can be downloaded from the release section of this repository. In order to install Olga software on Windows it is enough to extract the [Olga_win64_*.zip][1] archive. Olga can then be started from `Olga.exe` executable file.
 
 # Documentation
-Documentation, usage examples and demos are available in the [doc](/doc/) folder of this repository. The documentaion covers several common use cases:
+Documentation and usage examples are available in the [doc](/doc/) folder of this repository. The documentaion covers several common use cases:
 
- * FRET-screening with organic dyes (e.g. Alexa and Cy5)
+ * [FRET-screening with organic dyes (e.g. Alexa and Cy5)](/doc/screening%20tutorial/screening%20tutorial.md)
  * Selection of informative FRET pairs (experiment planning)
- * [FRET-screening with fluorescent protein dyes](/doc/screening%20with%20fluorescent%20proteins/Screening%20and%20AV%20saving.md)
+ * [FRET-screening with fluorescent protein dyes](/doc/screening%20with%20fluorescent%20proteins/Screening%20and%20AV%20saving.md#tutorial-screening-of-structural-models-and-generation-of-accessible-volumes)
 
-# Depepndencies:
+# Dependencies
 
  * cmake
  * boost
  * qt5
+ * [pteros](http://pteros.sourceforge.net/)
  * [libcuckoo](https://github.com/efficient/libcuckoo)
  * [readerwriterqueue](https://github.com/cameron314/readerwriterqueue)
  * [async++](https://github.com/Amanieu/asyncplusplus)
- * [pteros](http://pteros.sourceforge.net/)
 
 # Citation
 
