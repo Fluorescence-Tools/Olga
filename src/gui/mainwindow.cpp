@@ -29,13 +29,15 @@
 #include "Q_DebugStream.h"
 
 
-
-MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString ha4Out, const QString selPairs, const QString dumpJsonPath, QWidget *parent) :
-	QMainWindow(parent),
-	ui(new Ui::MainWindow)
+MainWindow::MainWindow(const QString json, const QString pdbsDir,
+		       const QString ha4Out, const QString selPairs,
+		       const QString dumpJsonPath, QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow)
 {
-	qRegisterMetaType<std::shared_ptr<AbstractCalcResult>>("shared_ptr<AbstractCalcResult>");
-	qRegisterMetaType<std::shared_ptr<AbstractEvaluator>>("shared_ptr<AbstractEvaluator>");
+	qRegisterMetaType<std::shared_ptr<AbstractCalcResult>>(
+		"shared_ptr<AbstractCalcResult>");
+	qRegisterMetaType<std::shared_ptr<AbstractEvaluator>>(
+		"shared_ptr<AbstractEvaluator>");
 	qRegisterMetaType<FrameDescriptor>("FrameDescriptor");
 	qRegisterMetaType<EvalId>("EvalId");
 	qRegisterMetaType<Position::SimulationType>("SimulationType");
@@ -44,7 +46,7 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 	ui->setupUi(this);
 
 	ui->menuExtras->menuAction()->setVisible(false);
-	if(QFileInfo("enableExtras").exists()) {
+	if (QFileInfo("enableExtras").exists()) {
 		ui->menuExtras->menuAction()->setVisible(true);
 		ui->menuExtras->setEnabled(true);
 	}
@@ -52,7 +54,7 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 	ui->evalTypeAddComboBox->addItems(_storage.supportedTypes());
 
 	evaluatorsDelegate = new EvaluatorDelegate(ui->evaluatorsTreeView);
-	//tabifyDockWidget();
+	// tabifyDockWidget();
 
 	readSettings();
 	ui->evalPropDockWidget->hide();
@@ -71,47 +73,50 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir, const QString 
 	ui->statusBar->addPermanentWidget(&tasksStatus);
 	const int timerInterval = 5000;
 	QTimer *timer = new QTimer(this);
-	connect(timer, &QTimer::timeout, [ = ]() {
+	connect(timer, &QTimer::timeout, [=]() {
 		static int tasksPendindOld = 0;
 		int tasksPending = trajectoriesModel.tasksPendingCount();
-		int ETA = tasksPending < tasksPendindOld ?
-				  timerInterval / 1000 * tasksPending / (tasksPendindOld - tasksPending) : 0;
+		int ETA = tasksPending < tasksPendindOld
+				  ? timerInterval / 1000 * tasksPending
+					    / (tasksPendindOld - tasksPending)
+				  : 0;
 		tasksPendindOld = tasksPending;
 
-		QString message = QString("Tasks pending/ready/running: %1/%2/%3; ETA: ")
-				  .arg(tasksPending)
-				  .arg(trajectoriesModel.resultsCount())
-				  .arg(trajectoriesModel.tasksRunningCount())
-				  + timespan(ETA);
+		QString message =
+			QString("Tasks pending/ready/running: %1/%2/%3; ETA: ")
+				.arg(tasksPending)
+				.arg(trajectoriesModel.resultsCount())
+				.arg(trajectoriesModel.tasksRunningCount())
+			+ timespan(ETA);
 		tasksStatus.setText(message);
 		ui->mainTreeView->viewport()->update();
 	});
 	timer->start(timerInterval);
 
-	auto degugStream = new QDebugStream(std::cerr); //Capture stderr
-	auto infoStream = new QDebugStream(std::cout); //Capture stderr
-	connect(degugStream, SIGNAL(errorPrinted(QString)),
-		ui->logTextEdit, SLOT(append(const QString &)));
-	connect(infoStream, SIGNAL(errorPrinted(QString)),
-		ui->infoTextEdit, SLOT(append(const QString &)));
+	auto degugStream = new QDebugStream(std::cerr); // Capture stderr
+	auto infoStream = new QDebugStream(std::cout);  // Capture stderr
+	connect(degugStream, SIGNAL(errorPrinted(QString)), ui->logTextEdit,
+		SLOT(append(const QString &)));
+	connect(infoStream, SIGNAL(errorPrinted(QString)), ui->infoTextEdit,
+		SLOT(append(const QString &)));
 
 	connect(&trajectoriesModel, SIGNAL(rowsInserted(QModelIndex, int, int)),
 		this, SLOT(expand(const QModelIndex &, int, int)));
-	if(json.size()>0 && pdbsDir.size()>0 && ha4Out.size() >0) {
+	if (json.size() > 0 && pdbsDir.size() > 0 && ha4Out.size() > 0) {
 		loadEvaluators(json);
-		if(!selPairs.isEmpty()) {
+		if (!selPairs.isEmpty()) {
 			autoSelectPairs(selPairs);
 		}
 		loadStructuresFolder(pdbsDir);
-		QTimer* timer=new QTimer(this);
+		QTimer *timer = new QTimer(this);
 		timer->setSingleShot(false);
-		connect(timer, &QTimer::timeout, [=](){
-			if(!_storage.ready()) {
+		connect(timer, &QTimer::timeout, [=]() {
+			if (!_storage.ready()) {
 				return;
 			}
 			timer->stop();
 			exportData(ha4Out);
-			if(!dumpJsonPath.isEmpty()) {
+			if (!dumpJsonPath.isEmpty()) {
 				saveJson(dumpJsonPath);
 			}
 			close();
@@ -149,19 +154,22 @@ void MainWindow::setupMenus()
 
 
 	ui->mainTreeView->setContextMenuPolicy(Qt::CustomContextMenu);
-	//ui->distancesTableView->setContextMenuPolicy(Qt::CustomContextMenu);
+	// ui->distancesTableView->setContextMenuPolicy(Qt::CustomContextMenu);
 
-	/*connect(ui->mainTreeView, SIGNAL(customContextMenuRequested(const QPoint&)),
+	/*connect(ui->mainTreeView, SIGNAL(customContextMenuRequested(const
+	   QPoint&)),
 		this, SLOT(ShowSystemsContextMenu(const QPoint&)));*/
 
-	/*connect(ui->distancesTableView, SIGNAL(customContextMenuRequested(const QPoint&)),
+	/*connect(ui->distancesTableView,
+	   SIGNAL(customContextMenuRequested(const QPoint&)),
 		this, SLOT(ShowDistancesContextMenu(const QPoint&)));*/
 
-	//distancesMenu.addAction("Delete selected distances",this,SLOT(deleteSelectedDistances()));
+	// distancesMenu.addAction("Delete selected
+	// distances",this,SLOT(deleteSelectedDistances()));
 
 
 	QAction *action = systemsMenu.addAction("&Copy");
-	connect(action, &QAction::triggered, [ = ]() {
+	connect(action, &QAction::triggered, [=]() {
 		copySelectedText(ui->mainTreeView->selectionModel());
 	});
 
@@ -170,24 +178,27 @@ void MainWindow::setupMenus()
 		copySelectedText(ui->distancesTableView->selectionModel());
 	   }  );*/
 
-	//ui->distancesTableView->installEventFilter(this);
+	// ui->distancesTableView->installEventFilter(this);
 
 	ui->mainTreeView->installEventFilter(this);
 }
 
 bool MainWindow::eventFilter(QObject *object, QEvent *event)
 {
-	if ((object == ui->mainTreeView /*|| object == ui->distancesTableView */) &&
-	    event->type() == QEvent::KeyPress) {
+	if ((object
+	     == ui->mainTreeView /*|| object == ui->distancesTableView */)
+	    && event->type() == QEvent::KeyPress) {
 		QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
 
 		if (keyEvent->matches(QKeySequence::Copy)) {
-			QAbstractItemView *viewObject = static_cast<QAbstractItemView *>(object);
+			QAbstractItemView *viewObject =
+				static_cast<QAbstractItemView *>(object);
 			copySelectedText(viewObject->selectionModel());
 			return true;
 
 		} else if (keyEvent->matches(QKeySequence::Paste)) {
-			QAbstractItemView *viewObject = static_cast<QAbstractItemView *>(object);
+			QAbstractItemView *viewObject =
+				static_cast<QAbstractItemView *>(object);
 			pasteText(viewObject);
 			return true;
 		}
@@ -196,7 +207,8 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
 	return false;
 }
 
-QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) const
+QString
+MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) const
 {
 	const QAbstractItemModel *model = selectionModel->model();
 	QModelIndexList indexes = selectionModel->selectedIndexes();
@@ -205,8 +217,8 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
 		return "";
 	}
 
-	std::sort(indexes.begin(), indexes.end(),
-		  [] (const QModelIndex &lhs, const QModelIndex &rhs) {
+	std::sort(indexes.begin(), indexes.end(), [](const QModelIndex &lhs,
+						     const QModelIndex &rhs) {
 		if (lhs.sibling(rhs.row(), rhs.column()) == rhs) {
 			return lhs < rhs;
 		}
@@ -238,19 +250,22 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
 	QString selectedText;
 	QModelIndex previous = indexes.takeFirst();
 
-	for (const QModelIndex & index : indexes) {
+	for (const QModelIndex &index : indexes) {
 
 		QString text = model->data(previous).toString();
 		// At this point `text` contains the text in one cell
 		selectedText.append(text);
 
-		// If you are at the start of the row the row number of the previous index
-		// isn't the same.  Text is followed by a row separator, which is a newline.
-		if (index.row() != previous.row() ||
-		    index.parent() != previous.parent()) {
+		// If you are at the start of the row the row number of the
+		// previous index
+		// isn't the same.  Text is followed by a row separator, which
+		// is a newline.
+		if (index.row() != previous.row()
+		    || index.parent() != previous.parent()) {
 			selectedText.append(QLatin1Char('\n'));
 		}
-		// Otherwise it's the same row, so append a column separator, which is a tab.
+		// Otherwise it's the same row, so append a column separator,
+		// which is a tab.
 		else {
 			selectedText.append(QLatin1Char('\t'));
 		}
@@ -266,7 +281,7 @@ QString MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) 
 void MainWindow::loadMolecules(const QStringList &fileNames)
 {
 	using namespace std;
-	auto pause=_storage.pause();
+	auto pause = _storage.pause();
 	trajectoriesModel.loadSystems(fileNames);
 
 	/*//This is a hack. It prevents from lags when scrolling
@@ -280,19 +295,20 @@ void MainWindow::loadMolecules(const QStringList &fileNames)
 	ui->mainTreeView->verticalScrollBar()->setValue(vPosStart);
 	progress.setValue(maxScroll);*/
 
-	statusBar()->showMessage(tr("Loaded %1 frames").arg(fileNames.size()), 5000);
+	statusBar()->showMessage(tr("Loaded %1 frames").arg(fileNames.size()),
+				 5000);
 }
 
 void MainWindow::loadStructuresFolder(const QString &path)
 {
 	QDir dir(path);
-	QStringList fileNames=dir.entryList({"*.pdb"});
-	const int size=fileNames.size();
-	QProgressDialog progress("Listing files...",QString(),0,size,this);
+	QStringList fileNames = dir.entryList({"*.pdb"});
+	const int size = fileNames.size();
+	QProgressDialog progress("Listing files...", QString(), 0, size, this);
 	progress.setWindowModality(Qt::WindowModal);
-	for(int i=0; i<size; ++i) {
-		auto& s=fileNames[i];
-		s.prepend(dir.absolutePath()+"/");
+	for (int i = 0; i < size; ++i) {
+		auto &s = fileNames[i];
+		s.prepend(dir.absolutePath() + "/");
 		progress.setValue(i);
 	}
 	progress.setValue(size);
@@ -308,31 +324,33 @@ void MainWindow::loadEvaluators(const QString &fileName)
 	QFile file(fileName);
 
 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-		QMessageBox::information(this, tr("Unable to open Evaluators file"),
-					 file.errorString()+":\n"+fileName);
+		QMessageBox::information(this,
+					 tr("Unable to open Evaluators file"),
+					 file.errorString() + ":\n" + fileName);
 		return;
 	}
 
 	QVariantMap evalsData;
-	//Load old format
-	if(fileName.endsWith(".txt")) {
+	// Load old format
+	if (fileName.endsWith(".txt")) {
 		QTextStream in(&file);
-		evalsData=evalsModel.evaluatorsFromLegacy(in);
+		evalsData = evalsModel.evaluatorsFromLegacy(in);
 	}
-	//Load new format
+	// Load new format
 	else {
 		QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
 
 		if (doc.isNull()) {
-			QMessageBox::information(this, tr("Unable to parse JSON file"),
-						 tr("Could not open the file. "
-						    "There is a syntax error in the provided JSON file."));
+			QMessageBox::information(
+				this, tr("Unable to parse JSON file"),
+				tr("Could not open the file. "
+				   "There is a syntax error in the provided JSON file."));
 			return;
 		}
-		evalsData=doc.toVariant().toMap();
+		evalsData = doc.toVariant().toMap();
 	}
 
-	auto pause=_storage.pause();
+	auto pause = _storage.pause();
 	QApplication::setOverrideCursor(Qt::WaitCursor);
 	evalsModel.loadEvaluators(evalsData);
 	QApplication::restoreOverrideCursor();
@@ -341,7 +359,8 @@ void MainWindow::loadEvaluators(const QString &fileName)
 		   positionsModel.load(positionsListObj);
 		   ui->labellingPositionsTableView->resizeColumnsToContents();
 
-		   QJsonObject distancesListObj=docObj.value("Distances").toObject();
+		   QJsonObject
+	   distancesListObj=docObj.value("Distances").toObject();
 		   distancesModel.load(distancesListObj);
 		   ui->distancesTableView->resizeColumnsToContents();
 
@@ -349,7 +368,7 @@ void MainWindow::loadEvaluators(const QString &fileName)
 		   domainsModel.load(domainsArr);
 		   ui->domainsTableView->resizeColumnsToContents();*/
 
-	//ui->mainTreeView->resizeColumnsToContents();
+	// ui->mainTreeView->resizeColumnsToContents();
 }
 
 bool MainWindow::exportData(const QString &fileName)
@@ -369,8 +388,8 @@ bool MainWindow::exportData(const QString &fileName)
 	if (!file.open(QFile::WriteOnly | QFile::Text)) {
 		QMessageBox::warning(this, tr("Application"),
 				     tr("Cannot write file %1:\n%2.")
-				     .arg(fileName)
-				     .arg(file.errorString()));
+					     .arg(fileName)
+					     .arg(file.errorString()));
 		return false;
 	}
 	QTextStream out(&file);
@@ -382,7 +401,7 @@ bool MainWindow::exportData(const QString &fileName)
 void MainWindow::autoSelectPairs(const QString &fileName)
 {
 	QStringList list;
-	list<<fileName;
+	list << fileName;
 	loadMolecules(list);
 	QApplication::processEvents();
 	addLpBatch(true);
@@ -401,9 +420,9 @@ void MainWindow::autoSelectPairs(const QString &fileName)
 void MainWindow::setPaused(bool state)
 {
 
-	if(state) {
-		_pause=_storage.pausePtr();
-	} else if(_pause){
+	if (state) {
+		_pause = _storage.pausePtr();
+	} else if (_pause) {
 		_pause.reset();
 	}
 }
@@ -431,35 +450,32 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::loadStructures()
 {
-	QStringList fileNames =
-			QFileDialog::getOpenFileNames(this,
-						      tr("Load strcutures from files"), "",
-						      tr("Molecular Structure Files (*.pdb *.nc)"));
+	QStringList fileNames = QFileDialog::getOpenFileNames(
+		this, tr("Load strcutures from files"), "",
+		tr("Molecular Structure Files (*.pdb)"));
 	loadMolecules(fileNames);
-	//ui->mainTreeView->resizeColumnsToContents();
+	// ui->mainTreeView->resizeColumnsToContents();
 }
 
 void MainWindow::loadStructuresFolder()
 {
-	QString path = QFileDialog::getExistingDirectory(this,
-							 tr("Load strcutures from a folder"), "");
-	if(!path.isEmpty()) {
+	QString path = QFileDialog::getExistingDirectory(
+		this, tr("Load strcutures from a folder"), "");
+	if (!path.isEmpty()) {
 		loadStructuresFolder(path);
 	}
 }
 
 void MainWindow::metropolisSampling()
 {
-
 }
 
 void MainWindow::loadEvaluators()
 {
-	QString fileName = QFileDialog::getOpenFileName(this,
-							tr("Open Settings File"), "",
-							tr("FPS settings (*.fps.json);;FPS obsolete format settings (*.txt);;All Files (*)"));
+	QString fileName = QFileDialog::getOpenFileName(
+		this, tr("Open Settings File"), "",
+		tr("FPS settings (*.fps.json);;FPS obsolete format settings (*.txt);;All Files (*)"));
 	loadEvaluators(fileName);
-
 }
 
 bool MainWindow::saveJson(const QString &fileName)
@@ -472,14 +488,15 @@ bool MainWindow::saveJson(const QString &fileName)
 	if (!file.open(QFile::WriteOnly | QFile::Text)) {
 		QMessageBox::warning(this, tr("Application"),
 				     tr("Cannot write file %1:\n%2.")
-				     .arg(fileName)
-				     .arg(file.errorString()));
+					     .arg(fileName)
+					     .arg(file.errorString()));
 		return false;
 	}
 
 	QJsonObject obj;
 
-	file.write(QJsonDocument::fromVariant(evalsModel.evaluators()).toJson());
+	file.write(
+		QJsonDocument::fromVariant(evalsModel.evaluators()).toJson());
 	file.close();
 	statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
 	return true;
@@ -487,11 +504,11 @@ bool MainWindow::saveJson(const QString &fileName)
 
 bool MainWindow::saveJson()
 {
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Settings"), "untitled",
-							tr("FPS settings (*.fps.json);;Any file (*)"));
-	QFileInfo fileInfo( fileName );
-	if (fileInfo.suffix().isEmpty())
-	{
+	QString fileName = QFileDialog::getSaveFileName(
+		this, tr("Save Settings"), "untitled",
+		tr("FPS settings (*.fps.json);;Any file (*)"));
+	QFileInfo fileInfo(fileName);
+	if (fileInfo.suffix().isEmpty()) {
 		fileName += ".fps.json";
 	}
 	return saveJson(fileName);
@@ -499,28 +516,30 @@ bool MainWindow::saveJson()
 
 bool MainWindow::exportData()
 {
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Export data"), "",
-							tr("Tab-separated values (*.ha4);;Any file (*)"));
+	QString fileName = QFileDialog::getSaveFileName(
+		this, tr("Export data"), "",
+		tr("Tab-separated values (*.ha4);;Any file (*)"));
 
 	return exportData(fileName);
 }
 
 bool MainWindow::exportStructures()
 {
-	QString dirName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-							    "",
-							    QFileDialog::ShowDirsOnly
-							    | QFileDialog::DontResolveSymlinks);
+	QString dirName = QFileDialog::getExistingDirectory(
+		this, tr("Open Directory"), "",
+		QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
 	if (dirName.isEmpty()) {
 		return false;
 	}
 
 
-
 	for (int r = 0; r < trajectoriesModel.rowCount(); r++) {
-		QString filename = dirName + "/" + trajectoriesModel.data(trajectoriesModel.index(r,
-												  0)).toString() + ".pdb";
+		QString filename =
+			dirName + "/"
+			+ trajectoriesModel.data(trajectoriesModel.index(r, 0))
+				  .toString()
+			+ ".pdb";
 		trajectoriesModel.exportSystem(r, filename);
 		statusBar()->showMessage(tr("Exporing %1").arg(filename), 2000);
 	}
@@ -535,7 +554,8 @@ void MainWindow::addEvaluator()
 
 /*void MainWindow::deleteSelectedPositions()
    {
-	QModelIndexList list=ui->labellingPositionsTableView->selectionModel()->selectedRows();
+        QModelIndexList
+   list=ui->labellingPositionsTableView->selectionModel()->selectedRows();
 	if(list.empty()){
 		return;
 	}
@@ -587,15 +607,16 @@ void MainWindow::pasteText(QAbstractItemView *view) const
 		cells.pop_back(); // strip empty trailing tokens
 
 	int rows = text.count(QLatin1Char('\n'));
-	if (rows==0) {
+	if (rows == 0) {
 		return;
 	}
 	int cols = cells.size() / rows;
 
 	if (cells.size() % rows != 0) {
 		// error, uneven number of columns, probably bad data
-		QMessageBox::critical(0, tr("Error"),
-				      tr("Invalid clipboard data: uneven number of columns. Unable to perform paste operation."));
+		QMessageBox::critical(
+			0, tr("Error"),
+			tr("Invalid clipboard data: uneven number of columns. Unable to perform paste operation."));
 		return;
 	}
 
@@ -610,10 +631,11 @@ void MainWindow::pasteText(QAbstractItemView *view) const
 
 	for (int row = 0; row < rows; ++row) {
 		for (int col = 0; col < cols; ++col, ++cell) {
-			model->setData(model->index(row + rowStart, col + colStart), cells[cell]);
+			model->setData(
+				model->index(row + rowStart, col + colStart),
+				cells[cell]);
 		}
 	}
-
 }
 
 void MainWindow::expand(const QModelIndex &parentIndex, int first, int last)
@@ -625,10 +647,11 @@ void MainWindow::expand(const QModelIndex &parentIndex, int first, int last)
 			child = trajectoriesModel.index(row, 0);
 		}
 
-		QModelIndexList indexes = trajectoriesModel.match(child, Qt::DisplayRole, "*", 2,
-								  Qt::MatchWildcard | Qt::MatchRecursive);
+		QModelIndexList indexes = trajectoriesModel.match(
+			child, Qt::DisplayRole, "*", 2,
+			Qt::MatchWildcard | Qt::MatchRecursive);
 
-		for (const auto & idx : indexes) {
+		for (const auto &idx : indexes) {
 			ui->mainTreeView->expand(idx);
 		}
 	}
@@ -639,45 +662,48 @@ void MainWindow::showAbout()
 	about.setWindowTitle("Olga");
 	about.setTextFormat(Qt::RichText);
 	about.setStandardButtons(QMessageBox::Ok);
-	QString msg="Olga v. %1<br>"
-		    "Mykola Dimura, dimura@hhu.de<br>"
-		    "If you use this software for scientific purposes,<br>"
-		    "please cite:<br>"
-		    "Dimura, M., Peulen, T.O., Hanke, C.A., Prakash, A.,<br>"
-		    "Gohlke, H. and Seidel, C.A., 2016.<br>"
-		    "Current Opinion in Structural Biology, 40, pp.163-185.<br>"
-		    "<a href='http://doi.org/10.1016/j.sbi.2016.11.012'>"
-		    "doi:10.1016/j.sbi.2016.11.012</a>";
-	msg=msg.arg(QApplication::applicationVersion());
+	QString msg =
+		"Olga v. %1<br>"
+		"Mykola Dimura, dimura@hhu.de<br>"
+		"If you use this software for scientific purposes,<br>"
+		"please cite:<br>"
+		"Dimura, M., Peulen, T.O., Hanke, C.A., Prakash, A.,<br>"
+		"Gohlke, H. and Seidel, C.A., 2016.<br>"
+		"Current Opinion in Structural Biology, 40, pp.163-185.<br>"
+		"<a href='http://doi.org/10.1016/j.sbi.2016.11.012'>"
+		"doi:10.1016/j.sbi.2016.11.012</a>";
+	msg = msg.arg(QApplication::applicationVersion());
 	about.setText(msg);
 	about.exec();
-//	QMessageBox::about(this, "Olga",msg);
+	//	QMessageBox::about(this, "Olga",msg);
 }
 
 void MainWindow::addLpBatch(bool all)
 {
 
-	BatchLPDialog dialog(this,evalsModel);
-	auto system=trajectoriesModel.firstSystem();
-	std::vector<std::tuple<int,std::string,char>> residues;
-	if (system.num_atoms()>0) {
+	BatchLPDialog dialog(this, evalsModel);
+	auto system = trajectoriesModel.firstSystem();
+	std::vector<std::tuple<int, std::string, char>> residues;
+	if (system.num_atoms() > 0) {
 		std::vector<pteros::Selection> resSel;
 		system.select_all().split_by_residue(resSel);
-		for(pteros::Selection& sel:resSel) {
-			char chain=sel.begin()->Chain();
-			int resid=sel.begin()->Resid();
-			auto resname=sel.begin()->Resname();
-			residues.emplace_back(resid,resname,chain);
+		for (pteros::Selection &sel : resSel) {
+			char chain = sel.begin()->Chain();
+			int resid = sel.begin()->Resid();
+			auto resname = sel.begin()->Resname();
+			residues.emplace_back(resid, resname, chain);
 		}
 	}
-	if(residues.empty()) {
-		QMessageBox::warning(this,tr("Can not add labeling positions"),
-				     tr("Could not populate the residue list.\n"
-					"Did you import any molecule or trajectory?"));
+	if (residues.empty()) {
+		QMessageBox::warning(
+			this, tr("Can not add labeling positions"),
+			tr("Could not populate the residue list.\n"
+			   "Did you import any molecule or trajectory?"));
 		return;
 	}
-	if(evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>().empty()) {
-		QMessageBox::warning(this,tr("Can not add labeling positions"),
+	if (evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>()
+		    .empty()) {
+		QMessageBox::warning(this, tr("Can not add labeling positions"),
 				     tr("Could not populate the references "
 					"list.\nCreate a labeling postion "
 					"to copy from, please."));
@@ -693,34 +719,36 @@ void MainWindow::addLpBatch(bool all)
 
 void MainWindow::addDistanceBatch()
 {
-	if(evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>().empty()) {
-		QMessageBox::warning(this,tr("Can not add distances"),
+	if (evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>()
+		    .empty()) {
+		QMessageBox::warning(this, tr("Can not add distances"),
 				     tr("Could not populate the labeling "
 					"positions list.\nCreate some "
 					"labeling postions, please."));
 		return;
 	}
-	if(evalsModel.evaluatorsAvailable<EvaluatorDistance>().empty()) {
-		QMessageBox::warning(this,tr("Can not add distances"),
+	if (evalsModel.evaluatorsAvailable<EvaluatorDistance>().empty()) {
+		QMessageBox::warning(this, tr("Can not add distances"),
 				     tr("Could not populate the references "
 					"list.\nCreate a distance "
 					"to copy from, please."));
 		return;
 	}
-	BatchDistanceDialog dialog(this,evalsModel);
+	BatchDistanceDialog dialog(this, evalsModel);
 	dialog.exec();
 }
 
 void MainWindow::addEfficiencyBatch(bool all)
 {
-	if(evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>().empty()) {
-		QMessageBox::warning(this,tr("Can not add distances"),
+	if (evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>()
+		    .empty()) {
+		QMessageBox::warning(this, tr("Can not add distances"),
 				     tr("Could not populate the labeling "
 					"positions list.\nCreate some "
 					"labeling postions, please."));
 		return;
 	}
-	BatchFretEfficiencyDialog dialog(this,evalsModel);
+	BatchFretEfficiencyDialog dialog(this, evalsModel);
 	if (all) {
 		dialog.autoAccept();
 	} else {
@@ -730,28 +758,30 @@ void MainWindow::addEfficiencyBatch(bool all)
 
 void MainWindow::removeNanEffs()
 {
-	std::vector<FrameDescriptor> frames=trajectoriesModel.frames();
-	std::vector<EvalId> evalIds=_storage.evalIds<EvaluatorFretEfficiency>();
+	std::vector<FrameDescriptor> frames = trajectoriesModel.frames();
+	std::vector<EvalId> evalIds =
+		_storage.evalIds<EvaluatorFretEfficiency>();
 
-	if(frames.empty()) {
-		QMessageBox::warning(this,tr("No structures loaded"),
+	if (frames.empty()) {
+		QMessageBox::warning(this, tr("No structures loaded"),
 				     tr("No structures loaded.\n"
 					"Load some, please."));
 		return;
 	}
-	if(evalIds.empty()) {
-		QMessageBox::warning(this,tr("Can not find EvaluatorFretEfficiency"),
-				     tr("Could not find any efficiency evaluators "
-					"\nCreate/load some, please."));
+	if (evalIds.empty()) {
+		QMessageBox::warning(
+			this, tr("Can not find EvaluatorFretEfficiency"),
+			tr("Could not find any efficiency evaluators "
+			   "\nCreate/load some, please."));
 		return;
 	}
 
-	const auto& fr=frames[0];
-	for(int iEv=0; iEv<evalIds.size(); ++iEv) {
-		TaskStorage::Result res=_storage.getResult(fr,evalIds[iEv]);
-		auto dRes=std::static_pointer_cast<CalcResult<double>>(res);
-		const double eff=dRes->get();
-		if(std::isnan(eff)) {
+	const auto &fr = frames[0];
+	for (int iEv = 0; iEv < evalIds.size(); ++iEv) {
+		TaskStorage::Result res = _storage.getResult(fr, evalIds[iEv]);
+		auto dRes = std::static_pointer_cast<CalcResult<double>>(res);
+		const double eff = dRes->get();
+		if (std::isnan(eff)) {
 			evalsModel.removeEvaluator(evalIds[iEv]);
 		}
 	}
@@ -759,58 +789,63 @@ void MainWindow::removeNanEffs()
 
 void MainWindow::loadResults()
 {
-	QString fileName = QFileDialog::getOpenFileName(this,
-							tr("Open data File"), "",
-							tr("tab-separated data (*.ha4);;All Files (*)"));
-	_storage.setResults(fileName.toStdString(),trajectoriesModel.frames());
+	QString fileName = QFileDialog::getOpenFileName(
+		this, tr("Open data File"), "",
+		tr("tab-separated data (*.ha4);;All Files (*)"));
+	_storage.setResults(fileName.toStdString(), trajectoriesModel.frames());
 }
 
 
 void MainWindow::getInfromativePairs()
 {
-	std::vector<FrameDescriptor> frames=trajectoriesModel.frames();
-	if(frames.empty()) {
-		QMessageBox::warning(this,tr("No structures loaded"),
+	std::vector<FrameDescriptor> frames = trajectoriesModel.frames();
+	if (frames.empty()) {
+		QMessageBox::warning(this, tr("No structures loaded"),
 				     tr("No structures loaded.\n"
 					"Load some, please."));
 		return;
 	}
-	std::vector<EvalId> evalIds=_storage.evalIds<EvaluatorFretEfficiency>();
-	if(evalIds.empty()) {
-		QMessageBox::warning(this,tr("No Efficiencies available"),
+	std::vector<EvalId> evalIds =
+		_storage.evalIds<EvaluatorFretEfficiency>();
+	if (evalIds.empty()) {
+		QMessageBox::warning(this, tr("No Efficiencies available"),
 				     tr("No Efficiencies are available.\n"
 					"Create some, please."));
 		return;
 	}
 	std::vector<std::string> evalNames;
 	evalNames.reserve(evalIds.size());
-	for (const auto evalId: evalIds) {
+	for (const auto evalId : evalIds) {
 		evalNames.push_back(_storage.evalName(evalId));
 	}
 
-	const int tasksCount=_storage.tasksPendingCount()+1;
-	QProgressDialog progress("Calculating efficiencies...",QString(),0,tasksCount,this);
+	const int tasksCount = _storage.tasksPendingCount() + 1;
+	QProgressDialog progress("Calculating efficiencies...", QString(), 0,
+				 tasksCount, this);
 	progress.setWindowModality(Qt::WindowModal);
 	do {
-		progress.setValue(tasksCount-_storage.tasksPendingCount());
+		progress.setValue(tasksCount - _storage.tasksPendingCount());
 		if (progress.wasCanceled()) {
 			return;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(25));
-	} while(!_storage.ready());
+	} while (!_storage.ready());
 	progress.setValue(tasksCount);
 
-	Eigen::MatrixXf effs(frames.size(),evalIds.size());
-	for (int iFrame=0; iFrame<frames.size(); ++iFrame) {
-		const auto& fr=frames[iFrame];
-	for(int iEv=0; iEv<evalIds.size(); ++iEv) {
-		TaskStorage::Result res=_storage.getResult(fr,evalIds[iEv]);
-		auto dRes=std::static_pointer_cast<CalcResult<double>>(res);
-			effs(iFrame,iEv)=dRes->get();
+	Eigen::MatrixXf effs(frames.size(), evalIds.size());
+	for (int iFrame = 0; iFrame < frames.size(); ++iFrame) {
+		const auto &fr = frames[iFrame];
+		for (int iEv = 0; iEv < evalIds.size(); ++iEv) {
+			TaskStorage::Result res =
+				_storage.getResult(fr, evalIds[iEv]);
+			auto dRes =
+				std::static_pointer_cast<CalcResult<double>>(
+					res);
+			effs(iFrame, iEv) = dRes->get();
 		}
 	}
 
-	GetInformativePairsDialog dialog(this,frames,effs,evalNames);
+	GetInformativePairsDialog dialog(this, frames, effs, evalNames);
 	dialog.exec();
 }
 
@@ -820,12 +855,12 @@ QString MainWindow::timespan(unsigned seconds)
 		return QString::number(seconds) + "s";
 
 	} else if (seconds < 3600) {
-		return QString::number(seconds / 60.0,'f',2) + "m";
+		return QString::number(seconds / 60.0, 'f', 2) + "m";
 
 	} else if (seconds < 86400) {
-		return QString::number(seconds / 3600.0,'f',2) + "h";
+		return QString::number(seconds / 3600.0, 'f', 2) + "h";
 	}
 
 	return QString::number(seconds / 86400) + "d "
-			+ QString::number(seconds / 3600 % 24) + "h";
+	       + QString::number(seconds / 3600 % 24) + "h";
 }
