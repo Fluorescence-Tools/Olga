@@ -72,6 +72,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="allFrom">
+       <property name="text">
+        <string>all positions</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QListWidget" name="lpList1">
        <property name="alternatingRowColors">
         <bool>true</bool>
@@ -92,6 +99,13 @@
        </property>
        <property name="buddy">
         <cstring>lpList2</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="allTo">
+       <property name="text">
+        <string>all positions</string>
        </property>
       </widget>
      </item>
@@ -153,5 +167,41 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>allTo</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>BatchFretEfficiencyDialog</receiver>
+   <slot>toggleAllTo(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>280</x>
+     <y>105</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>188</x>
+     <y>191</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>allFrom</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>BatchFretEfficiencyDialog</receiver>
+   <slot>toggleAllFrom(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>96</x>
+     <y>105</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>188</x>
+     <y>191</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <slots>
+  <slot>toggleAllFrom(int)</slot>
+  <slot>toggleAllTo(int)</slot>
+ </slots>
 </ui>

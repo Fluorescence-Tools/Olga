@@ -67,6 +67,7 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir,
 	ui->evaluatorsTreeView->expandAll();
 	ui->evaluatorsTreeView->setItemDelegate(evaluatorsDelegate);
 	ui->evaluatorsTreeView->resizeColumnToContents(1);
+	ui->evaluatorsTreeView->setUniformRowHeights(true);
 
 	setupMenus();
 

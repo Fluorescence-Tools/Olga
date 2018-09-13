@@ -4,7 +4,8 @@
 #include <QDialog>
 #include "EvaluatorsTreeModel.h"
 
-namespace Ui {
+namespace Ui
+{
 class BatchLPDialog;
 }
 
@@ -13,9 +14,11 @@ class BatchLPDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit BatchLPDialog(QWidget *parent, EvaluatorsTreeModel& evModel);
+	explicit BatchLPDialog(QWidget *parent, EvaluatorsTreeModel &evModel);
 	~BatchLPDialog();
-	void setResidueList(const std::vector<std::tuple<int, std::string, char> > &residues);
+	void
+	setResidueList(const std::vector<std::tuple<int, std::string, char>>
+			       &residues);
 public Q_SLOTS:
 	virtual void reject() override
 	{
@@ -23,9 +26,12 @@ public Q_SLOTS:
 	}
 	void autoAccept();
 	virtual void accept() override;
+	void toggleAll(int state);
+
 private:
-	std::vector<std::tuple<int, std::string,char> > _residues;//resid, resname, chain
-	EvaluatorsTreeModel& _evModel;
+	std::vector<std::tuple<int, std::string, char>>
+		_residues; // resid, resname, chain
+	EvaluatorsTreeModel &_evModel;
 	Ui::BatchLPDialog *ui;
 	QList<QModelIndex> indexes;
 };

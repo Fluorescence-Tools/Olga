@@ -4,7 +4,8 @@
 #include <QDialog>
 #include "EvaluatorsTreeModel.h"
 
-namespace Ui {
+namespace Ui
+{
 class BatchFretEfficiencyDialog;
 }
 
@@ -13,7 +14,8 @@ class BatchFretEfficiencyDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit BatchFretEfficiencyDialog(QWidget *parent, EvaluatorsTreeModel& evModel);
+	explicit BatchFretEfficiencyDialog(QWidget *parent,
+					   EvaluatorsTreeModel &evModel);
 	~BatchFretEfficiencyDialog();
 public Q_SLOTS:
 	virtual void reject() override
@@ -22,8 +24,11 @@ public Q_SLOTS:
 	}
 	virtual void accept() override;
 	void autoAccept();
+	void toggleAllFrom(int state);
+	void toggleAllTo(int state);
+
 private:
-	EvaluatorsTreeModel& _evModel;
+	EvaluatorsTreeModel &_evModel;
 	QList<QModelIndex> lpIndexes;
 
 	Ui::BatchFretEfficiencyDialog *ui;

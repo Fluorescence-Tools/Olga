@@ -15,5 +15,6 @@ DISTFILES += \
     .gitlab-ci.yml \
     .clang-format \
     src/vdWRadii.json \
+    src/weighting_function.csv \
     README.md \
     LICENSE

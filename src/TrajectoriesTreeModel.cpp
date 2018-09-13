@@ -5,6 +5,8 @@
 #include <QFileInfo>
 #include <QTimer>
 #include <QProgressDialog>
+#include <QTime>
+#include <QCoreApplication>
 
 #include "TrajectoriesTreeModel.h"
 #include "EvaluatorTrasformationMatrix.h"
@@ -12,28 +14,47 @@
 #include "EvaluatorPositionSimulation.h"
 
 
-TrajectoriesTreeModel::
-TrajectoriesTreeModel(const TaskStorage &storage, QObject *parent) :
-	QAbstractItemModel(parent),_storage(storage)
+TrajectoriesTreeModel::TrajectoriesTreeModel(const TaskStorage &storage,
+					     QObject *parent)
+    : QAbstractItemModel(parent), _storage(storage)
 {
-	connect(&_storage,&TaskStorage::evaluatorAdded,this,
-		[this](const EvalId& id){evaluatorAdded(id);},Qt::QueuedConnection);
-	connect(&_storage,&TaskStorage::evaluatorIsGoingToBeRemoved,
-		[this](const EvalId& id){evaluatorRemove(id);});
+	connect(&_storage, &TaskStorage::evaluatorAdded, this,
+		[this](const EvalId &id) { evaluatorAdded(id); },
+		Qt::QueuedConnection);
+	connect(&_storage, &TaskStorage::evaluatorIsGoingToBeRemoved,
+		[this](const EvalId &id) { evaluatorRemove(id); });
 
 	_evaluatePending.setSingleShot(true);
 	_evaluatePending.setInterval(1000);
-	connect(&_evaluatePending,&QTimer::timeout,[this]{
-		for(const MolecularTrajectory& mt:_molTrajs)//iterate over all frames in trajectories
+	connect(&_evaluatePending, &QTimer::timeout, [this] {
+		if (_evalsPending.empty()) {
+			return;
+		}
+		std::vector<EvalId> evPendingCopy;
+		evPendingCopy.swap(_evalsPending);
+		_evalsPending.clear();
+		QTime runningTime;
+		runningTime.start();
+		auto pause = _storage.pause();
+		for (const MolecularTrajectory &mt :
+		     _molTrajs) // iterate over all frames in
+				// trajectories
 		{
-			for(int trajIdx=0; trajIdx<mt.chunkCount(); ++trajIdx) {
-				for(int frIdx=0; frIdx<mt.frameCount(trajIdx); ++frIdx) {
-					auto desc=mt.descriptor(trajIdx,frIdx);
-					_storage.evaluate(desc,_evalsPending);
+			for (int trajIdx = 0; trajIdx < mt.chunkCount();
+			     ++trajIdx) {
+				for (int frIdx = 0;
+				     frIdx < mt.frameCount(trajIdx); ++frIdx) {
+					auto desc =
+						mt.descriptor(trajIdx, frIdx);
+					_storage.evaluate(desc, evPendingCopy);
+					if (runningTime.elapsed() > 20) {
+						QCoreApplication::
+							processEvents();
+						runningTime.restart();
+					}
 				}
 			}
 		}
-		_evalsPending.clear();
 	});
 }
 
@@ -46,18 +67,18 @@ QVariant TrajectoriesTreeModel::data(const QModelIndex &index, int role) const
 		return QVariant();
 
 	const TrajectoriesTreeItem *parentItem =
-			static_cast<TrajectoriesTreeItem*>(index.internalPointer());
+		static_cast<TrajectoriesTreeItem *>(index.internalPointer());
 
-	if(index.column()==0) {
-		return frameName(parentItem,index.row());
-	}
-	else {
-		if(parentItem->nesting()<2) {
+	if (index.column() == 0) {
+		return frameName(parentItem, index.row());
+	} else {
+		if (parentItem->nesting() < 2) {
 			return "";
 		}
-		auto calccol=_columns[index.column()-1];
-		auto frame=frameDescriptor(parentItem,index.row());
-		auto string=_storage.getString(frame,calccol.first,calccol.second);
+		auto calccol = _columns[index.column() - 1];
+		auto frame = frameDescriptor(parentItem, index.row());
+		auto string = _storage.getString(frame, calccol.first,
+						 calccol.second);
 		return QString::fromStdString(string);
 	}
 
@@ -72,16 +93,16 @@ Qt::ItemFlags TrajectoriesTreeModel::flags(const QModelIndex &index) const
 	return QAbstractItemModel::flags(index);
 }
 
-QVariant TrajectoriesTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant TrajectoriesTreeModel::headerData(int section,
+					   Qt::Orientation orientation,
+					   int role) const
 {
-	if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
-	{
-		if(section==0) {
+	if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
+		if (section == 0) {
 			return "structure";
 		}
-		if(section>0 && section<int(_columns.size()+1))
-		{
-			return colName(section-1);
+		if (section > 0 && section < int(_columns.size() + 1)) {
+			return colName(section - 1);
 		}
 		return QString("WRONG COLUMN");
 	}
@@ -89,7 +110,8 @@ QVariant TrajectoriesTreeModel::headerData(int section, Qt::Orientation orientat
 	return QVariant();
 }
 
-QModelIndex TrajectoriesTreeModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex TrajectoriesTreeModel::index(int row, int column,
+					 const QModelIndex &parent) const
 {
 	/*if (!hasIndex(row, column, parent))
 	    return QModelIndex();*/
@@ -99,11 +121,14 @@ QModelIndex TrajectoriesTreeModel::index(int row, int column, const QModelIndex 
 	if (!parent.isValid())
 		parentParentItem = nullptr;
 	else
-		parentParentItem = static_cast<TrajectoriesTreeItem*>(parent.internalPointer());
+		parentParentItem = static_cast<TrajectoriesTreeItem *>(
+			parent.internalPointer());
 
-	const TrajectoriesTreeItem *parentItem=childItem(parentParentItem,parent.row());
+	const TrajectoriesTreeItem *parentItem =
+		childItem(parentParentItem, parent.row());
 
-	return createIndex(row, column, const_cast<TrajectoriesTreeItem*>(parentItem));
+	return createIndex(row, column,
+			   const_cast<TrajectoriesTreeItem *>(parentItem));
 }
 
 QModelIndex TrajectoriesTreeModel::parent(const QModelIndex &index) const
@@ -111,22 +136,24 @@ QModelIndex TrajectoriesTreeModel::parent(const QModelIndex &index) const
 	if (!index.isValid())
 		return QModelIndex();
 
-	TrajectoriesTreeItem *parentItem = static_cast<TrajectoriesTreeItem*>(index.internalPointer());
+	TrajectoriesTreeItem *parentItem =
+		static_cast<TrajectoriesTreeItem *>(index.internalPointer());
 
-	if (parentItem == nullptr || parentItem->nesting()==0) {
+	if (parentItem == nullptr || parentItem->nesting() == 0) {
 		return QModelIndex();
 	}
 
-	assert(parentItem->nesting()>0);
-	assert(parentItem->nesting()<3);
+	assert(parentItem->nesting() > 0);
+	assert(parentItem->nesting() < 3);
 
-	if(parentItem->nesting()==1) {
+	if (parentItem->nesting() == 1) {
 		return createIndex(parentItem->moltrajIndex, 0, nullptr);
-	}
-	else{ //if(parentItem->nesting()==2)
-		TrajectoriesTreeItem itm {parentItem->moltrajIndex,-1};
-		const TrajectoriesTreeItem *pitm=&(*(items.emplace(std::move(itm)).first));
-		return createIndex(parentItem->trajindex, 0, const_cast<TrajectoriesTreeItem*>(pitm));
+	} else { // if(parentItem->nesting()==2)
+		TrajectoriesTreeItem itm{parentItem->moltrajIndex, -1};
+		const TrajectoriesTreeItem *pitm =
+			&(*(items.emplace(std::move(itm)).first));
+		return createIndex(parentItem->trajindex, 0,
+				   const_cast<TrajectoriesTreeItem *>(pitm));
 	}
 }
 
@@ -136,35 +163,34 @@ int TrajectoriesTreeModel::rowCount(const QModelIndex &parent) const
 		return 0;
 
 	TrajectoriesTreeItem *parentParentItem;
-	parentParentItem = static_cast<TrajectoriesTreeItem*>(parent.internalPointer());
+	parentParentItem =
+		static_cast<TrajectoriesTreeItem *>(parent.internalPointer());
 
-	if(!parent.isValid())
-	{
+	if (!parent.isValid()) {
 		return _molTrajs.size();
 	}
-	unsigned parentParentNesting=0;
-	if(parentParentItem!=nullptr) {
-		parentParentNesting=parentParentItem->nesting();
+	unsigned parentParentNesting = 0;
+	if (parentParentItem != nullptr) {
+		parentParentNesting = parentParentItem->nesting();
 	}
-	if(parentParentNesting==0)
-	{
-		unsigned moltrajIndex=parent.row();
+	if (parentParentNesting == 0) {
+		unsigned moltrajIndex = parent.row();
 		return _molTrajs[moltrajIndex].chunkCount();
 	}
-	if(parentParentNesting==1){
-		unsigned moltrajIndex=parentParentItem->moltrajIndex;
-		unsigned trajindex=parent.row();
+	if (parentParentNesting == 1) {
+		unsigned moltrajIndex = parentParentItem->moltrajIndex;
+		unsigned trajindex = parent.row();
 		return _molTrajs[moltrajIndex].frameCount(trajindex);
 	}
-	if(parentParentNesting==2){
+	if (parentParentNesting == 2) {
 		return 0;
 	}
 	return 0;
 }
 
-int TrajectoriesTreeModel::columnCount(const QModelIndex &/*parent*/) const
+int TrajectoriesTreeModel::columnCount(const QModelIndex & /*parent*/) const
 {
-	return _columns.size()+1;
+	return _columns.size() + 1;
 }
 
 bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
@@ -173,20 +199,22 @@ bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
 		return false;
 	}
 	MolecularTrajectory tmpTrj;
-	auto fileNamePtr=std::make_shared<std::string>(fileName.toStdString());
+	auto fileNamePtr =
+		std::make_shared<std::string>(fileName.toStdString());
 	tmpTrj.setTopology(fileNamePtr);
-	if(tmpTrj.addPdbChunk(fileNamePtr))
-	{
-		beginInsertRows(QModelIndex(),_molTrajs.size(),_molTrajs.size());
+	if (tmpTrj.addPdbChunk(fileNamePtr)) {
+		beginInsertRows(QModelIndex(), _molTrajs.size(),
+				_molTrajs.size());
 		_molTrajs.push_back(tmpTrj);
 		endInsertRows();
 		std::set<EvalId> evIds;
-		for(const CalcColumn& cc:_columns) {
-			EvalId evId=cc.first;
+		for (const CalcColumn &cc : _columns) {
+			EvalId evId = cc.first;
 			evIds.emplace(evId);
 		}
-		_storage.evaluate(tmpTrj.descriptor(0,0),
-				  std::vector<EvalId>(evIds.begin(),evIds.end()));
+		_storage.evaluate(
+			tmpTrj.descriptor(0, 0),
+			std::vector<EvalId>(evIds.begin(), evIds.end()));
 		return true;
 	}
 	return false;
@@ -200,110 +228,116 @@ void TrajectoriesTreeModel::loadSystems(const QStringList &fileNames)
 			progress.setValue(i);
 			prevUpd=now;
 		}*/
-	const int rawSize=fileNames.size();
-	QProgressDialog progress("Checking files...","Cancel",0,rawSize);
+	const int rawSize = fileNames.size();
+	QProgressDialog progress("Checking files...", "Cancel", 0, rawSize);
 	progress.setWindowModality(Qt::ApplicationModal);
 
-	//prepare trajectories
+	// prepare trajectories
 	QVector<MolecularTrajectory> tmpTrajVec;
-	for(int i=0; i<rawSize; ++i) {
-		const QString& fileName=fileNames[i];
-		if(fileName.isEmpty()) {
+	for (int i = 0; i < rawSize; ++i) {
+		const QString &fileName = fileNames[i];
+		if (fileName.isEmpty()) {
 			continue;
 		}
 		MolecularTrajectory tmpTrj;
-		auto fileNamePtr=std::make_shared<std::string>(fileName.toStdString());
+		auto fileNamePtr =
+			std::make_shared<std::string>(fileName.toStdString());
 		tmpTrj.setTopology(fileNamePtr);
-		if(tmpTrj.addPdbChunk(fileNamePtr)) {
+		if (tmpTrj.addPdbChunk(fileNamePtr)) {
 			tmpTrajVec.push_back(tmpTrj);
 		}
 		progress.setValue(i);
 	}
 
-	//insert Rows
-	const int size=tmpTrajVec.size();
+	// insert Rows
+	const int size = tmpTrajVec.size();
 	progress.setLabelText("Inserting rows");
 	progress.setValue(0);
 	progress.setMaximum(size);
 
-	const int firstTraj=_molTrajs.size();
-	const int lastTraj=_molTrajs.size()+size-1;
-	beginInsertRows(QModelIndex(),firstTraj,lastTraj);
+	const int firstTraj = _molTrajs.size();
+	const int lastTraj = _molTrajs.size() + size - 1;
+	beginInsertRows(QModelIndex(), firstTraj, lastTraj);
 	_molTrajs.append(std::move(tmpTrajVec));
 	endInsertRows();
 
-	//evaluate
+	// evaluate
 	progress.setLabelText("Submitting jobs");
 	progress.setValue(0);
 	progress.setMaximum(size);
 
 	std::set<EvalId> evIds;
-	for(const CalcColumn& cc:_columns) {
-		EvalId evId=cc.first;
+	for (const CalcColumn &cc : _columns) {
+		EvalId evId = cc.first;
 		evIds.emplace(evId);
 	}
-	for(int i=firstTraj; i<=lastTraj; ++i) {
-		_storage.evaluate(_molTrajs[i].descriptor(0,0),
-				  std::vector<EvalId>(evIds.begin(),evIds.end()));
-		progress.setValue(i-firstTraj);
+	for (int i = firstTraj; i <= lastTraj; ++i) {
+		_storage.evaluate(
+			_molTrajs[i].descriptor(0, 0),
+			std::vector<EvalId>(evIds.begin(), evIds.end()));
+		progress.setValue(i - firstTraj);
 	}
 	progress.setValue(size);
 }
 
-void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream& out) const
+void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream &out) const
 {
-	QModelIndex start=index(0,0);
+	QModelIndex start = index(0, 0);
 	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1,
-					Qt::MatchWildcard|Qt::MatchRecursive);
-	int numCols=columnCount();
-	for(int c=0;c<numCols; c++)
-	{
-		out<<headerData(c,Qt::Horizontal).toString()+"\t";
+					Qt::MatchWildcard | Qt::MatchRecursive);
+	int numCols = columnCount();
+	for (int c = 0; c < numCols; c++) {
+		out << headerData(c, Qt::Horizontal).toString() + "\t";
 	}
-	out<<"\n";
-	for(const auto& idx:indexes)
-	{
+	out << "\n";
+	for (const auto &idx : indexes) {
 		TrajectoriesTreeItem *parentItem;
-		parentItem = static_cast<TrajectoriesTreeItem*>(idx.internalPointer());
-		if(parentItem->nesting()<2) {
+		parentItem = static_cast<TrajectoriesTreeItem *>(
+			idx.internalPointer());
+		if (parentItem->nesting() < 2) {
 			continue;
 		}
-		out<<data(parent(idx)).toString()+" ";
-		for(int c=0;c<numCols; c++)
-		{
-			out<<data(idx.sibling(idx.row(),c)).toString()+"\t";
+		out << data(parent(idx)).toString() + " ";
+		for (int c = 0; c < numCols; c++) {
+			out << data(idx.sibling(idx.row(), c)).toString()
+					+ "\t";
 		}
-		out<<"\n";
+		out << "\n";
 	}
 }
 
-const TrajectoriesTreeItem* TrajectoriesTreeModel::childItem(const TrajectoriesTreeItem *parent, unsigned childRow) const
+const TrajectoriesTreeItem *
+TrajectoriesTreeModel::childItem(const TrajectoriesTreeItem *parent,
+				 unsigned childRow) const
 {
-	//assert(parent->nesting()<2);
-	if(parent!=nullptr && parent->nesting()==1){
-		TrajectoriesTreeItem itm {parent->moltrajIndex,int(childRow)};
+	// assert(parent->nesting()<2);
+	if (parent != nullptr && parent->nesting() == 1) {
+		TrajectoriesTreeItem itm{parent->moltrajIndex, int(childRow)};
 		return &(*(items.emplace(std::move(itm)).first));
-	}
-	else {//if(parentNesting==0) || parent!=nullptr
-		TrajectoriesTreeItem itm {int(childRow),-1};
+	} else { // if(parentNesting==0) || parent!=nullptr
+		TrajectoriesTreeItem itm{int(childRow), -1};
 		return &(*(items.emplace(std::move(itm)).first));
 	}
 }
 
-QString TrajectoriesTreeModel::frameName(const TrajectoriesTreeItem *parent, int row) const
+QString TrajectoriesTreeModel::frameName(const TrajectoriesTreeItem *parent,
+					 int row) const
 {
 	QString name;
-	switch (parent->nesting()){
+	switch (parent->nesting()) {
 	case 0:
-		name=QString::fromStdString(*(_molTrajs[row].topologyFileName()));
-		name=QFileInfo(name).fileName();
+		name = QString::fromStdString(
+			*(_molTrajs[row].topologyFileName()));
+		name = QFileInfo(name).fileName();
 		break;
 	case 2:
 		return QString("#%1").arg(row);
 		break;
 	case 1:
-		name=QString::fromStdString(*(_molTrajs[parent->moltrajIndex].trajectoryFileName(row)));
-		name=QFileInfo(name).fileName();
+		name = QString::fromStdString(
+			*(_molTrajs[parent->moltrajIndex].trajectoryFileName(
+				row)));
+		name = QFileInfo(name).fileName();
 		break;
 	default:
 		return QString("???");
@@ -313,50 +347,54 @@ QString TrajectoriesTreeModel::frameName(const TrajectoriesTreeItem *parent, int
 
 QString TrajectoriesTreeModel::colName(int section) const
 {
-	const auto& cc=_columns.at(section);
-	return QString::fromStdString(_storage.getColumnName(cc.first,cc.second));
+	const auto &cc = _columns.at(section);
+	return QString::fromStdString(
+		_storage.getColumnName(cc.first, cc.second));
 }
 
-FrameDescriptor TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeItem *parent, int row) const
+FrameDescriptor
+TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeItem *parent,
+				       int row) const
 {
-	std::shared_ptr<const std::string> top,traj;
-	unsigned frame=-100;
-	switch (parent->nesting()){
+	std::shared_ptr<const std::string> top, traj;
+	unsigned frame = -100;
+	switch (parent->nesting()) {
 	case 0:
-		top=_molTrajs[row].topologyFileName();
-		traj=_molTrajs[row].trajectoryFileName(0);
-		frame=0;
+		top = _molTrajs[row].topologyFileName();
+		traj = _molTrajs[row].trajectoryFileName(0);
+		frame = 0;
 		break;
 	case 1:
-		top=_molTrajs[parent->moltrajIndex].topologyFileName();
-		traj=_molTrajs[parent->moltrajIndex].trajectoryFileName(row);
-		frame=0;
+		top = _molTrajs[parent->moltrajIndex].topologyFileName();
+		traj = _molTrajs[parent->moltrajIndex].trajectoryFileName(row);
+		frame = 0;
 		break;
 	case 2:
-		top=_molTrajs[parent->moltrajIndex].topologyFileName();
-		traj=_molTrajs[parent->moltrajIndex].trajectoryFileName(row);
-		frame=row;
+		top = _molTrajs[parent->moltrajIndex].topologyFileName();
+		traj = _molTrajs[parent->moltrajIndex].trajectoryFileName(row);
+		frame = row;
 		break;
 	default:
-		top=std::make_shared<const std::string>("?");
-		traj=std::make_shared<const std::string>("??");
-		frame=-1;
+		top = std::make_shared<const std::string>("?");
+		traj = std::make_shared<const std::string>("??");
+		frame = -1;
 	}
-	return FrameDescriptor(top,traj,frame);
+	return FrameDescriptor(top, traj, frame);
 }
 
 void TrajectoriesTreeModel::evaluatorAdded(const EvalId &id)
 {
-	int colCount=_storage.eval(id).columnCount();
-	if(colCount==0) {
+	int colCount = _storage.eval(id).columnCount();
+	if (colCount == 0) {
 		return;
 	}
-	beginInsertColumns(QModelIndex(),_columns.size()+1,_columns.size()+colCount);
-	for(int i=0; i<colCount; ++i) {
-		_columns.emplace_back(id,i);
+	beginInsertColumns(QModelIndex(), _columns.size() + 1,
+			   _columns.size() + colCount);
+	for (int i = 0; i < colCount; ++i) {
+		_columns.emplace_back(id, i);
 	}
 	endInsertColumns();
-	if(colCount>0) {
+	if (colCount > 0) {
 		_evalsPending.push_back(id);
 	}
 	_evaluatePending.start();
@@ -364,17 +402,22 @@ void TrajectoriesTreeModel::evaluatorAdded(const EvalId &id)
 
 void TrajectoriesTreeModel::evaluatorRemove(const EvalId &id)
 {
-	int colCount=_storage.eval(id).columnCount();
-	if(colCount==0) {
+	int colCount = _storage.eval(id).columnCount();
+	if (colCount == 0) {
 		return;
 	}
 	int firstCol;
-	for(firstCol=0; _columns[firstCol].first!=id; ++firstCol);
+	for (firstCol = 0; _columns[firstCol].first != id; ++firstCol)
+		;
 	int lastCol;
-	for(lastCol=firstCol+1; _columns[lastCol].first==id && lastCol<_columns.size(); ++lastCol);
+	for (lastCol = firstCol + 1;
+	     _columns[lastCol].first == id && lastCol < _columns.size();
+	     ++lastCol)
+		;
 	--lastCol;
-	beginRemoveColumns(QModelIndex(),firstCol+1,lastCol+1);
-	_columns.erase(_columns.begin()+firstCol,_columns.begin()+lastCol+1);
+	beginRemoveColumns(QModelIndex(), firstCol + 1, lastCol + 1);
+	_columns.erase(_columns.begin() + firstCol,
+		       _columns.begin() + lastCol + 1);
 	endRemoveColumns();
 }
 /*
@@ -386,7 +429,8 @@ void TrajectoriesTreeModel::updateColumn(int column)
 	}
 	const auto& calccol=_columns[column-1];
 	QModelIndex start=index(0,0);
-	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1, Qt::MatchWildcard|Qt::MatchRecursive);
+	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1,
+Qt::MatchWildcard|Qt::MatchRecursive);
 	for(const auto& idx:indexes) {
 		const TrajectoriesTreeItem *parentItem =
 				static_cast<TrajectoriesTreeItem*>(idx.internalPointer());
@@ -394,7 +438,9 @@ void TrajectoriesTreeModel::updateColumn(int column)
 			continue;
 		}
 		auto frame=frameDescriptor(parentItem,idx.row());
-		//qDebug()<<"data: <"<<idx.data()<<"> row:"<<idx.row()<<"nesting: "<<parentItem->nesting()<<" col:"<<column<<" frame:"<<QString::fromStdString(frame.trajFileName());
+		//qDebug()<<"data: <"<<idx.data()<<">
+row:"<<idx.row()<<"nesting: "<<parentItem->nesting()<<" col:"<<column<<"
+frame:"<<QString::fromStdString(frame.trajFileName());
 		_storage.getString(frame,calccol.first,calccol.second);
 		//emit dataChanged(idx,idx);
 	}
@@ -436,9 +482,11 @@ void TrajectoriesTreeModel::distancesInserted(int from, int to)
 		addCalculator(_distancesModel->distance(i));
 	}
 }
-void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<MolecularSystemDomain> domain)
+void TrajectoriesTreeModel::addCalculator(const
+std::shared_ptr<MolecularSystemDomain> domain)
 {
-	auto calculator=std::make_shared<EvaluatorTrasformationMatrix>(_storage,domain);
+	auto
+calculator=std::make_shared<EvaluatorTrasformationMatrix>(_storage,domain);
 
 	std::shared_ptr<EvaluatorTrasformationMatrix> firstTmCalc;
 	for(const auto& calc:_calculators)
@@ -453,7 +501,8 @@ void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<MolecularSystemD
 	_calculators.insert(calculator);
 
 	if(firstTmCalc) {
-		auto  angleCalc=std::make_shared<EvaluatorEulerAngle>(_storage,firstTmCalc,calculator);
+		auto
+angleCalc=std::make_shared<EvaluatorEulerAngle>(_storage,firstTmCalc,calculator);
 		_calculators.insert(angleCalc);
 		beginInsertColumns(QModelIndex(),columnCount(),columnCount()+2);
 		_visibleCalculators.push_back(std::make_pair(angleCalc,0));
@@ -463,19 +512,23 @@ void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<MolecularSystemD
 	}
 }
 
-void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<Position> position)
+void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<Position>
+position)
 {
-	auto calculator=std::make_shared<EvaluatorPositionSimulation>(_storage,position);
+	auto
+calculator=std::make_shared<EvaluatorPositionSimulation>(_storage,position);
 	_avCalculators[position->name()]=calculator;
 	_calculators.insert(calculator);
 	//_visibleCalculators.push_back(std::make_pair(calculator,0));
 }
 
-void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<Distance> distance)
+void TrajectoriesTreeModel::addCalculator(const std::shared_ptr<Distance>
+distance)
 {
 	auto av1=_avCalculators.at(distance->position1());
 	auto av2=_avCalculators.at(distance->position2());
-	auto calculator=std::make_shared<EvaluatorDistance>(_storage,av1,av2,distance);
+	auto
+calculator=std::make_shared<EvaluatorDistance>(_storage,av1,av2,distance);
 	_calculators.insert(calculator);
 
 	beginInsertColumns(QModelIndex(), columnCount(),columnCount());

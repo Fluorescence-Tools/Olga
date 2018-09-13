@@ -12,7 +12,8 @@
 #include "EvaluatorDelegate.h"
 
 
-namespace Ui {
+namespace Ui
+{
 class MainWindow;
 }
 
@@ -21,7 +22,9 @@ class MainWindow : public QMainWindow
 	Q_OBJECT
 
 public:
-	explicit MainWindow(const QString json, const QString pdbsDir, const QString ha4Out, const QString selPairs, const QString dumpJsonPath, QWidget *parent = 0);
+	explicit MainWindow(const QString json, const QString pdbsDir,
+			    const QString ha4Out, const QString selPairs,
+			    const QString dumpJsonPath, QWidget *parent = 0);
 	~MainWindow();
 
 protected:
@@ -46,39 +49,41 @@ private Q_SLOTS:
 	void ShowDomainsContextMenu(const QPoint& pos);
 	void ShowPositionsContextMenu(const QPoint& pos);
 */
-	void copySelectedText(const QItemSelectionModel* selModel) const;
+	void copySelectedText(const QItemSelectionModel *selModel) const;
 	void pasteText(QAbstractItemView *view) const;
 
 	void expand(const QModelIndex &parentIndex, int first, int last);
 	void showAbout();
 
-	void addLpBatch(bool all=false);
+	void addLpBatch(bool all = false);
 	void addDistanceBatch();
-	void addEfficiencyBatch(bool all=false);
+	void addEfficiencyBatch(bool all = false);
 	void getInfromativePairs();
 
-	void setPaused(bool state=true);
+	void setPaused(bool state = true);
 
 	void showBuffersStats();
 	void removeNanEffs();
 
 	void loadResults();
+
 private:
-	bool saveJson(const QString& fileName);
+	bool saveJson(const QString &fileName);
 	QString timespan(unsigned seconds);
 
 	void readSettings();
 	void writeSettings() const;
 	void setupMenus();
-	bool eventFilter(QObject* object, QEvent* event);
+	bool eventFilter(QObject *object, QEvent *event);
 
-	QString tabSeparatedData(const QItemSelectionModel *selectionModel) const;
-	void loadMolecules(const QStringList& fileNames);
+	QString
+	tabSeparatedData(const QItemSelectionModel *selectionModel) const;
+	void loadMolecules(const QStringList &fileNames);
 
-	void loadStructuresFolder(const QString& path);
-	void loadEvaluators(const QString& fileName);
-	bool exportData(const QString& fileName);
-	void autoSelectPairs(const QString& fileName);
+	void loadStructuresFolder(const QString &path);
+	void loadEvaluators(const QString &fileName);
+	bool exportData(const QString &fileName);
+	void autoSelectPairs(const QString &fileName);
 
 private:
 	Ui::MainWindow *ui;
@@ -89,16 +94,15 @@ private:
 	QMenu positionsMenu;
 
 	TaskStorage _storage;
-	TrajectoriesTreeModel trajectoriesModel{_storage,this};
-	EvaluatorsTreeModel evalsModel{_storage,this};
-	EvaluatorDelegate* evaluatorsDelegate;
+	TrajectoriesTreeModel trajectoriesModel{_storage, this};
+	EvaluatorsTreeModel evalsModel{_storage, this};
+	EvaluatorDelegate *evaluatorsDelegate;
 
-	//DistanceDelegate distanceDelegate;
+	// DistanceDelegate distanceDelegate;
 
 	QLabel tasksStatus;
 
 	std::unique_ptr<TaskStorage::Pause> _pause;
-
 };
 
 #endif // MAINWINDOW_H

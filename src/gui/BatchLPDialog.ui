@@ -89,6 +89,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="allResidues">
+       <property name="text">
+        <string>all residues</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QListWidget" name="residuesWidget">
        <property name="alternatingRowColors">
         <bool>true</bool>
@@ -121,8 +128,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>256</x>
+     <y>522</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -137,8 +144,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>308</x>
+     <y>522</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -146,5 +153,24 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>allResidues</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>BatchLPDialog</receiver>
+   <slot>toggleAll(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>71</x>
+     <y>134</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>103</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <slots>
+  <slot>toggleAll(int)</slot>
+ </slots>
 </ui>
