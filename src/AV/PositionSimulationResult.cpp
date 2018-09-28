@@ -237,6 +237,32 @@ std::ostream &PositionSimulationResult::dump_xyz(std::ostream &os) const
 	return os;
 }
 
+std::ostream &PositionSimulationResult::dump_pqr(std::ostream &os) const
+{
+	const int n = _points.size();
+	std::ios::fmtflags osflags = os.flags();
+	os.unsetf(std::ios::fixed);
+	using std::fixed;
+	using std::setprecision;
+	using std::setw;
+
+	// ATOM      1   AV  AV     0        -0.0    -8.5   -18.9    0.75  0.450
+	for (int i = 0; i < n; i++) {
+		const Eigen::Vector4f &p = _points.at(i);
+		os << "ATOM";
+		os << setw(7) << i << "   AV  AV";
+		os << setw(6) << i << "    ";
+		for (int d = 0; d < p.size(); ++d) {
+			os << fixed << setw(8) << setprecision(2) << p[d];
+		}
+		os << fixed << setw(7) << setprecision(3) << 1.0;
+		os << "\n";
+	}
+	// meanPosition();
+	os.flags(osflags);
+	return os;
+}
+
 /*std::ostream &PositionSimulationResult::dump_pdb(std::ostream &os) const
 {
 
