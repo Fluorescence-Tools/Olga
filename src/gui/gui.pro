@@ -65,7 +65,10 @@ HEADERS += \
     GetInformativePairsDialog.h \
     BatchFretEfficiencyDialog.h \
     best_dist.h \
-    split_string.h
+    split_string.h \
+    chisqdist.hpp \
+    spline.hpp \
+    polynomial.hpp
 
 SOURCES += \
     main.cpp \

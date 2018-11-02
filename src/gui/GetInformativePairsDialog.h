@@ -6,7 +6,10 @@
 #include "FrameDescriptor.h"
 #include <pteros/pteros.h>
 #include <Eigen/Dense>
+
+#include <QProgressDialog>
 #include <atomic>
+#include <future>
 
 namespace Ui
 {
@@ -35,24 +38,17 @@ private:
 	const std::vector<std::string> evalNames;
 	Ui::GetInformativePairsDialog *ui;
 
-	using pair_list_type = std::vector<std::pair<std::string, float>>;
-	static std::string
-	list2str(const GetInformativePairsDialog::pair_list_type &list);
-
-	pair_list_type miSelection(const float err,
-				   const FRETEfficiencies &Eall,
-				   const Eigen::MatrixXf &RMSDs,
-				   const int maxPairs) const;
-
-	pair_list_type greedySelection(const float err,
-				       const FRETEfficiencies &Eall,
-				       const Eigen::MatrixXf &RMSDs,
-				       const int maxPairs,
-				       const int fitParams) const;
-	mutable std::atomic<int> percDone{0};
-
+	std::vector<unsigned> greedySelection(const float err,
+	                                      const Eigen::MatrixXf &Effs,
+	                                      const Eigen::MatrixXf &RMSDs,
+	                                      const int maxPairs,
+	                                      const int fitParams) const;
 	Eigen::MatrixXf rmsds(const pteros::System &traj) const;
-	mutable std::atomic<int> rmsdsDone{0};
+	pteros::System buildTrajectory(const std::string &sel) const;
+
+	mutable std::atomic<int> percDone{0};
+	template <typename Lambda>
+	void showProgress(const QString &title, Lambda &&func);
 };
 
 #endif // GETINFORMATIVEPAIRSDIALOG_H
