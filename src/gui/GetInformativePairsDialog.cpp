@@ -46,7 +46,7 @@ std::vector<float> sys2xyz(const pteros::System &s)
 	std::vector<float> vec;
 	vec.reserve(s.num_atoms() * s.num_frames() * 3);
 	for (int fr = 0; fr < s.num_frames(); ++fr) {
-		const float *beg = s.Frame_data(fr).coord.data()->data();
+		const float *beg = s.frame(fr).coord.data()->data();
 		vec.insert(vec.end(), beg, beg + 3 * s.num_atoms());
 		/*
 		for(int at=0; at<s.num_atoms(); ++at) {
@@ -126,7 +126,7 @@ GetInformativePairsDialog::buildTrajectory(const std::string &sel) const
 		System system(fr.topologyFileName());
 		system.keep(sel);
 		if (traj.num_atoms() == system.num_atoms()) {
-			traj.frame_append(system.Frame_data(0));
+			traj.frame_append(system.frame(0));
 		} else {
 			std::cerr
 			        << "ERROR! Number of atoms does not match "
@@ -269,7 +269,9 @@ void GetInformativePairsDialog::showProgress(const QString &title,
 	auto f = std::async(std::launch::async, func);
 	std::future_status status = f.wait_for(std::chrono::milliseconds(0));
 	while (status != std::future_status::ready) {
+		// setValue() calls processEvents() only if percDone has changed
 		dialog.setValue(percDone);
+		QApplication::processEvents(); // makes GUI more responsive
 		status = f.wait_for(std::chrono::milliseconds(20));
 	}
 	f.get();

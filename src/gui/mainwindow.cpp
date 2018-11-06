@@ -218,35 +218,40 @@ MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) const
 		return "";
 	}
 
-	std::sort(indexes.begin(), indexes.end(), [](const QModelIndex &lhs,
-						     const QModelIndex &rhs) {
-		if (lhs.sibling(rhs.row(), rhs.column()) == rhs) {
-			return lhs < rhs;
-		}
+	std::sort(indexes.begin(), indexes.end(),
+	          [](const QModelIndex &lhs, const QModelIndex &rhs) {
+		          if (lhs.sibling(rhs.row(), rhs.column()) == rhs) {
+				  return lhs < rhs;
+			  }
 
-		QModelIndexList lParents, rParents;
-		lParents.prepend(lhs);
+			  QModelIndexList lParents, rParents;
+			  lParents.prepend(lhs);
 
-		for (QModelIndex idx = lhs; idx.isValid(); idx = idx.parent()) {
-			lParents.prepend(idx);
-		}
+			  for (QModelIndex idx = lhs; idx.isValid();
+			       idx = idx.parent()) {
+				  lParents.prepend(idx);
+			  }
 
-		rParents.prepend(rhs);
+			  rParents.prepend(rhs);
 
-		for (QModelIndex idx = rhs; idx.isValid(); idx = idx.parent()) {
-			rParents.prepend(idx);
-		}
+			  for (QModelIndex idx = rhs; idx.isValid();
+			       idx = idx.parent()) {
+				  rParents.prepend(idx);
+			  }
 
-		int nParents = std::min(lParents.size(), rParents.size()) - 1;
+			  int nParents =
+			          std::min(lParents.size(), rParents.size())
+			          - 1;
 
-		for (int i = 0; i < nParents; i++) {
-			if (lParents[i].row() != rParents[i].row()) {
-				return lParents[i].row() < rParents[i].row();
-			}
-		}
+			  for (int i = 0; i < nParents; i++) {
+				  if (lParents[i].row() != rParents[i].row()) {
+					  return lParents[i].row()
+					         < rParents[i].row();
+				  }
+			  }
 
-		return lParents.size() < rParents.size();
-	});
+			  return lParents.size() < rParents.size();
+	          });
 
 	QString selectedText;
 	QModelIndex previous = indexes.takeFirst();
@@ -555,7 +560,7 @@ void MainWindow::addEvaluator()
 
 /*void MainWindow::deleteSelectedPositions()
    {
-        QModelIndexList
+	QModelIndexList
    list=ui->labellingPositionsTableView->selectionModel()->selectedRows();
 	if(list.empty()){
 		return;
@@ -689,9 +694,9 @@ void MainWindow::addLpBatch(bool all)
 		std::vector<pteros::Selection> resSel;
 		system.select_all().split_by_residue(resSel);
 		for (pteros::Selection &sel : resSel) {
-			char chain = sel.begin()->Chain();
-			int resid = sel.begin()->Resid();
-			auto resname = sel.begin()->Resname();
+			char chain = sel.begin()->chain();
+			int resid = sel.begin()->resid();
+			auto resname = sel.begin()->resname();
 			residues.emplace_back(resid, resname, chain);
 		}
 	}

@@ -106,8 +106,7 @@ float pterosVDW(const pteros::System &system, int i)
 	QString path =
 		QCoreApplication::applicationDirPath() + "/vdWRadii.json";
 	static QMap<QString, double> vdWRMap = loadvdWRadii(path);
-	return vdWRMap.value(QString::fromStdString(system.Atom_data(i).name),
-			     0.15);
+	return vdWRMap.value(QString::fromStdString(system.atom(i).name), 0.15);
 }
 
 std::vector<Eigen::Vector4f> coordsVdW(const pteros::System &system)
@@ -118,7 +117,7 @@ std::vector<Eigen::Vector4f> coordsVdW(const pteros::System &system)
 	xyzw.reserve(nAtoms);
 
 	// Fill coordinates
-	const pteros::Frame &frame = system.Frame_data(0);
+	const pteros::Frame &frame = system.frame(0);
 	for (int i = 0; i < nAtoms; i++) {
 		xyzw.emplace_back(frame.coord.at(i)[0] * 10.0f,
 				  frame.coord.at(i)[1] * 10.0f,
@@ -333,7 +332,7 @@ Eigen::Vector3f Position::atomXYZ(const pteros::System &system) const
 		const double nan = std::numeric_limits<float>::quiet_NaN();
 		return Eigen::Vector3f(nan, nan, nan);
 	}
-	return select.XYZ(0) * 10.0f;
+	return select.xyz(0) * 10.0f;
 }
 
 PositionSimulationResult

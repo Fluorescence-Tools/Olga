@@ -85,7 +85,7 @@
    <item row="2" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>atom selection:</string>
+      <string>RMSD atom selection:</string>
      </property>
      <property name="buddy">
       <cstring>selectionEdit</cstring>
