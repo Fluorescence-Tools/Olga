@@ -2,39 +2,39 @@ stages:
   - compile
   - package
 
-build-ubuntu16.04:
+build-ubuntu:
   stage: compile
-  image: burningdaylight/docker-ubuntu16.04-devel
+  image: burningdaylight/ubuntu-latest-devel
   script:
     - mkdir -p ${CI_BUILD_NAME}
-    - rm -f ${CI_BUILD_NAME}/gui/Olga build-ubuntu16.04/gui/main.o
+    - rm -f ${CI_BUILD_NAME}/src/gui/Olga ${CI_BUILD_NAME}/src/gui/main.o
     - find ${CI_BUILD_NAME} -name "Makefile*" -delete
-    - cd ${CI_BUILD_NAME}; qmake ..; make -j8
+    - cd ${CI_BUILD_NAME}; qmake ..; make
   cache:
     paths:
     - ${CI_BUILD_NAME}/
   artifacts:
     expire_in: 1 day
     paths:
-      - ${CI_BUILD_NAME}/gui/Olga
-      - ${CI_BUILD_NAME}/irmsd/libirmsd.so
+      - ${CI_BUILD_NAME}/src/gui/Olga
+      - ${CI_BUILD_NAME}/src/irmsd/libirmsd.so
 
 build-win64:
   stage: compile
   image: burningdaylight/docker-mingw-qt5
   script:
     - mkdir -p ${CI_BUILD_NAME}
-    - rm -f ${CI_BUILD_NAME}/gui/release/Olga.exe build-win64/gui/release/main.o
+    - rm -f ${CI_BUILD_NAME}/src/gui/release/Olga.exe ${CI_BUILD_NAME}/src/gui/release/main.o
     - find ${CI_BUILD_NAME} -name "Makefile*" -delete
-    - cd ${CI_BUILD_NAME}; x86_64-w64-mingw32-qmake-qt5 ..; make -j8
+    - cd ${CI_BUILD_NAME}; x86_64-w64-mingw32-qmake-qt5 ..; make
   cache:
     paths:
     - ${CI_BUILD_NAME}/
   artifacts:
     expire_in: 1 day
     paths:
-      - ${CI_BUILD_NAME}/gui/release/Olga.exe
-      - ${CI_BUILD_NAME}/irmsd/release/irmsd.dll
+      - ${CI_BUILD_NAME}/src/gui/release/Olga.exe
+      - ${CI_BUILD_NAME}/src/irmsd/release/irmsd.dll
 
 
 build-win32:
@@ -42,39 +42,23 @@ build-win32:
   image: burningdaylight/docker-mingw-qt5
   script:
     - mkdir -p ${CI_BUILD_NAME}
-    - rm -f ${CI_BUILD_NAME}/gui/release/Olga.exe build-win32/gui/release/main.o;
+    - rm -f ${CI_BUILD_NAME}/src/gui/release/Olga.exe ${CI_BUILD_NAME}/src/gui/release/main.o;
     - find ${CI_BUILD_NAME} -name "Makefile*" -delete
-    - cd ${CI_BUILD_NAME}; i686-w64-mingw32-qmake-qt5 ..; make -j8
+    - cd ${CI_BUILD_NAME}; i686-w64-mingw32-qmake-qt5 ..; make
   cache:
     paths:
     - ${CI_BUILD_NAME}/
   artifacts:
     expire_in: 1 day
     paths:
-      - ${CI_BUILD_NAME}/gui/release/Olga.exe
-      - ${CI_BUILD_NAME}/irmsd/release/irmsd.dll
+      - ${CI_BUILD_NAME}/src/gui/release/Olga.exe
+      - ${CI_BUILD_NAME}/src/irmsd/release/irmsd.dll
 
 pack-win64:
   stage: package
   image: burningdaylight/docker-mingw-qt5
   script:
-    - mkdir -p ./Olga/platforms/
-    - mkdir -p ./Olga/imageformats/
-    - cp build-win64/gui/release/Olga.exe ./Olga/
-    - cp build-win64/irmsd/release/irmsd.dll ./Olga/
-    - "cp /usr/x86_64-w64-mingw32/bin/lib{GLESv2,async++,bz2-1,freetype-6,\
-	gcc_s_seh-1,glib-2.0-0,harfbuzz-0,iconv-2,intl-8,pcre-1,pcre16-0,png16-16,\
-	pteros,pteros_analysis,stdc++-6,tng_io,winpthread-1,\
-	boost_filesystem-mt,boost_system-mt,graphite2,gomp-1}.dll ./Olga/"
-    - "cp /usr/x86_64-w64-mingw32/bin/{Qt5Core,Qt5Gui,Qt5Multimedia,Qt5Network,\
-	Qt5Svg,Qt5Widgets,zlib1}.dll ./Olga/"
-    - cp /usr/x86_64-w64-mingw32/lib/qt/plugins/platforms/qwindows.dll ./Olga/platforms/
-    - "cp /usr/x86_64-w64-mingw32/lib/qt/plugins/imageformats/\
-	{qsvg,qico,qtiff,qjpeg}.dll ./Olga/imageformats/"
-    - cp ./*.json ./Olga/
-    - cp ./weighting_function.csv ./Olga/
-    - cp -r ./examples ./Olga/
-    - cp -r ./doc ./Olga/
+    - ./src/pack_mingw.sh build-win64 /usr/x86_64-w64-mingw32 Olga
   dependencies:
     - build-win64
   artifacts:
@@ -87,23 +71,7 @@ pack-win32:
   stage: package
   image: burningdaylight/docker-mingw-qt5
   script:
-    - mkdir -p ./Olga/platforms/
-    - mkdir -p ./Olga/imageformats/
-    - cp build-win32/gui/release/Olga.exe ./Olga/
-    - cp build-win32/irmsd/release/irmsd.dll ./Olga/
-    - "cp /usr/i686-w64-mingw32/bin/lib{GLESv2,async++,bz2-1,freetype-6,\
-	gcc_s_sjlj-1,glib-2.0-0,harfbuzz-0,iconv-2,intl-8,pcre-1,pcre16-0,\
-	png16-16,pteros,pteros_analysis,stdc++-6,tng_io,winpthread-1,\
-	boost_filesystem-mt,boost_system-mt,graphite2,gomp-1}.dll ./Olga/"
-    - "cp /usr/i686-w64-mingw32/bin/{Qt5Core,Qt5Gui,Qt5Multimedia,Qt5Network,\
-	Qt5Svg,Qt5Widgets,zlib1}.dll ./Olga/"
-    - cp /usr/i686-w64-mingw32/lib/qt/plugins/platforms/qwindows.dll ./Olga/platforms/
-    - "cp /usr/i686-w64-mingw32/lib/qt/plugins/imageformats/\
-	{qsvg,qico,qtiff,qjpeg}.dll ./Olga/imageformats/"
-    - cp ./*.json ./Olga/
-    - cp ./weighting_function.csv ./Olga/
-    - cp -r ./examples ./Olga/
-    - cp -r ./doc ./Olga/
+    - ./src/pack_mingw.sh build-win32 /usr/i686-w64-mingw32 Olga
   dependencies:
     - build-win32
   artifacts:
