@@ -15,8 +15,8 @@ win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../irmsd/release/ -lir
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../irmsd/debug/ -lirmsd
 else:unix: LIBS += -L$$OUT_PWD/../irmsd/ -lirmsd
 
-RESOURCES += \
-    icons.qrc
+
+RESOURCES += icons.qrc
 
 FORMS += \
     mainwindow.ui \

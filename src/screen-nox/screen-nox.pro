@@ -1,21 +1,16 @@
+! include( ../common.pri ) {
+    error( "Couldn't find the common.pri file!" )
+}
+
 QT += core
 QT -= gui
 LIBS   -= -lQtGui
-
-CONFIG += c++11
 
 TARGET = screen-nox
 CONFIG += console
 CONFIG -= app_bundle
 
 TEMPLATE = app
-
-QMAKE_CXXFLAGS -= -O1
-QMAKE_CXXFLAGS_RELEASE -= -O1
-QMAKE_CXXFLAGS_RELEASE *= -O2 -march=native -flto #-fwhole-program
-QMAKE_LFLAGS -= -O1
-QMAKE_LFLAGS *= -O2 -flto #-fwhole-program
-LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io #-lyomm11
 
 INCLUDEPATH += ../
 VPATH += ../
