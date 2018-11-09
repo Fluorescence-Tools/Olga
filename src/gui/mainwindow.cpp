@@ -30,7 +30,7 @@
 
 
 MainWindow::MainWindow(const QString json, const QString pdbsDir,
-		       const QString ha4Out, const QString selPairs,
+                       const QString csvOut, const QString selPairs,
 		       const QString dumpJsonPath, QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -103,7 +103,7 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir,
 
 	connect(&trajectoriesModel, SIGNAL(rowsInserted(QModelIndex, int, int)),
 		this, SLOT(expand(const QModelIndex &, int, int)));
-	if (json.size() > 0 && pdbsDir.size() > 0 && ha4Out.size() > 0) {
+	if (json.size() > 0 && pdbsDir.size() > 0 && csvOut.size() > 0) {
 		loadEvaluators(json);
 		if (!selPairs.isEmpty()) {
 			autoSelectPairs(selPairs);
@@ -116,7 +116,7 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir,
 				return;
 			}
 			timer->stop();
-			exportData(ha4Out);
+			exportData(csvOut);
 			if (!dumpJsonPath.isEmpty()) {
 				saveJson(dumpJsonPath);
 			}
@@ -524,7 +524,7 @@ bool MainWindow::exportData()
 {
 	QString fileName = QFileDialog::getSaveFileName(
 		this, tr("Export data"), "",
-		tr("Tab-separated values (*.ha4);;Any file (*)"));
+	        tr("Tab-separated values (*.dat *.csv *.tsv *.ol4);;Any file (*)"));
 
 	return exportData(fileName);
 }
@@ -797,7 +797,7 @@ void MainWindow::loadResults()
 {
 	QString fileName = QFileDialog::getOpenFileName(
 		this, tr("Open data File"), "",
-		tr("tab-separated data (*.ha4);;All Files (*)"));
+	        tr("Tab-separated data (*.dat *.csv *.ol4);;All Files (*)"));
 	_storage.setResults(fileName.toStdString(), trajectoriesModel.frames());
 }
 

@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	        {{"j", "json"},
 	         "setting file describing labelig positions and distances",
 	         "file"},
-	        {{"o", "out"}, "results .ha4 filename", "file"},
+	        {{"o", "out"}, "results .dat filename", "file"},
 	        {"selectpairs", "source PDB file", "path"},
 	        {"savejson", "save generated evaluators", "path"},
 	});

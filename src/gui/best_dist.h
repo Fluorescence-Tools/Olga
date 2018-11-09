@@ -255,7 +255,7 @@ void selectFromFiles()
 
 	auto RMSDs = load_tsv<Eigen::MatrixXf>("RMSDs.dat");
 
-	const std::string effsPath = "effs.ha4";
+	const std::string effsPath = "effs.dat";
 	auto Effs = load_tsv<Eigen::MatrixXf>(effsPath, 1, 1);
 	std::vector<std::string> pairNames = loadPairNames(effsPath);
 
