@@ -1,5 +1,7 @@
 #include <vector>
 
+#include <QDesktopServices>
+
 #include <Eigen/Dense>
 
 #include "mainwindow.h"
@@ -684,6 +686,12 @@ void MainWindow::showAbout()
 	//	QMessageBox::about(this, "Olga",msg);
 }
 
+void MainWindow::showDocumentation()
+{
+	QDesktopServices::openUrl(QUrl(
+	        "https://github.com/Fluorescence-Tools/Olga/blob/master/README.md"));
+}
+
 void MainWindow::addLpBatch(bool all)
 {
 
@@ -704,7 +712,7 @@ void MainWindow::addLpBatch(bool all)
 		QMessageBox::warning(
 			this, tr("Can not add labeling positions"),
 			tr("Could not populate the residue list.\n"
-			   "Did you import any molecule or trajectory?"));
+		           "Import a molecule or trajectory first, please."));
 		return;
 	}
 	if (evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>()
@@ -811,23 +819,19 @@ void MainWindow::getInfromativePairs()
 					"Load some, please."));
 		return;
 	}
+
 	std::vector<EvalId> evalIds =
-		_storage.evalIds<EvaluatorFretEfficiency>();
+	        _storage.evalIds<EvaluatorFretEfficiency>();
 	if (evalIds.empty()) {
 		QMessageBox::warning(this, tr("No Efficiencies available"),
-				     tr("No Efficiencies are available.\n"
-					"Create some, please."));
+		                     tr("No Efficiencies are available.\n"
+		                        "Create some, please."));
 		return;
-	}
-	std::vector<std::string> evalNames;
-	evalNames.reserve(evalIds.size());
-	for (const auto evalId : evalIds) {
-		evalNames.push_back(_storage.evalName(evalId));
 	}
 
 	const int tasksCount = _storage.tasksPendingCount() + 1;
 	QProgressDialog progress("Calculating efficiencies...", QString(), 0,
-				 tasksCount, this);
+	                         tasksCount, this);
 	progress.setWindowModality(Qt::WindowModal);
 	do {
 		progress.setValue(tasksCount - _storage.tasksPendingCount());
@@ -837,6 +841,16 @@ void MainWindow::getInfromativePairs()
 		std::this_thread::sleep_for(std::chrono::milliseconds(25));
 	} while (!_storage.ready());
 	progress.setValue(tasksCount);
+
+	std::vector<std::string> evalNames;
+	evalNames.reserve(evalIds.size());
+	for (const auto evalId : evalIds) {
+		evalNames.push_back(_storage.evalName(evalId));
+	}
+
+	progress.reset();
+	progress.setLabelText("Populating Efficiency matrix");
+	progress.setRange(0, frames.size());
 
 	Eigen::MatrixXf effs(frames.size(), evalIds.size());
 	for (int iFrame = 0; iFrame < frames.size(); ++iFrame) {
@@ -849,8 +863,9 @@ void MainWindow::getInfromativePairs()
 					res);
 			effs(iFrame, iEv) = dRes->get();
 		}
+		progress.setValue(iFrame);
 	}
-
+	progress.setValue(frames.size());
 	GetInformativePairsDialog dialog(this, frames, effs, evalNames);
 	dialog.exec();
 }

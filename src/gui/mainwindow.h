@@ -55,6 +55,7 @@ private Q_SLOTS:
 
 	void expand(const QModelIndex &parentIndex, int first, int last);
 	void showAbout();
+	void showDocumentation();
 
 	void addLpBatch(bool all = false);
 	void addDistanceBatch();

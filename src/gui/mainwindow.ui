@@ -96,6 +96,7 @@
    <addaction name="actionPauseExecution"/>
    <addaction name="separator"/>
    <addaction name="actionAbout"/>
+   <addaction name="actionDocumentation"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="logDockWidget">
@@ -230,6 +231,11 @@
      </item>
      <item row="0" column="0" colspan="2">
       <widget class="QTreeView" name="evaluatorsTreeView">
+       <property name="font">
+        <font>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
        <property name="editTriggers">
         <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
        </property>
@@ -276,7 +282,7 @@
      <x>0</x>
      <y>0</y>
      <width>1004</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -287,6 +293,7 @@
     <addaction name="actionLoadSettings"/>
     <addaction name="actionSaveSettings"/>
     <addaction name="actionExportData"/>
+    <addaction name="actionDocumentation"/>
    </widget>
    <widget class="QMenu" name="menuWizards">
     <property name="title">
@@ -536,6 +543,18 @@
    </property>
    <property name="text">
     <string>load results</string>
+   </property>
+  </action>
+  <action name="actionDocumentation">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/actions-help-contents.svg</normaloff>:/icons/actions-help-contents.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Documentation</string>
+   </property>
+   <property name="toolTip">
+    <string>Show documentation page</string>
    </property>
   </action>
  </widget>
@@ -828,6 +847,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionDocumentation</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>showDocumentation()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>356</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>loadEvaluators()</slot>
@@ -847,5 +882,6 @@
   <slot>showBuffersStats()</slot>
   <slot>removeNanEffs()</slot>
   <slot>loadResults()</slot>
+  <slot>showDocumentation()</slot>
  </slots>
 </ui>

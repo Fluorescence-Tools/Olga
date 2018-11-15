@@ -24,5 +24,6 @@
         <file>icons/molecule_add.svgz</file>
         <file>icons/molecule_add_fldr.svgz</file>
         <file>icons/pause.svg</file>
+        <file>icons/actions-help-contents.svg</file>
     </qresource>
 </RCC>
