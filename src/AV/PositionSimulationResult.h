@@ -22,6 +22,10 @@ public:
 	}
 
 	Eigen::Vector3f meanPosition() const;
+	std::vector<double> RdaDist(const PositionSimulationResult &other,
+	                            double distMin, double distMax,
+	                            double numBins,
+	                            unsigned nsamples = 2000000) const;
 	double meanFretEfficiency(const PositionSimulationResult &other,
 	                          const double R0) const;
 	double Rda(const PositionSimulationResult &other,

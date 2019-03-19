@@ -22,6 +22,35 @@ Eigen::Vector3f PositionSimulationResult::meanPosition() const
 	return _meanPosition;
 }
 
+std::vector<double>
+PositionSimulationResult::RdaDist(const PositionSimulationResult &other,
+                                  double distMin, double distMax,
+                                  double numBins, unsigned nsamples) const
+{
+	double binSize = (distMax - distMin) / numBins;
+	unsigned long av1length = _points.size();
+	unsigned long av2length = other._points.size();
+	std::random_device rd;
+	std::mt19937 engine(rd());
+	std::uniform_int_distribution<unsigned long> dist1(0, av1length - 1);
+	std::uniform_int_distribution<unsigned long> dist2(0, av2length - 1);
+
+	std::vector<double> hist(numBins, 0.0);
+	for (unsigned i = 0; i < nsamples; i++) {
+		unsigned long i1, i2;
+		i1 = dist1(engine);
+		i2 = dist2(engine);
+		double w = _points.at(i1)[3] * other._points.at(i2)[3];
+		double r = (_points.at(i1) - other._points.at(i2))
+		                   .head<3>()
+		                   .norm();
+		int ibin = (r - distMin) / binSize;
+		if (ibin < numBins)
+			hist[ibin] += w;
+	}
+	return hist;
+}
+
 double PositionSimulationResult::meanFretEfficiency(
 	const PositionSimulationResult &other, const double R0) const
 {

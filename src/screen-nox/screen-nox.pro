@@ -30,6 +30,7 @@ SOURCES += \
     EvaluatorChi2Contribution.cpp \
     EvaluatorChi2r.cpp \
     EvaluatorDistance.cpp \
+    EvaluatorDistanceDistribution.cpp \
     EvaluatorEulerAngle.cpp \
     EvaluatorFretEfficiency.cpp \
     EvaluatorMinDistance.cpp \
@@ -57,6 +58,7 @@ HEADERS += \
     EvaluatorChi2Contribution.h \
     EvaluatorChi2r.h \
     EvaluatorDistance.h \
+    EvaluatorDistanceDistribution.h \
     EvaluatorEulerAngle.h \
     EvaluatorFretEfficiency.h \
     EvaluatorMinDistance.h \
