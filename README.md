@@ -45,6 +45,6 @@ See the [page of C. Seidel research group](http://www.mpc.hhu.de/) for more fluo
 
 [LabelLib][3] - a C++/Python library for the simulation of small probes flexibly coupled to biomolecules
 
-[1]: https://github.com/Fluorescence-Tools/Olga/releases/download/20181115/Olga-20181115-b7f5456_win64.zip
+[1]: https://github.com/Fluorescence-Tools/Olga/releases/download/20180320/Olga-20180320-bce4c09_win64.zip
 [2]: https://doi.org/10.1038/nmeth.2222
 [3]: https://github.com/Fluorescence-Tools/LabelLib
