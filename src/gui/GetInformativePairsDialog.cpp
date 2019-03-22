@@ -186,12 +186,13 @@ void GetInformativePairsDialog::accept()
 	std::vector<unsigned> keepIdxs;
 	for (unsigned i = 0; i < effs.cols(); ++i) {
 		int numNan = effs.array().col(i).isNaN().cast<int>().sum();
-		if (numNan < maxNan) {
-			keepIdxs.push_back(i);
-		} else {
+		if (numNan > maxNan) {
 			pairNames[i].erase();
+		} else {
+			keepIdxs.push_back(i);
 		}
 	}
+
 	Eigen::MatrixXf E = sliceCols(effs, keepIdxs);
 	auto isEmptyStr = [](const std::string &s) { return s.empty(); };
 	auto it = remove_if(pairNames.begin(), pairNames.end(), isEmptyStr);
@@ -229,6 +230,10 @@ void GetInformativePairsDialog::accept()
 		float rmsdAve = rmsdMeanMean(RMSDs, chi2, i + 1, 0.99f);
 		report += std::to_string(i + 1) + "\t" + pairNames[pairList[i]]
 		          + "\t" + std::to_string(rmsdAve) + "\n";
+	}
+
+	if (pairList.size() == 0) {
+		report = "No NaN-free pairs found. Pair selection failed.\n";
 	}
 
 	std::string fname = ui->fileEdit->text().toStdString();
