@@ -17,7 +17,7 @@ build-ubuntu:
     expire_in: 1 day
     paths:
       - ${CI_BUILD_NAME}/src/gui/Olga
-      - ${CI_BUILD_NAME}/src/irmsd/libirmsd.so
+      - ${CI_BUILD_NAME}/src/irmsd/libirmsd.so.1.0.0
 
 build-win64:
   stage: compile
@@ -53,6 +53,19 @@ build-win32:
     paths:
       - ${CI_BUILD_NAME}/src/gui/release/Olga.exe
       - ${CI_BUILD_NAME}/src/irmsd/release/irmsd.dll
+
+pack-ubuntu:
+  stage: package
+  image: burningdaylight/ubuntu-latest-devel
+  script:
+    - ./src/pack_ubuntu.sh build-ubuntu Olga
+  dependencies:
+    - build-ubuntu
+  artifacts:
+    expire_in: 1 week
+    name: "Olga_ubuntu18.04_${CI_BUILD_REF_NAME}-${CI_BUILD_REF:0:8}"
+    paths:
+      - Olga
 
 pack-win64:
   stage: package

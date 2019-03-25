@@ -13,6 +13,8 @@ gui.depends = irmsd
 DISTFILES += \
     .gitignore \
     .gitlab-ci.yml \
+    src/pack_mingw.sh \
+    src/pack_ubuntu.sh \
     .clang-format \
     src/vdWRadii.json \
     src/weighting_function.csv \

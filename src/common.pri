@@ -4,10 +4,10 @@ QMAKE_CXXFLAGS -= -O2
 
 QMAKE_CXXFLAGS_RELEASE -= -O
 QMAKE_CXXFLAGS_RELEASE -= -O1
-QMAKE_CXXFLAGS_RELEASE *= -O2 -march=native -flto #-fwhole-program
+QMAKE_CXXFLAGS_RELEASE *= -O2 -flto -ftree-vectorize -msse3 -mfpmath=sse #-fwhole-program
 
 QMAKE_LFLAGS -= -O1
-QMAKE_LFLAGS *= -O2 -flto #-fwhole-program
+QMAKE_LFLAGS *= -O2 -flto -ftree-vectorize -msse3 -mfpmath=sse #-fwhole-program
 
 COMMIT_DATE = $$system(git show -s --pretty='%ci')
 COMMIT_DATE = $$first(COMMIT_DATE)
