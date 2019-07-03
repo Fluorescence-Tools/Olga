@@ -49,14 +49,14 @@ public:
 			        _storage.isValid(_av1)
 			                ? _av1
 			                : _storage.evaluatorPositionSimulation;
-			return {"position_name", QVariant::fromValue(id)};
+			return {"position1_name", QVariant::fromValue(id)};
 		}
 		case 1: {
 			EvalId id =
 			        _storage.isValid(_av2)
 			                ? _av2
 			                : _storage.evaluatorPositionSimulation;
-			return {"position_name", QVariant::fromValue(id)};
+			return {"position2_name", QVariant::fromValue(id)};
 		}
 		case 2:
 			return {"histograms_path",

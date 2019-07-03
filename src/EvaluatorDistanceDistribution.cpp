@@ -111,7 +111,7 @@ EvaluatorDistanceDistribution::calculate(const PositionSimulationResult &av1,
                                          const std::string traj) const
 {
 	std::ostringstream buf;
-	buf << std::setprecision(3);
+	buf << std::setprecision(4);
 	buf << std::fixed;
 	buf << traj;
 	unsigned numBins = lround((_distMax - _distMin) / _binSize);
