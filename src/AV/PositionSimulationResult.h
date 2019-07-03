@@ -23,26 +23,26 @@ public:
 
 	Eigen::Vector3f meanPosition() const;
 	std::vector<double> RdaDist(const PositionSimulationResult &other,
-	                            double distMin, double distMax,
-	                            double numBins,
-	                            unsigned nsamples = 2000000) const;
+				    double distMin, double distMax,
+				    double numBins,
+				    unsigned nsamples = 2000000) const;
 	double meanFretEfficiency(const PositionSimulationResult &other,
-	                          const double R0) const;
+				  const double R0) const;
 	double Rda(const PositionSimulationResult &other,
-	           unsigned nsamples = 200000) const;
+		   unsigned nsamples = 200000) const;
 	double Rdae(const PositionSimulationResult &other, double R0,
-	            unsigned nsamples = 200000) const;
+		    unsigned nsamples = 200000) const;
 	double Rmp(const PositionSimulationResult &other) const;
 	double modelDistance(const PositionSimulationResult &other,
-	                     const std::string &type, double R0 = 0) const;
+			     const std::string &type, double R0 = 0) const;
 	double minDistance(const PositionSimulationResult &other) const
 	{
 		float minDistSq = std::numeric_limits<double>::infinity();
 		for (const Eigen::Vector4f &p1 : _points) {
 			for (const Eigen::Vector4f &p2 : other._points) {
 				minDistSq = std::min(
-				        minDistSq,
-				        (p2 - p1).head<3>().squaredNorm());
+					minDistSq,
+					(p2 - p1).head<3>().squaredNorm());
 			}
 		}
 		return std::sqrt(minDistSq);
@@ -80,7 +80,7 @@ public:
 		_meanPosition += r;
 	}
 	float overlap(const std::vector<Eigen::Vector3f> &refs,
-	              float maxR) const
+		      float maxR) const
 	{
 		if (_points.size() == 0) {
 			return std::numeric_limits<double>::quiet_NaN();
@@ -96,7 +96,7 @@ public:
 			totalVol += point[3];
 			for (const Eigen::Vector3f &ref : refs) {
 				float rSq =
-				        (ref - point.head<3>()).squaredNorm();
+					(ref - point.head<3>()).squaredNorm();
 				if (rSq < maxRSq) {
 					overlapVol += point[3];
 					break;
@@ -115,7 +115,7 @@ protected:
 	// needed to accomodate all points
 	densityArray_t pointsToDensity(double res = 0.5) const;
 	static bool allNeighboursFilled(const densityArray_t &arr, int i, int j,
-	                                int k);
+					int k);
 	std::vector<Eigen::Vector3f> shell(double res = 0.5) const;
 	std::vector<Eigen::Vector4f> _points;
 	static constexpr double nan = std::numeric_limits<double>::quiet_NaN();

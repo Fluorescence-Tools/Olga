@@ -3,32 +3,31 @@
 
 #include <functional>
 
-struct TrajectoriesTreeItem
-{
+struct TrajectoriesTreeItem {
 	int moltrajIndex;
 	int trajindex;
 	unsigned char nesting() const
 	{
-		if(moltrajIndex<0){
+		if (moltrajIndex < 0) {
 			return 0;
-		}
-		else {
-			return trajindex<0?1:2;
+		} else {
+			return trajindex < 0 ? 1 : 2;
 		}
 	}
-	bool inline operator==(const TrajectoriesTreeItem& rhs) const {
-	    return (moltrajIndex == rhs.moltrajIndex) &&
-			    (trajindex==rhs.trajindex);
+	bool inline operator==(const TrajectoriesTreeItem &rhs) const
+	{
+		return (moltrajIndex == rhs.moltrajIndex)
+		       && (trajindex == rhs.trajindex);
 	}
 };
-namespace std {
-template <>
-struct hash<TrajectoriesTreeItem>  {
+namespace std
+{
+template <> struct hash<TrajectoriesTreeItem> {
 	size_t operator()(const TrajectoriesTreeItem &itm) const
 	{
-		return std::hash<int>()(itm.moltrajIndex)^
-				std::hash<int>()(itm.trajindex);
+		return std::hash<int>()(itm.moltrajIndex)
+		       ^ std::hash<int>()(itm.trajindex);
 	}
 };
-}
+} // namespace std
 #endif // TRAJECTORIESTREEITEM_H

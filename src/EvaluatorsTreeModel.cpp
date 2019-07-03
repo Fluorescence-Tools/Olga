@@ -82,9 +82,8 @@ QVariant EvaluatorsTreeModel::data(const QModelIndex &index, int role) const
 			}
 			if (res.userType() == simulationType) {
 				if (role == Qt::DisplayRole) {
-					const auto &type =
-						res.value<Position::
-								  SimulationType>();
+					const auto &type = res.value<
+						Position::SimulationType>();
 					auto name =
 						Position::simulationTypeName(
 							type);

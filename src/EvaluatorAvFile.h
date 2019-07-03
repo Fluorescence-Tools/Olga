@@ -9,16 +9,20 @@ class EvaluatorAvFile : public AbstractEvaluator
 private:
 	EvalId _av;
 	std::string _name, _writeDirPath;
-	bool _onlyShell=false, _openDX=false;
+	bool _onlyShell = false, _openDX = false;
+
 public:
-	EvaluatorAvFile(const TaskStorage& storage, const std::string& name):
-		AbstractEvaluator(storage),_name(name) {}
+	EvaluatorAvFile(const TaskStorage &storage, const std::string &name)
+	    : AbstractEvaluator(storage), _name(name)
+	{
+	}
 	virtual Task makeTask(const FrameDescriptor &frame) const noexcept;
 	virtual std::string name() const
 	{
 		return _name;
 	}
-	virtual std::string className() const {
+	virtual std::string className() const
+	{
 		return "AV File";
 	}
 	virtual std::string columnName(int) const
@@ -35,56 +39,58 @@ public:
 	}
 	virtual Setting setting(int row) const override
 	{
-		switch(row)
-		{
-		case 0:
-		{
-			EvalId id=_storage.isValid(_av)?_av:_storage.evaluatorPositionSimulation;
-			return {"position_name",QVariant::fromValue(id)};
+		switch (row) {
+		case 0: {
+			EvalId id =
+				_storage.isValid(_av)
+					? _av
+					: _storage.evaluatorPositionSimulation;
+			return {"position_name", QVariant::fromValue(id)};
 		}
 		case 1:
-			return {"write_dir",QString::fromStdString(_writeDirPath)};
+			return {"write_dir",
+				QString::fromStdString(_writeDirPath)};
 
 		case 2:
-			return {"only_shell",_onlyShell};
+			return {"only_shell", _onlyShell};
 		case 3:
-			return {"openDX",_openDX};
+			return {"openDX", _openDX};
 		}
-		return {"",""};
+		return {"", ""};
 	}
-	virtual void setSetting(int row, const QVariant& val)
+	virtual void setSetting(int row, const QVariant &val)
 	{
-		switch(row)
-		{
-		case 0:
-		{
-			auto tmpId=val.value<EvalId>();
-			if (tmpId==EvalId(-1)) {
-				std::cerr<<"Can not set position\n"<<std::flush;
+		switch (row) {
+		case 0: {
+			auto tmpId = val.value<EvalId>();
+			if (tmpId == EvalId(-1)) {
+				std::cerr << "Can not set position\n"
+					  << std::flush;
 				return;
 			}
-			_av=tmpId;
+			_av = tmpId;
 			return;
 		}
 		case 1:
-			_writeDirPath=val.toString().toStdString();
+			_writeDirPath = val.toString().toStdString();
 			return;
 		case 2:
-			_onlyShell=val.toBool();
+			_onlyShell = val.toBool();
 			return;
 		case 3:
-			_openDX=val.toBool();
+			_openDX = val.toBool();
 			return;
 		}
 	}
-	virtual void setName(const std::string& name)
+	virtual void setName(const std::string &name)
 	{
-		_name=name;
+		_name = name;
 	}
+
 private:
 	virtual std::shared_ptr<AbstractCalcResult>
-	calculate(const PositionSimulationResult& av,
-		  const std::string& fname) const;
+	calculate(const PositionSimulationResult &av,
+		  const std::string &fname) const;
 };
 
 #endif // EVALUATORAVFILE_H

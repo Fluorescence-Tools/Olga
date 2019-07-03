@@ -91,9 +91,9 @@ public:
 	using Task = async::shared_task<Result>;
 	using PterosSysTask = async::shared_task<pteros::System>;
 	std::string getString(const FrameDescriptor &frame, const EvalId &evId,
-	                      int col, bool persistent = true) const;
+			      int col, bool persistent = true) const;
 	Result getResult(const FrameDescriptor &frame,
-	                 const EvalId &evId) const;
+			 const EvalId &evId) const;
 	void setResults(const std::string &fName,
 			const std::vector<FrameDescriptor> &frames);
 	const PterosSysTask &getSysTask(const FrameDescriptor &frame) const;
@@ -151,7 +151,7 @@ public:
 		return _requests.size();
 	}
 	void evaluate(const FrameDescriptor &frame,
-	              const std::vector<EvalId> &evIds) const
+		      const std::vector<EvalId> &evIds) const
 	{
 		for (const auto &evId : evIds) {
 			getString(frame, evId, 0);
@@ -292,7 +292,7 @@ private:
 	mutable CuckooMap<CacheKey, Result> _results;
 
 	const int _minRunningCount =
-	        (std::thread::hardware_concurrency() + 1) * 10;
+		(std::thread::hardware_concurrency() + 1) * 10;
 	const int _maxRunningCount = _minRunningCount * 2;
 	mutable std::unordered_map<CacheKey, Task> _tasks;
 	mutable std::atomic<int> _tasksRunning{0};

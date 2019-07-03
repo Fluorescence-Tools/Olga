@@ -11,8 +11,8 @@
 #include <future>
 
 GetInformativePairsDialog::GetInformativePairsDialog(
-        QWidget *parent, const std::vector<FrameDescriptor> &frames,
-        const Eigen::MatrixXf &effs, const std::vector<std::string> &evalNames)
+	QWidget *parent, const std::vector<FrameDescriptor> &frames,
+	const Eigen::MatrixXf &effs, const std::vector<std::string> &evalNames)
     : QDialog(parent), frames(frames), effs(effs), evalNames(evalNames),
       ui(new Ui::GetInformativePairsDialog)
 {
@@ -76,17 +76,17 @@ GetInformativePairsDialog::rmsds(const pteros::System &traj) const
 	for (int t = 0; t < threads.size(); ++t) {
 		threads[t] = std::thread([=, &RMSDs, &xyz, &rmsdsDone] {
 			const int maxFr =
-			        std::min((t + 1) * grainSize, numFrames);
+				std::min((t + 1) * grainSize, numFrames);
 			for (int fr = t * grainSize; fr < maxFr; ++fr) {
 				for (int j = fr; j < numFrames; ++j) {
 					const float *xyz_fr =
-					        xyz.data() + 3 * fr * nAtoms;
+						xyz.data() + 3 * fr * nAtoms;
 					const float *xyz_j =
-					        xyz.data() + 3 * j * nAtoms;
+						xyz.data() + 3 * j * nAtoms;
 					RMSDs(fr, j) = msd_atom_major(
-					        nAtoms, nAtoms, xyz_fr, xyz_j,
-					        traces[fr], traces[j], 0,
-					        nullptr);
+						nAtoms, nAtoms, xyz_fr, xyz_j,
+						traces[fr], traces[j], 0,
+						nullptr);
 					RMSDs(j, fr) = RMSDs(fr, j);
 				}
 				rmsdsDone += numFrames - fr;
@@ -129,21 +129,21 @@ GetInformativePairsDialog::buildTrajectory(const std::string &sel) const
 			traj.frame_append(system.frame(0));
 		} else {
 			std::cerr
-			        << "ERROR! Number of atoms does not match "
-			                   + fr.topologyFileName() + " atoms: "
-			                   + std::to_string(system.num_atoms())
-			                   + "/"
-			                   + std::to_string(traj.num_atoms())
-			                   + "\n"
-			        << std::flush;
+				<< "ERROR! Number of atoms does not match "
+					   + fr.topologyFileName() + " atoms: "
+					   + std::to_string(system.num_atoms())
+					   + "/"
+					   + std::to_string(traj.num_atoms())
+					   + "\n"
+				<< std::flush;
 		}
 		percDone = i * 100 / numFrames;
 	}
 	if (numFrames != traj.num_frames()) {
 		std::cout << "total frames loaded "
-		                     + std::to_string(traj.num_frames()) + "/"
-		                     + std::to_string(numFrames) + "\n"
-		          << std::flush;
+				     + std::to_string(traj.num_frames()) + "/"
+				     + std::to_string(numFrames) + "\n"
+			  << std::flush;
 		return System();
 	}
 	return traj;
@@ -165,7 +165,7 @@ void GetInformativePairsDialog::accept()
 
 	pteros::System traj;
 	showProgress("Building trajectory...",
-	             [&] { traj = buildTrajectory(sel); });
+		     [&] { traj = buildTrajectory(sel); });
 	const size_t numFrames = traj.num_frames();
 	if (numFrames == 0) {
 		return;
@@ -202,8 +202,8 @@ void GetInformativePairsDialog::accept()
 	const float maxFloat = std::numeric_limits<float>::max();
 	for (unsigned col = 0; col < E.cols(); ++col) {
 		const Eigen::VectorXf filter =
-		        E.col(col).array().isNaN().matrix().cast<float>()
-		        * maxFloat;
+			E.col(col).array().isNaN().matrix().cast<float>()
+			* maxFloat;
 		for (unsigned row = 0; row < E.rows(); ++row) {
 			if (not std::isnan(E(row, col))) {
 				continue;
@@ -219,7 +219,7 @@ void GetInformativePairsDialog::accept()
 	std::vector<unsigned> pairList;
 	showProgress("Greedy selection...", [&]() {
 		pairList =
-		        greedySelection(err, E, RMSDs, maxPairs, numFitParams);
+			greedySelection(err, E, RMSDs, maxPairs, numFitParams);
 	});
 
 	std::string report = "#\tPair_added\t<<RMSD>>/A\n";
@@ -229,7 +229,7 @@ void GetInformativePairsDialog::accept()
 		auto chi2 = chiSquared(sliceCols(E, tmpPairs), err);
 		float rmsdAve = rmsdMeanMean(RMSDs, chi2, i + 1, 0.99f);
 		report += std::to_string(i + 1) + "\t" + pairNames[pairList[i]]
-		          + "\t" + std::to_string(rmsdAve) + "\n";
+			  + "\t" + std::to_string(rmsdAve) + "\n";
 	}
 
 	if (pairList.size() == 0) {
@@ -243,8 +243,8 @@ void GetInformativePairsDialog::accept()
 		std::ofstream outfile(fname, std::ifstream::out);
 		if (!outfile.is_open()) {
 			std::cerr << "Warning! could not open file for saving: "
-			                     + fname + "\n"
-			          << std::flush;
+					     + fname + "\n"
+				  << std::flush;
 			return;
 		}
 		outfile << report;
@@ -257,14 +257,14 @@ void GetInformativePairsDialog::accept()
 void GetInformativePairsDialog::setFileName()
 {
 	QString fileName = QFileDialog::getSaveFileName(
-	        this, tr("report file"), "",
-	        tr("Text file (*.txt);;Any file (*)"));
+		this, tr("report file"), "",
+		tr("Text file (*.txt);;Any file (*)"));
 	ui->fileEdit->setText(fileName);
 }
 
 template <typename Lambda>
 void GetInformativePairsDialog::showProgress(const QString &title,
-                                             Lambda &&func)
+					     Lambda &&func)
 {
 	percDone = 0;
 	QProgressDialog dialog(title, QString(), 0, 100, this);
@@ -284,9 +284,9 @@ void GetInformativePairsDialog::showProgress(const QString &title,
 }
 
 std::vector<unsigned> GetInformativePairsDialog::greedySelection(
-        const float err, const Eigen::MatrixXf &Effs,
-        const Eigen::MatrixXf &RMSDs, const int maxPairs,
-        const int fitParams) const
+	const float err, const Eigen::MatrixXf &Effs,
+	const Eigen::MatrixXf &RMSDs, const int maxPairs,
+	const int fitParams) const
 {
 	std::vector<unsigned> selPairs;
 	for (int pairsDone = 0; pairsDone < maxPairs; ++pairsDone) {

@@ -4,7 +4,8 @@
 #include <QDialog>
 #include "EvaluatorsTreeModel.h"
 
-namespace Ui {
+namespace Ui
+{
 class BatchDistanceDialog;
 }
 
@@ -13,7 +14,8 @@ class BatchDistanceDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit BatchDistanceDialog(QWidget *parent, EvaluatorsTreeModel& evModel);
+	explicit BatchDistanceDialog(QWidget *parent,
+				     EvaluatorsTreeModel &evModel);
 	~BatchDistanceDialog();
 public Q_SLOTS:
 	virtual void reject() override
@@ -21,8 +23,9 @@ public Q_SLOTS:
 		QDialog::reject();
 	}
 	virtual void accept() override;
+
 private:
-	EvaluatorsTreeModel& _evModel;
+	EvaluatorsTreeModel &_evModel;
 	QList<QModelIndex> lpIndexes;
 	QList<QModelIndex> distanceIndexes;
 

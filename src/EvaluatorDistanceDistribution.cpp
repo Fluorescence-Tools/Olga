@@ -10,9 +10,9 @@ EvaluatorDistanceDistribution::fullPath(const std::string &path) const
 {
 	if (path.empty()) {
 		return QDir::current()
-		        .filePath(QString::fromStdString("histogram_" + _name
-		                                         + ".dat"))
-		        .toStdString();
+			.filePath(QString::fromStdString("histogram_" + _name
+							 + ".dat"))
+			.toStdString();
 	}
 	QFileInfo pathInfo(QString::fromStdString(path));
 	if (pathInfo.isAbsolute()) {
@@ -40,7 +40,7 @@ bool EvaluatorDistanceDistribution::initOut() const
 	outfile = std::ofstream(fileName, std::ifstream::out);
 	if (!outfile.is_open()) {
 		std::cerr << "could not open the file for writing: <" + fileName
-		                     + ">\n";
+				     + ">\n";
 		return false;
 	}
 
@@ -58,23 +58,23 @@ bool EvaluatorDistanceDistribution::initOut() const
 }
 
 EvaluatorDistanceDistribution::EvaluatorDistanceDistribution(
-        const TaskStorage &storage, const std::string &name)
+	const TaskStorage &storage, const std::string &name)
     : AbstractEvaluator(storage), _name(name)
 {
 }
 
 AbstractEvaluator::Task
 EvaluatorDistanceDistribution::makeTask(const FrameDescriptor &frame) const
-        noexcept
+	noexcept
 {
 	Task av1 = getTask(frame, _av1, false);
 	Task av2 = getTask(frame, _av2, false);
 	if (!av1.valid() || !av2.valid()) {
 		auto res = std::make_shared<CalcResult<double>>(
-		        std::numeric_limits<double>::quiet_NaN());
+			std::numeric_limits<double>::quiet_NaN());
 		return async::make_task(
-		               std::shared_ptr<AbstractCalcResult>(res))
-		        .share();
+			       std::shared_ptr<AbstractCalcResult>(res))
+			.share();
 	}
 
 	// std::string posName1 = _storage.eval(_av1).name();
@@ -83,32 +83,32 @@ EvaluatorDistanceDistribution::makeTask(const FrameDescriptor &frame) const
 
 	using result_t = std::tuple<Task, Task>;
 	return async::when_all(av1, av2)
-	        .then([this, trajFname](result_t result) {
-		        auto ptrAv1 = std::get<0>(result).get();
+		.then([this, trajFname](result_t result) {
+			auto ptrAv1 = std::get<0>(result).get();
 			auto ptrAv2 = std::get<1>(result).get();
 			auto resAv1 = dynamic_cast<
-			        CalcResult<PositionSimulationResult> *>(
-			        ptrAv1.get());
+				CalcResult<PositionSimulationResult> *>(
+				ptrAv1.get());
 			auto resAv2 = dynamic_cast<
-			        CalcResult<PositionSimulationResult> *>(
-			        ptrAv2.get());
+				CalcResult<PositionSimulationResult> *>(
+				ptrAv2.get());
 			if (!resAv1 || !resAv2) {
 				auto res = std::make_shared<CalcResult<double>>(
-				        std::numeric_limits<
-				                double>::quiet_NaN());
+					std::numeric_limits<
+						double>::quiet_NaN());
 				return std::shared_ptr<AbstractCalcResult>(res);
 			}
 			PositionSimulationResult av1 = resAv1->get();
 			PositionSimulationResult av2 = resAv2->get();
 			return calculate(av1, av2, trajFname);
-	        })
-	        .share();
+		})
+		.share();
 }
 
 std::shared_ptr<AbstractCalcResult>
 EvaluatorDistanceDistribution::calculate(const PositionSimulationResult &av1,
-                                         const PositionSimulationResult &av2,
-                                         const std::string traj) const
+					 const PositionSimulationResult &av2,
+					 const std::string traj) const
 {
 	std::ostringstream buf;
 	buf << std::setprecision(4);
@@ -116,7 +116,7 @@ EvaluatorDistanceDistribution::calculate(const PositionSimulationResult &av1,
 	buf << traj;
 	unsigned numBins = lround((_distMax - _distMin) / _binSize);
 	std::vector<double> hist =
-	        av1.RdaDist(av2, _distMin, _distMax, numBins);
+		av1.RdaDist(av2, _distMin, _distMax, numBins);
 	for (double freq : hist) {
 		buf << '\t' << freq;
 	}

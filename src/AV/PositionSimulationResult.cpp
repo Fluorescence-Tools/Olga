@@ -24,8 +24,8 @@ Eigen::Vector3f PositionSimulationResult::meanPosition() const
 
 std::vector<double>
 PositionSimulationResult::RdaDist(const PositionSimulationResult &other,
-                                  double distMin, double distMax,
-                                  double numBins, unsigned nsamples) const
+				  double distMin, double distMax,
+				  double numBins, unsigned nsamples) const
 {
 	double binSize = (distMax - distMin) / numBins;
 	unsigned long av1length = _points.size();
@@ -42,8 +42,8 @@ PositionSimulationResult::RdaDist(const PositionSimulationResult &other,
 		i2 = dist2(engine);
 		double w = _points.at(i1)[3] * other._points.at(i2)[3];
 		double r = (_points.at(i1) - other._points.at(i2))
-		                   .head<3>()
-		                   .norm();
+				   .head<3>()
+				   .norm();
 		int ibin = (r - distMin) / binSize;
 		if (ibin < numBins)
 			hist[ibin] += w;

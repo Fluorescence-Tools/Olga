@@ -23,11 +23,11 @@
 
 const int TaskStorage::evalType = QVariant::fromValue(EvalId()).userType();
 const int TaskStorage::simulationType =
-        QVariant::fromValue(Position::SimulationType()).userType();
+	QVariant::fromValue(Position::SimulationType()).userType();
 const int TaskStorage::evalListType =
-        QVariant::fromValue(QList<EvalId>()).userType();
+	QVariant::fromValue(QList<EvalId>()).userType();
 const int TaskStorage::vec3dType =
-        QVariant::fromValue(TaskStorage::Vector3d()).userType();
+	QVariant::fromValue(TaskStorage::Vector3d()).userType();
 
 
 TaskStorage::TaskStorage()
@@ -35,42 +35,42 @@ TaskStorage::TaskStorage()
       _currentId(EvalId(0))
 {
 	addEvaluator(std::make_unique<const EvaluatorPositionSimulation>(
-	        *this, "unknown"));
+		*this, "unknown"));
 	evaluatorPositionSimulation = _currentId;
 	addEvaluator(std::make_unique<const EvaluatorAvFile>(*this, "unknown"));
 	evaluatorEvaluatorAvFile = _currentId;
 	addEvaluator(
-	        std::make_unique<const EvaluatorAvVolume>(*this, "unknown"));
+		std::make_unique<const EvaluatorAvVolume>(*this, "unknown"));
 	evaluatorEvaluatorAvVolume = _currentId;
 	addEvaluator(std::make_unique<const EvaluatorFretEfficiency>(
-	        *this, "unknown"));
+		*this, "unknown"));
 	evaluatorFretEfficiency = _currentId;
 	addEvaluator(
-	        std::make_unique<const EvaluatorDistance>(*this, "unknown"));
+		std::make_unique<const EvaluatorDistance>(*this, "unknown"));
 	evaluatorDistance = _currentId;
 	addEvaluator(std::make_unique<const EvaluatorChi2>(*this, "unknown"));
 	evaluatorChi2 = _currentId;
 	addEvaluator(std::make_unique<const EvaluatorChi2r>(*this, "unknown"));
 	evaluatorChi2r = _currentId;
 	addEvaluator(std::make_unique<const EvaluatorWeightedResidual>(
-	        *this, "unknown"));
+		*this, "unknown"));
 	evaluatorWeightedResidual = _currentId;
 	addEvaluator(
-	        std::make_unique<const EvaluatorMinDistance>(*this, "unknown"));
+		std::make_unique<const EvaluatorMinDistance>(*this, "unknown"));
 	evaluatorMinDistance = _currentId;
 	addEvaluator(std::make_unique<const EvaluatorSphereAVOverlap>(
-	        *this, "unknown"));
+		*this, "unknown"));
 	evaluatorAVOverlap = _currentId;
 	addEvaluator(std::make_unique<const EvaluatorChi2Contribution>(
-	        *this, "unknown"));
+		*this, "unknown"));
 	evaluatorChi2Conribution = _currentId;
 	addEvaluator(std::make_unique<const EvaluatorTrasformationMatrix>(
-	        *this, "unknown"));
+		*this, "unknown"));
 	evaluatorTrasformationMatrix = _currentId;
 	addEvaluator(
-	        std::make_unique<const EvaluatorEulerAngle>(*this, "unknown"));
+		std::make_unique<const EvaluatorEulerAngle>(*this, "unknown"));
 	addEvaluator(std::make_unique<const EvaluatorDistanceDistribution>(
-	        *this, "unknown"));
+		*this, "unknown"));
 	evaluatorEulerAngle = _currentId;
 
 	_maxStubEval = _currentId;
@@ -88,15 +88,15 @@ TaskStorage::~TaskStorage()
 
 // must only run in worker thread
 const TaskStorage::Task &TaskStorage::getTask(const CacheKey &key,
-                                              bool persistent) const
+					      bool persistent) const
 {
 	static auto tid = std::this_thread::get_id();
 	assert(tid == std::this_thread::get_id());
 	// check Eval validity
 	if (!isValid(key.second)) {
 		Task &task =
-		        _tasks.emplace(key, async::make_task(Result()).share())
-		                .first->second;
+			_tasks.emplace(key, async::make_task(Result()).share())
+				.first->second;
 		pushTask(key);
 		return task;
 	}
@@ -111,9 +111,9 @@ const TaskStorage::Task &TaskStorage::getTask(const CacheKey &key,
 		bool exists = _results.find(key, res);
 		if (exists) {
 			Task &task =
-			        _tasks.emplace(key,
-			                       async::make_task(res).share())
-			                .first->second;
+				_tasks.emplace(key,
+					       async::make_task(res).share())
+					.first->second;
 			pushTask(key);
 			return task;
 		}
@@ -122,13 +122,13 @@ const TaskStorage::Task &TaskStorage::getTask(const CacheKey &key,
 }
 // must only run in worker thread
 const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key,
-                                               bool persistent) const
+					       bool persistent) const
 {
 	static auto tid = std::this_thread::get_id();
 	assert(tid == std::this_thread::get_id());
 	// append a new job
 	Task &task = _tasks.emplace(key, eval(key.second).makeTask(key.first))
-	                     .first->second;
+			     .first->second;
 	pushTask(key);
 	_tasksRunning++;
 
@@ -139,10 +139,10 @@ const TaskStorage::Task &TaskStorage::makeTask(const CacheKey &key,
 				_results.insert(key, tres.get());
 			} catch (...) {
 				std::cerr
-				        << "ERROR! Task is invalid (exception): "
-				                   + key.first.fullName() + " "
-				                   + eval(key.second).name()
-				        << std::flush;
+					<< "ERROR! Task is invalid (exception): "
+						   + key.first.fullName() + " "
+						   + eval(key.second).name()
+					<< std::flush;
 			}
 		}
 		_requests.erase(key);
@@ -161,7 +161,7 @@ void TaskStorage::runRequests() const
 
 		while (_pauseCount) {
 			std::this_thread::sleep_for(
-			        std::chrono::milliseconds(100));
+				std::chrono::milliseconds(100));
 		}
 		if (_tasksRunning < _minRunningCount
 		    && tasksPendingCount() > 0) {
@@ -181,7 +181,7 @@ void TaskStorage::runRequests() const
 		} else {
 			waitms = std::min(20u, ++waitms);
 			std::this_thread::sleep_for(
-			        std::chrono::milliseconds(waitms));
+				std::chrono::milliseconds(waitms));
 		}
 		CacheKey key;
 		while (_tasksRunning < _maxRunningCount) // consume
@@ -221,9 +221,9 @@ QVariantMap TaskStorage::propMap(const AbstractEvaluator &ev) const
 
 		} else if (opt.second.userType() == simulationType) {
 			const auto &type =
-			        opt.second.value<Position::SimulationType>();
+				opt.second.value<Position::SimulationType>();
 			val = QString::fromStdString(
-			        Position::simulationTypeName(type));
+				Position::simulationTypeName(type));
 		} else if (opt.second.userType() == evalListType) {
 			const auto &list = opt.second.value<QList<EvalId>>();
 			QStringList evnames;
@@ -277,43 +277,43 @@ TaskStorage::MutableEvalPtr TaskStorage::makeEvaluator(int typeNum) const
 	switch (typeNum) {
 	case 0:
 		return std::make_unique<EvaluatorPositionSimulation>(*this,
-		                                                     "new LP");
+								     "new LP");
 	case 1:
 		return std::make_unique<EvaluatorAvFile>(*this, "new AV File");
 	case 2:
 		return std::make_unique<EvaluatorAvVolume>(*this,
-		                                           "new AV Volume");
+							   "new AV Volume");
 	case 3:
 		return std::make_unique<EvaluatorFretEfficiency>(*this,
-		                                                 "new <E>");
+								 "new <E>");
 	case 4:
 		return std::make_unique<EvaluatorDistance>(*this,
-		                                           "new distance");
+							   "new distance");
 	case 5:
 		return std::make_unique<EvaluatorWeightedResidual>(
-		        *this, "new w.res.");
+			*this, "new w.res.");
 	case 6:
 		return std::make_unique<EvaluatorChi2Contribution>(
-		        *this, "new χ² contribution");
+			*this, "new χ² contribution");
 	case 7:
 		return std::make_unique<EvaluatorMinDistance>(
-		        *this, "new minimum distance");
+			*this, "new minimum distance");
 	case 8:
 		return std::make_unique<EvaluatorSphereAVOverlap>(
-		        *this, "new AV overlap");
+			*this, "new AV overlap");
 	case 9:
 		return std::make_unique<EvaluatorChi2>(*this, "new χ²");
 	case 10:
 		return std::make_unique<EvaluatorChi2r>(*this, "new χᵣ²");
 	case 11:
 		return std::make_unique<EvaluatorTrasformationMatrix>(
-		        *this, "new coordinate system");
+			*this, "new coordinate system");
 	case 12:
 		return std::make_unique<EvaluatorEulerAngle>(
-		        *this, "new euler angles");
+			*this, "new euler angles");
 	case 13:
 		return std::make_unique<EvaluatorDistanceDistribution>(
-		        *this, "new distance distribution");
+			*this, "new distance distribution");
 	default:
 		return MutableEvalPtr();
 	}
@@ -343,7 +343,7 @@ std::string TaskStorage::evalTypeName(int typeNum) const
 }
 
 void TaskStorage::setEval(TaskStorage::MutableEvalPtr &ev,
-                          const QVariantMap &propMap) const
+			  const QVariantMap &propMap) const
 {
 	for (int propRow = 0; propRow < ev->settingsCount(); ++propRow) {
 		QVariant oldVal = ev->settingValue(propRow);
@@ -355,7 +355,7 @@ void TaskStorage::setEval(TaskStorage::MutableEvalPtr &ev,
 		QVariant newVal;
 		if (oldVal.userType() == evalType) {
 			newVal.setValue(
-			        evalId(propVal.toString().toStdString()));
+				evalId(propVal.toString().toStdString()));
 		} else if (oldVal.userType() == simulationType) {
 			auto simName = propVal.toString().toStdString();
 			const auto &simType = Position::simulationType(simName);
@@ -369,11 +369,11 @@ void TaskStorage::setEval(TaskStorage::MutableEvalPtr &ev,
 					ptrs.append(id);
 				} else {
 					std::cerr
-					        << "Error in JSON file! "
+						<< "Error in JSON file! "
 						   "Can not find evaluator "
-					                   + name.toStdString()
-					                   + "\n"
-					        << std::flush;
+							   + name.toStdString()
+							   + "\n"
+						<< std::flush;
 				}
 			}
 			newVal.setValue(ptrs);
@@ -407,7 +407,7 @@ TaskStorage::getSysTask(const FrameDescriptor &frame) const
 		++sysRingBufIndex;
 		sysRingBufIndex %= _sysRingBufSize;
 		auto pair =
-		        _sysCache.emplace(frame, _systemLoader.makeTask(frame));
+			_sysCache.emplace(frame, _systemLoader.makeTask(frame));
 		return pair.first->second;
 	}
 }
@@ -493,7 +493,7 @@ std::string TaskStorage::getString(const FrameDescriptor &frame,
 }
 
 TaskStorage::Result TaskStorage::getResult(const FrameDescriptor &frame,
-                                           const EvalId &evId) const
+					   const EvalId &evId) const
 {
 	auto key = CacheKey(frame, evId);
 	Result result;
@@ -502,7 +502,7 @@ TaskStorage::Result TaskStorage::getResult(const FrameDescriptor &frame,
 }
 
 void TaskStorage::setResults(const std::string &fName,
-                             const std::vector<FrameDescriptor> &frames)
+			     const std::vector<FrameDescriptor> &frames)
 {
 	using std::string;
 	using std::vector;
@@ -513,7 +513,7 @@ void TaskStorage::setResults(const std::string &fName,
 	infile.open(fName, std::ifstream::in);
 	if (!infile.is_open()) {
 		std::cerr << "could not open the file: " + fName + "\n"
-		          << std::flush;
+			  << std::flush;
 		return;
 	}
 
@@ -538,7 +538,7 @@ void TaskStorage::setResults(const std::string &fName,
 		vector<string> values = split(str, '\t');
 		if (frameMap.count(values[0]) == 0) {
 			std::cout << "Not found: " + values[0] + "\n"
-			          << std::flush;
+				  << std::flush;
 			continue;
 		}
 		FrameDescriptor frame = frameMap.at(values[0]);

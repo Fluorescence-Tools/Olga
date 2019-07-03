@@ -144,9 +144,9 @@ PositionSimulationResult Position::calculate(const pteros::System &system) const
 			xyzW = coordsVdW(stripped);
 		} catch (pteros::Pteros_error err) {
 			std::cerr << "stripping failed: "
-			                     + std::string(err.what()) + ": '"
-			                     + stripExpr + "'\n"
-			          << std::flush;
+					     + std::string(err.what()) + ": '"
+					     + stripExpr + "'\n"
+				  << std::flush;
 			xyzW = coordsVdW(system);
 		}
 	}
@@ -406,7 +406,7 @@ std::string Position::stripExpression() const
 	std::string num = std::to_string(_allowedSphereRadius * 0.1);
 	std::replace(num.begin(), num.end(), ',', '.');
 	std::string expr = "(within " + num + " noself of ("
-	                   + selectionExpression() + "))";
+			   + selectionExpression() + "))";
 	if (!_stripMask.empty()) {
 		expr += " or (" + _stripMask + ")";
 	}

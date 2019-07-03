@@ -9,9 +9,7 @@
 class CheckBoxListDelegate : public QItemDelegate
 {
 public:
-
-	CheckBoxListDelegate(QObject *parent)
-		: QItemDelegate(parent)
+	CheckBoxListDelegate(QObject *parent) : QItemDelegate(parent)
 	{
 		;
 	}
@@ -19,7 +17,7 @@ public:
 	void paint(QPainter *painter, const QStyleOptionViewItem &option,
 		   const QModelIndex &index) const
 	{
-		//Get item data
+		// Get item data
 		bool value = index.data(Qt::CheckStateRole).toBool();
 		QString text = index.data(Qt::DisplayRole).toString();
 
@@ -32,14 +30,13 @@ public:
 		opt.rect = option.rect;
 
 		// draw item data as CheckBox
-		style->drawControl(QStyle::CE_CheckBox,&opt,painter);
-		//QMessageBox::information(0,"Info",text);
-
+		style->drawControl(QStyle::CE_CheckBox, &opt, painter);
+		// QMessageBox::information(0,"Info",text);
 	}
 
 	QWidget *createEditor(QWidget *parent,
-			      const QStyleOptionViewItem & /*option*/ ,
-			      const QModelIndex & /*index*/ ) const
+			      const QStyleOptionViewItem & /*option*/,
+			      const QModelIndex & /*index*/) const
 	{
 		// create check box as our editor
 
@@ -48,12 +45,11 @@ public:
 		return editor;
 	}
 
-	void setEditorData(QWidget *editor,
-			   const QModelIndex &index) const
+	void setEditorData(QWidget *editor, const QModelIndex &index) const
 	{
 
-		//set editor data
-		QCheckBox *myEditor = static_cast<QCheckBox*>(editor);
+		// set editor data
+		QCheckBox *myEditor = static_cast<QCheckBox *>(editor);
 		myEditor->setText(index.data(Qt::DisplayRole).toString());
 		myEditor->setChecked(index.data(Qt::CheckStateRole).toBool());
 
@@ -63,36 +59,32 @@ public:
 	void setModelData(QWidget *editor, QAbstractItemModel *model,
 			  const QModelIndex &index) const
 	{
-		//get the value from the editor (CheckBox)
-		QCheckBox *myEditor = static_cast<QCheckBox*>(editor);
+		// get the value from the editor (CheckBox)
+		QCheckBox *myEditor = static_cast<QCheckBox *>(editor);
 		bool value = myEditor->isChecked();
 
 
-		//set model data
-		QMap<int,QVariant> data;
-		data.insert(Qt::DisplayRole,myEditor->text());
-		data.insert(Qt::CheckStateRole,value);
-		model->setItemData(index,data);
-
+		// set model data
+		QMap<int, QVariant> data;
+		data.insert(Qt::DisplayRole, myEditor->text());
+		data.insert(Qt::CheckStateRole, value);
+		model->setItemData(index, data);
 	}
 
 	void updateEditorGeometry(QWidget *editor,
 				  const QStyleOptionViewItem &option,
-				  const QModelIndex &/*index*/ ) const
+				  const QModelIndex & /*index*/) const
 	{
 
 		editor->setGeometry(option.rect);
-
-
 	}
 };
-//min-width:10em;
-CheckBoxList::CheckBoxList(QWidget *widget )
-	:QComboBox(widget)
+// min-width:10em;
+CheckBoxList::CheckBoxList(QWidget *widget) : QComboBox(widget)
 {
 	// set delegate items view
 	view()->setItemDelegate(new CheckBoxListDelegate(this));
-	//view()->setStyleSheet("  padding: 15px; ");
+	// view()->setStyleSheet("  padding: 15px; ");
 	// Enable editing on items view
 	view()->setEditTriggers(QAbstractItemView::CurrentChanged);
 
@@ -113,11 +105,11 @@ bool CheckBoxList::eventFilter(QObject *object, QEvent *event)
 {
 	// don't close items view after we release the mouse button
 	// by simple eating MouseButtonRelease in viewport of items view
-	if(event->type() == QEvent::MouseButtonRelease && object==view()->viewport())
-	{
+	if (event->type() == QEvent::MouseButtonRelease
+	    && object == view()->viewport()) {
 		return true;
 	}
-	return QComboBox::eventFilter(object,event);
+	return QComboBox::eventFilter(object, event);
 }
 void CheckBoxList::paintEvent(QPaintEvent *)
 {
@@ -129,7 +121,7 @@ void CheckBoxList::paintEvent(QPaintEvent *)
 	initStyleOption(&opt);
 
 	// if no display text been set , use "" as default
-	if(m_DisplayText.isNull())
+	if (m_DisplayText.isNull())
 		opt.currentText = "none (click to select)";
 	else
 		opt.currentText = m_DisplayText;
@@ -137,26 +129,25 @@ void CheckBoxList::paintEvent(QPaintEvent *)
 
 	// draw the icon and text
 	painter.drawControl(QStyle::CE_ComboBoxLabel, opt);
-
 }
 
 void CheckBoxList::setChecked(const QList<int> &list)
 {
 	QStringList strlist;
-	for(int i:list) {
-		setItemData(i,Qt::Checked,Qt::CheckStateRole);
-		strlist<<itemText(i);
+	for (int i : list) {
+		setItemData(i, Qt::Checked, Qt::CheckStateRole);
+		strlist << itemText(i);
 	}
 
-	m_DisplayText=strlist.join(", ");
+	m_DisplayText = strlist.join(", ");
 }
 
 QList<int> CheckBoxList::getChecked() const
 {
 	QList<int> list;
-	for(int i=0; i<count(); ++i) {
-		if(itemData(i,Qt::CheckStateRole).toBool()) {
-			list<<i;
+	for (int i = 0; i < count(); ++i) {
+		if (itemData(i, Qt::CheckStateRole).toBool()) {
+			list << i;
 		}
 	}
 	return list;

@@ -3,7 +3,8 @@
 #include <vector>
 #include <string>
 #include <sstream>
-inline std::vector<std::string> split(const std::string &s, char delim) {
+inline std::vector<std::string> split(const std::string &s, char delim)
+{
 	std::vector<std::string> elems;
 	std::stringstream ss(s);
 	std::string item;

@@ -11,18 +11,21 @@ private:
 	EvalId _av1;
 	std::string _name;
 	std::string _selectionString;
-	float _overlapRadius=0.0f;
+	float _overlapRadius = 0.0f;
 
 public:
-	EvaluatorSphereAVOverlap(const TaskStorage& storage, const std::string& name):
-		AbstractEvaluator(storage),_name(name)
-	{}
+	EvaluatorSphereAVOverlap(const TaskStorage &storage,
+				 const std::string &name)
+	    : AbstractEvaluator(storage), _name(name)
+	{
+	}
 	virtual Task makeTask(const FrameDescriptor &frame) const noexcept;
 	virtual std::string name() const
 	{
 		return _name;
 	}
-	virtual std::string className() const {
+	virtual std::string className() const
+	{
 		return "AV-sphere overlap";
 	}
 	virtual std::string columnName(int) const
@@ -39,44 +42,45 @@ public:
 	}
 	virtual Setting setting(int row) const override
 	{
-		switch(row)
-		{
+		switch (row) {
 		case 0:
-			return {"selection_mask",QString::fromStdString(_selectionString)};
+			return {"selection_mask",
+				QString::fromStdString(_selectionString)};
 		case 1:
-			return {"overlap_radius",_overlapRadius};
-		case 2:
-		{
-			EvalId id=_storage.isValid(_av1)?_av1:_storage.evaluatorPositionSimulation;
-			return {"position_name",QVariant::fromValue(id)};
+			return {"overlap_radius", _overlapRadius};
+		case 2: {
+			EvalId id =
+				_storage.isValid(_av1)
+					? _av1
+					: _storage.evaluatorPositionSimulation;
+			return {"position_name", QVariant::fromValue(id)};
 		}
 		}
 		return Setting();
 	}
-	virtual void setSetting(int row, const QVariant& val)
+	virtual void setSetting(int row, const QVariant &val)
 	{
-		switch(row)
-		{
+		switch (row) {
 		case 0:
-			_selectionString=val.toString().toStdString();
+			_selectionString = val.toString().toStdString();
 			return;
 		case 1:
-			_overlapRadius=val.toFloat();
-			return ;
+			_overlapRadius = val.toFloat();
+			return;
 		case 2:
-			_av1=val.value<EvalId>();
+			_av1 = val.value<EvalId>();
 			return;
 		}
 	}
-	virtual void setName(const std::string& name)
+	virtual void setName(const std::string &name)
 	{
-		_name=name;
+		_name = name;
 	}
+
 private:
 	virtual std::shared_ptr<AbstractCalcResult>
-		calculate(const pteros::System &system,
-			  const PositionSimulationResult& av) const;
-
+	calculate(const pteros::System &system,
+		  const PositionSimulationResult &av) const;
 };
 
 #endif // EVALUATORSPHEREAVOVERLAP_H

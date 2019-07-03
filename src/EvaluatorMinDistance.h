@@ -4,18 +4,18 @@
 #include "AbstractEvaluator.h"
 #include "AV/Distance.h"
 
-class EvaluatorMinDistance: public AbstractEvaluator
+class EvaluatorMinDistance : public AbstractEvaluator
 {
 private:
 	EvalId _av1, _av2;
 	Distance _dist;
+
 public:
-	EvaluatorMinDistance(const TaskStorage& storage,
-			     const EvalId& av1,
-			     const EvalId& av2,
-			     Distance dist);
-	EvaluatorMinDistance(const TaskStorage& storage, const std::string& name):
-		AbstractEvaluator(storage)
+	EvaluatorMinDistance(const TaskStorage &storage, const EvalId &av1,
+			     const EvalId &av2, Distance dist);
+	EvaluatorMinDistance(const TaskStorage &storage,
+			     const std::string &name)
+	    : AbstractEvaluator(storage)
 	{
 		_dist.setName(name);
 	}
@@ -24,7 +24,8 @@ public:
 	{
 		return _dist.name();
 	}
-	virtual std::string className() const {
+	virtual std::string className() const
+	{
 		return "Minimum distances";
 	}
 	virtual std::string columnName(int) const
@@ -41,42 +42,44 @@ public:
 	}
 	virtual Setting setting(int row) const override
 	{
-		switch(row)
-		{
-		case 0:
-		{
-			EvalId id=_storage.isValid(_av1)?_av1:_storage.evaluatorPositionSimulation;
-			return {"position1_name",QVariant::fromValue(id)};
+		switch (row) {
+		case 0: {
+			EvalId id =
+				_storage.isValid(_av1)
+					? _av1
+					: _storage.evaluatorPositionSimulation;
+			return {"position1_name", QVariant::fromValue(id)};
 		}
-		case 1:
-		{
-			EvalId id=_storage.isValid(_av2)?_av2:_storage.evaluatorPositionSimulation;
-			return {"position2_name",QVariant::fromValue(id)};
+		case 1: {
+			EvalId id =
+				_storage.isValid(_av2)
+					? _av2
+					: _storage.evaluatorPositionSimulation;
+			return {"position2_name", QVariant::fromValue(id)};
 		}
 		case 2:
-			return {"distance",_dist.distance()};
+			return {"distance", _dist.distance()};
 		case 3:
-			return {"error_neg",_dist.errNeg()};
+			return {"error_neg", _dist.errNeg()};
 		case 4:
-			return {"error_pos",_dist.errPos()};
+			return {"error_pos", _dist.errPos()};
 		}
-		return {"",""};
+		return {"", ""};
 	}
-	//std::string str;
-	virtual void setSetting(int row, const QVariant& val)
+	// std::string str;
+	virtual void setSetting(int row, const QVariant &val)
 	{
-		switch(row)
-		{
+		switch (row) {
 		case 0:
-			_av1=val.value<EvalId>();
-			//str=_storage.eval(_av1).name();
-			//qDebug()<<"av1="<<static_cast<int>(_av1)<<", "<<str;
+			_av1 = val.value<EvalId>();
+			// str=_storage.eval(_av1).name();
+			// qDebug()<<"av1="<<static_cast<int>(_av1)<<", "<<str;
 			_dist.setPosition1(_storage.eval(_av1).name());
 			return;
 		case 1:
-			_av2=val.value<EvalId>();
-			//str=_storage.eval(_av2).name();
-			//qDebug()<<"av2="<<static_cast<int>(_av2)<<", "<<str;
+			_av2 = val.value<EvalId>();
+			// str=_storage.eval(_av2).name();
+			// qDebug()<<"av2="<<static_cast<int>(_av2)<<", "<<str;
 			_dist.setPosition2(_storage.eval(_av2).name());
 			return;
 		case 2:
@@ -90,14 +93,15 @@ public:
 			return;
 		}
 	}
-	virtual void setName(const std::string& name)
+	virtual void setName(const std::string &name)
 	{
 		_dist.setName(name);
 	}
+
 private:
 	virtual std::shared_ptr<AbstractCalcResult>
-		calculate(const PositionSimulationResult& av1,
-			  const PositionSimulationResult& av2) const;
+	calculate(const PositionSimulationResult &av1,
+		  const PositionSimulationResult &av2) const;
 };
 
 #endif // EVALUATORMINDISTANCE_H

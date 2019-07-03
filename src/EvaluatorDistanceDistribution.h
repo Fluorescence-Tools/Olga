@@ -19,7 +19,7 @@ private:
 
 public:
 	EvaluatorDistanceDistribution(const TaskStorage &storage,
-	                              const std::string &name);
+				      const std::string &name);
 	virtual Task makeTask(const FrameDescriptor &frame) const noexcept;
 	virtual std::string name() const
 	{
@@ -46,16 +46,16 @@ public:
 		switch (row) {
 		case 0: {
 			EvalId id =
-			        _storage.isValid(_av1)
-			                ? _av1
-			                : _storage.evaluatorPositionSimulation;
+				_storage.isValid(_av1)
+					? _av1
+					: _storage.evaluatorPositionSimulation;
 			return {"position1_name", QVariant::fromValue(id)};
 		}
 		case 1: {
 			EvalId id =
-			        _storage.isValid(_av2)
-			                ? _av2
-			                : _storage.evaluatorPositionSimulation;
+				_storage.isValid(_av2)
+					? _av2
+					: _storage.evaluatorPositionSimulation;
 			return {"position2_name", QVariant::fromValue(id)};
 		}
 		case 2:
@@ -77,7 +77,7 @@ public:
 			auto tmpId = val.value<EvalId>();
 			if (tmpId == EvalId(-1)) {
 				std::cerr << "Can not set position\n"
-				          << std::flush;
+					  << std::flush;
 				return;
 			}
 			_av1 = tmpId;
@@ -87,7 +87,7 @@ public:
 			auto tmpId = val.value<EvalId>();
 			if (tmpId == EvalId(-1)) {
 				std::cerr << "Can not set position\n"
-				          << std::flush;
+					  << std::flush;
 				return;
 			}
 			_av2 = tmpId;
@@ -115,8 +115,8 @@ public:
 private:
 	virtual std::shared_ptr<AbstractCalcResult>
 	calculate(const PositionSimulationResult &av1,
-	          const PositionSimulationResult &av2,
-	          const std::string traj) const;
+		  const PositionSimulationResult &av2,
+		  const std::string traj) const;
 };
 
 #endif // DISTANCEDISTRIBUTION_H

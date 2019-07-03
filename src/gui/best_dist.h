@@ -18,7 +18,7 @@ template <typename Lambda>
 void mtFor(int start, int end, Lambda &&func, int numThreads = -1)
 {
 	numThreads = numThreads < 1 ? std::thread::hardware_concurrency()
-	                            : numThreads;
+				    : numThreads;
 	const int numIter = end - start;
 	numThreads = std::min(numThreads, numIter);
 
@@ -39,7 +39,7 @@ void mtFor(int start, int end, Lambda &&func, int numThreads = -1)
 }
 
 Eigen::MatrixXf sliceCols(const Eigen::MatrixXf &M,
-                          const std::vector<unsigned> &indexes)
+			  const std::vector<unsigned> &indexes)
 {
 	const unsigned cols = indexes.size();
 	Eigen::MatrixXf res(M.rows(), cols);
@@ -50,8 +50,8 @@ Eigen::MatrixXf sliceCols(const Eigen::MatrixXf &M,
 }
 
 Spline<2> chiSqRTSpline(unsigned ndof, unsigned Npieces,
-                        const float tolerance = 0.0001,
-                        const unsigned sampling = 10)
+			const float tolerance = 0.0001,
+			const unsigned sampling = 10)
 {
 	// Approximate the chisqRTcdf function by a second degree polynomial
 
@@ -61,7 +61,7 @@ Spline<2> chiSqRTSpline(unsigned ndof, unsigned Npieces,
 	double xMax = ndof - 0.65; //~=CHISQINV(0.5,ndof)
 	while (chisqRTcdf(xMax, ndof) > tolerance) {
 		xMax += -0.1 * std::log(tolerance)
-		        * std::sqrt(ndof); //~width of chi-squared distribution
+			* std::sqrt(ndof); //~width of chi-squared distribution
 	}
 
 	const unsigned nSamp = sampling * Npieces;
@@ -94,8 +94,8 @@ Spline<2> chiSqRTSpline(unsigned ndof, unsigned Npieces,
 
 template <typename Derived1, typename Derived2>
 float rmsdColMean(const Eigen::MatrixBase<Derived1> &rmsd,
-                  const Eigen::MatrixBase<Derived2> &chi2,
-                  const Spline<2> &weightFunc, const float diagWeight)
+		  const Eigen::MatrixBase<Derived2> &chi2,
+		  const Spline<2> &weightFunc, const float diagWeight)
 {
 	constexpr int batchSize = 2048; // cache performance optimization
 
@@ -120,8 +120,8 @@ float rmsdColMean(const Eigen::MatrixBase<Derived1> &rmsd,
 }
 
 float rmsdMeanMeanAdd(const Eigen::MatrixXf &rmsds, const Eigen::MatrixXf &chi2,
-                      const Eigen::VectorXf &Eadd, const float err,
-                      const Spline<2> &spl, const float diagWeight)
+		      const Eigen::VectorXf &Eadd, const float err,
+		      const Spline<2> &spl, const float diagWeight)
 {
 	const float invErrSq = 1.0f / (err * err);
 
@@ -136,7 +136,7 @@ float rmsdMeanMeanAdd(const Eigen::MatrixXf &rmsds, const Eigen::MatrixXf &chi2,
 }
 
 float rmsdMeanMean(const Eigen::MatrixXf &rmsds, const Eigen::MatrixXf &chi2,
-                   unsigned Ndof, const float diagWeight)
+		   unsigned Ndof, const float diagWeight)
 {
 	assert(rmsds.rows() == rmsds.cols());
 
@@ -145,7 +145,7 @@ float rmsdMeanMean(const Eigen::MatrixXf &rmsds, const Eigen::MatrixXf &chi2,
 	Eigen::VectorXf ave(N);
 	for (unsigned col = 0; col < N; ++col) {
 		ave[col] = rmsdColMean(rmsds.col(col), chi2.col(col), spl,
-		                       diagWeight);
+				       diagWeight);
 	}
 	return ave.mean();
 }
@@ -160,7 +160,7 @@ Eigen::MatrixXf chiSquared(const Eigen::MatrixXf &Effs, const float err)
 		auto E = Effs.col(pair);
 		for (unsigned col = 0; col < N; ++col) {
 			M.col(col) += ((E.array() - E[col])).abs2().matrix()
-			              * invErrSq;
+				      * invErrSq;
 		}
 	}
 	assert(M.minCoeff() >= 0.0f);
@@ -172,8 +172,8 @@ Eigen::MatrixXf chiSquared(const Eigen::MatrixXf &Effs, const float err)
 }
 
 unsigned bestPair(const Eigen::MatrixXf &Effs, const Eigen::MatrixXf &RMSDs,
-                  const float err, const float diagWeight,
-                  const std::vector<unsigned> &selPairs)
+		  const float err, const float diagWeight,
+		  const std::vector<unsigned> &selPairs)
 {
 	using Eigen::MatrixXf;
 	using Eigen::VectorXf;
@@ -189,7 +189,7 @@ unsigned bestPair(const Eigen::MatrixXf &Effs, const Eigen::MatrixXf &RMSDs,
 	const Spline<2> spl = chiSqRTSpline(nDof, 64);
 	mtFor(0, Effs.cols(), [&](int i) {
 		rmsdAve[i] = rmsdMeanMeanAdd(RMSDs, x2, Effs.col(i), err, spl,
-		                             diagWeight);
+					     diagWeight);
 	});
 
 	auto it = std::min_element(rmsdAve.begin(), rmsdAve.end());

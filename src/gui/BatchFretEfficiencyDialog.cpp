@@ -77,8 +77,8 @@ void BatchFretEfficiencyDialog::accept()
 				_evModel.evalName(lp2Index));
 			EvalId lp2Id = _evModel.evalId(lp2Index);
 
-			QModelIndex newEff =
-				_evModel.addEvaluator<EvaluatorFretEfficiency>();
+			QModelIndex newEff = _evModel.addEvaluator<
+				EvaluatorFretEfficiency>();
 			QString nameTemplate = ui->nameTemplateEdit->text();
 			auto name = nameTemplate.replace("{lp1}", lp1name)
 					    .replace("{lp2}", lp2name);

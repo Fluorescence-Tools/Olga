@@ -46,9 +46,9 @@ struct Restrt {
 		header += "\n" + tmp;
 		// trim
 		tmp.erase(tmp.begin(),
-		          std::find_if(tmp.begin(), tmp.end(),
-		                       std::not1(std::ptr_fun<int, int>(
-		                               std::isspace))));
+			  std::find_if(tmp.begin(), tmp.end(),
+				       std::not1(std::ptr_fun<int, int>(
+					       std::isspace))));
 		int natoms = std::stoi(tmp.substr(0, tmp.find(" ")));
 		coords.clear();
 		coords.reserve(natoms);
@@ -68,11 +68,11 @@ struct Restrt {
 			}
 		} else {
 			std::cout
-			        << "WARNING: velocities are not read from restart file"
-			        << std::endl;
+				<< "WARNING: velocities are not read from restart file"
+				<< std::endl;
 			std::cout << "fsize=" << fsize
-			          << ", tellg=" << f.tellg()
-			          << ", header=" << header.size() << std::endl;
+				  << ", tellg=" << f.tellg()
+				  << ", header=" << header.size() << std::endl;
 			velocities.resize(natoms);
 		}
 		std::getline(f, footer);
@@ -138,7 +138,7 @@ struct NmrRestraint {
 	double r1a, r2a, r3a, r4a, rk2a, rk3a;
 	std::string note;
 	NmrRestraint(const double Fmax1, const double Fmax2, const int iat1,
-	             int iat2, int nstep2, const Distance &dist)
+		     int iat2, int nstep2, const Distance &dist)
 	{
 		using std::to_string;
 		_iat1 = iat1;
@@ -196,7 +196,7 @@ struct NmrRestraint {
 		return str;
 	}
 	static void save(const std::vector<NmrRestraint> &vec,
-	                 const std::string &fileName)
+			 const std::string &fileName)
 	{
 		std::ofstream f;
 		f.open(fileName);
@@ -206,7 +206,7 @@ struct NmrRestraint {
 	}
 	static std::map<int, Eigen::Vector3d>
 	totalForce(const std::vector<NmrRestraint> &vec,
-	           const std::map<int, Eigen::Vector3d> &duIdPos, bool atstep1)
+		   const std::map<int, Eigen::Vector3d> &duIdPos, bool atstep1)
 	{
 		std::map<int, Eigen::Vector3d> totalForce;
 		for (const auto &pair : duIdPos) {
@@ -214,9 +214,9 @@ struct NmrRestraint {
 		}
 		for (const NmrRestraint &rst : vec) {
 			Eigen::Vector3d r =
-			        duIdPos.at(rst._iat1) - duIdPos.at(rst._iat2);
+				duIdPos.at(rst._iat1) - duIdPos.at(rst._iat2);
 			const auto &force1 =
-			        rst.force(r.norm(), atstep1) * r.normalized();
+				rst.force(r.norm(), atstep1) * r.normalized();
 			totalForce[rst._iat1] += force1;
 			totalForce[rst._iat2] -= force1;
 		}
@@ -224,7 +224,7 @@ struct NmrRestraint {
 	}
 	static std::vector<NmrRestraint>
 	capForce(const std::vector<NmrRestraint> &vec,
-	         const std::map<int, Eigen::Vector3d> &duIdPos)
+		 const std::map<int, Eigen::Vector3d> &duIdPos)
 	{
 		std::vector<NmrRestraint> caped = vec;
 		using std::pair;
@@ -237,11 +237,11 @@ struct NmrRestraint {
 		auto totalF = totalForce(caped, duIdPos, atstep1);
 
 		auto pr = std::max_element(
-		        totalF.begin(), totalF.end(),
-		        [](const pair<int, Eigen::Vector3d> &p1,
-		           const pair<int, Eigen::Vector3d> &p2) {
-			        return p1.second.norm() < p2.second.norm();
-		        });
+			totalF.begin(), totalF.end(),
+			[](const pair<int, Eigen::Vector3d> &p1,
+			   const pair<int, Eigen::Vector3d> &p2) {
+				return p1.second.norm() < p2.second.norm();
+			});
 
 		while (pr->second.norm() > Fcap) {
 			for (auto &p : caped) {
@@ -253,12 +253,12 @@ struct NmrRestraint {
 			}
 			totalF = totalForce(caped, duIdPos, atstep1);
 			pr = std::max_element(
-			        totalF.begin(), totalF.end(),
-			        [](const pair<int, Eigen::Vector3d> &p1,
-			           const pair<int, Eigen::Vector3d> &p2) {
-				        return p1.second.norm()
+				totalF.begin(), totalF.end(),
+				[](const pair<int, Eigen::Vector3d> &p1,
+				   const pair<int, Eigen::Vector3d> &p2) {
+					return p1.second.norm()
 					       < p2.second.norm();
-			        });
+				});
 		}
 
 		std::cout << "Total Force per DU (nstep1) =\n";
@@ -271,11 +271,11 @@ struct NmrRestraint {
 
 		totalF = totalForce(caped, duIdPos, atstep1);
 		pr = std::max_element(totalF.begin(), totalF.end(),
-		                      [](const pair<int, Eigen::Vector3d> &p1,
-		                         const pair<int, Eigen::Vector3d> &p2) {
-			                      return p1.second.norm()
-					             < p2.second.norm();
-		                      });
+				      [](const pair<int, Eigen::Vector3d> &p1,
+					 const pair<int, Eigen::Vector3d> &p2) {
+					      return p1.second.norm()
+						     < p2.second.norm();
+				      });
 
 		while (pr->second.norm() > Fcap) {
 			for (auto &p : caped) {
@@ -287,12 +287,12 @@ struct NmrRestraint {
 			}
 			totalF = totalForce(caped, duIdPos, atstep1);
 			pr = std::max_element(
-			        totalF.begin(), totalF.end(),
-			        [](const pair<int, Eigen::Vector3d> &p1,
-			           const pair<int, Eigen::Vector3d> &p2) {
-				        return p1.second.norm()
+				totalF.begin(), totalF.end(),
+				[](const pair<int, Eigen::Vector3d> &p1,
+				   const pair<int, Eigen::Vector3d> &p2) {
+					return p1.second.norm()
 					       < p2.second.norm();
-			        });
+				});
 		}
 		std::cout << "Total Force per DU (nstep2) =\n";
 		print(totalF);
@@ -304,8 +304,8 @@ struct NmrRestraint {
 	{
 		for (const auto &pair : map) {
 			std::cout << pair.first << ": |"
-			          << pair.second.transpose() << "|*69.4786 =\t"
-			          << pair.second.norm() * 69.4786 << std::endl;
+				  << pair.second.transpose() << "|*69.4786 =\t"
+				  << pair.second.norm() * 69.4786 << std::endl;
 		}
 	}
 	static void print(const std::vector<NmrRestraint> &vec)
@@ -332,21 +332,21 @@ int main(int argc, char *argv[])
 	parser.addHelpOption();
 	parser.addVersionOption();
 	parser.addOptions(
-	        {{{"p", "pdb"}, "PDB file to use for AV simulations", "file"},
-	         {"savepdb", "save PDB file with updated DUs", "file"},
-	         {{"j", "json"},
-	          "setting file describing labelig positions and distances",
-	          "file"},
-	         {"ir",
-	          "Reference restart file, corresponding to the specified PDB",
-	          "file"},
-	         {"o", "Name for the generated restraints file", "file"},
-	         {"or", "Name for the generated restart file", "file"},
-	         {{"n", "nstep2"}, "Number of steps in the run", "int"},
-	         {"f1", "Max force at the beginning of the run [pN]", "float"},
-	         {"f2", "Max force at the end of the run [pN]", "float"},
-	         {"nocap",
-	          "Do not limit the per-dummy total Force,only per-distance"}});
+		{{{"p", "pdb"}, "PDB file to use for AV simulations", "file"},
+		 {"savepdb", "save PDB file with updated DUs", "file"},
+		 {{"j", "json"},
+		  "setting file describing labelig positions and distances",
+		  "file"},
+		 {"ir",
+		  "Reference restart file, corresponding to the specified PDB",
+		  "file"},
+		 {"o", "Name for the generated restraints file", "file"},
+		 {"or", "Name for the generated restart file", "file"},
+		 {{"n", "nstep2"}, "Number of steps in the run", "int"},
+		 {"f1", "Max force at the beginning of the run [pN]", "float"},
+		 {"f2", "Max force at the end of the run [pN]", "float"},
+		 {"nocap",
+		  "Do not limit the per-dummy total Force,only per-distance"}});
 	parser.process(a);
 	QString settingsFileName = parser.value("j");
 	QString pdbFileName = parser.value("p");
@@ -372,9 +372,9 @@ int main(int argc, char *argv[])
 	QFile settingsFile(settingsFileName);
 	if (!settingsFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
 		std::cout << "Unable to open file "
-		          << settingsFileName.toStdString()
-		          << settingsFile.errorString().toStdString()
-		          << std::endl;
+			  << settingsFileName.toStdString()
+			  << settingsFile.errorString().toStdString()
+			  << std::endl;
 		return 3;
 	}
 	pteros::System sys;
@@ -382,13 +382,13 @@ int main(int argc, char *argv[])
 		sys.load(pdbFileName.toStdString());
 	} catch (...) {
 		std::cout << "Unable to open file " << pdbFileName.toStdString()
-		          << std::endl;
+			  << std::endl;
 		return 4;
 	}
 	Restrt restrt;
 	if (!restrt.load(restartInFileName.toStdString())) {
 		std::cout << "Unable to load file "
-		          << restartInFileName.toStdString() << std::endl;
+			  << restartInFileName.toStdString() << std::endl;
 		return 5;
 	}
 
@@ -402,8 +402,8 @@ int main(int argc, char *argv[])
 
 	if (restrt.coords.size() != sys.num_atoms()) {
 		std::cerr
-		        << "FATAL error: number of atoms in pdb and restrt do not match"
-		        << std::endl;
+			<< "FATAL error: number of atoms in pdb and restrt do not match"
+			<< std::endl;
 		return 6;
 	}
 
@@ -421,13 +421,13 @@ int main(int argc, char *argv[])
 
 	const int numDUAtoms = selDU.size();
 	std::cout << numDUAtoms << " DU atoms, " << avs.size()
-	          << " positions and " << distances.size() << " distances"
-	          << std::endl;
+		  << " positions and " << distances.size() << " distances"
+		  << std::endl;
 
 	if (numDUAtoms != avs.size() && numDUAtoms != 0) {
 		std::cerr
-		        << "FATAL error: Could not mathch Labelling Positions to Pseudoatoms!"
-		        << std::endl;
+			<< "FATAL error: Could not mathch Labelling Positions to Pseudoatoms!"
+			<< std::endl;
 		return 1;
 	}
 
@@ -443,7 +443,7 @@ int main(int argc, char *argv[])
 		atom.resid = *it + 1;
 		auto chains = sys.select(std::string("all")).get_chain(true);
 		atom.chain =
-		        *std::max_element(chains.begin(), chains.end()) + 1;
+			*std::max_element(chains.begin(), chains.end()) + 1;
 		atom.chain = atom.chain == '!' ? 'B' : atom.chain;
 		for (int i = 0; i < avs.size(); i++) {
 			auto c = Eigen::Vector3f(i, 3.14f, 3.14f);
@@ -462,7 +462,7 @@ int main(int argc, char *argv[])
 	std::cout << "DU coordinates read:\n" << duXYZd << "\n";
 
 	auto pdbFnamePtr =
-	        std::make_shared<const std::string>(pdbFileName.toStdString());
+		std::make_shared<const std::string>(pdbFileName.toStdString());
 	FrameDescriptor frame(pdbFnamePtr, pdbFnamePtr);
 	storage.evaluate(frame, avs);
 	std::cout << "Evaluation started, waiting..." << std::endl;
@@ -483,8 +483,8 @@ int main(int argc, char *argv[])
 		lpNames[lp2] = storage.eval(lp2).name();
 		dist2lps.insert({dist, std::make_pair(lp1, lp2)});
 		distInfo[dist] = static_cast<const EvaluatorDistance &>(
-		                         storage.eval(dist))
-		                         .distance();
+					 storage.eval(dist))
+					 .distance();
 		std::cout << dist << " " << lp1 << " " << lp2 << std::endl;
 	}
 
@@ -504,7 +504,7 @@ int main(int argc, char *argv[])
 		} // somehow av calculation has failed, stay with old coords
 		std::shared_ptr<CalcResult<PositionSimulationResult>> calcpos;
 		calcpos = std::static_pointer_cast<
-		        CalcResult<PositionSimulationResult>>(res);
+			CalcResult<PositionSimulationResult>>(res);
 		PositionSimulationResult pos = calcpos->get();
 		if (pos.empty()) {
 			continue;
@@ -521,7 +521,7 @@ int main(int argc, char *argv[])
 	if (parser.isSet("savepdb")) {
 		selDU.set_xyz(duXYZf);
 		sys.select(std::string("all"))
-		        .write(parser.value("savepdb").toStdString());
+			.write(parser.value("savepdb").toStdString());
 	}
 
 	std::vector<NmrRestraint> nmrVec;
@@ -545,8 +545,8 @@ int main(int argc, char *argv[])
 		using std::to_string;
 		std::string anchStr;
 		anchStr = static_cast<const EvaluatorPositionSimulation &>(
-		                  storage.eval(avId))
-		                  .anchorAtoms();
+				  storage.eval(avId))
+				  .anchorAtoms();
 		pteros::Selection sel;
 		try {
 			sel = sys.select(anchStr);
@@ -570,8 +570,8 @@ int main(int argc, char *argv[])
 			d.setPosition1(lpNames.at(avId));
 			d.setPosition2(to_string(resids[c]) + "@" + atNames[c]);
 			nmrVec.emplace_back(f1 * FmaxMultAnchor,
-			                    f2 * FmaxMultAnchor, iat1, iat2,
-			                    nstep2, d);
+					    f2 * FmaxMultAnchor, iat1, iat2,
+					    nstep2, d);
 		}
 	}
 	NmrRestraint::save(nmrVec, restraintsFileName.toStdString());

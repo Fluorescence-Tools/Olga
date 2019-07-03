@@ -23,9 +23,9 @@ class MainWindow : public QMainWindow
 
 public:
 	explicit MainWindow(const QString json, const QString pdbsDir,
-	                    const QString csvOut, const QString selPairs,
-	                    const QString dumpJsonPath,
-	                    QWidget *parent = nullptr);
+			    const QString csvOut, const QString selPairs,
+			    const QString dumpJsonPath,
+			    QWidget *parent = nullptr);
 	~MainWindow();
 
 protected:

@@ -39,10 +39,10 @@ private:
 	Ui::GetInformativePairsDialog *ui;
 
 	std::vector<unsigned> greedySelection(const float err,
-	                                      const Eigen::MatrixXf &Effs,
-	                                      const Eigen::MatrixXf &RMSDs,
-	                                      const int maxPairs,
-	                                      const int fitParams) const;
+					      const Eigen::MatrixXf &Effs,
+					      const Eigen::MatrixXf &RMSDs,
+					      const int maxPairs,
+					      const int fitParams) const;
 	Eigen::MatrixXf rmsds(const pteros::System &traj) const;
 	pteros::System buildTrajectory(const std::string &sel) const;
 

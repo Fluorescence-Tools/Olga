@@ -8,13 +8,14 @@ std::string FrameDescriptor::topologyFileName() const
 	return "";
 }
 /*
-void FrameDescriptor::setTopologyFileName(std::shared_ptr<const std::string> topologyFileName)
+void FrameDescriptor::setTopologyFileName(std::shared_ptr<const std::string>
+topologyFileName)
 {
 	_topologyFileName = topologyFileName;
 }*/
 std::string FrameDescriptor::trajFileName() const
 {
-	if(_trajFileName) {
+	if (_trajFileName) {
 		return *_trajFileName;
 	}
 	return "";
@@ -25,7 +26,3 @@ unsigned FrameDescriptor::frame() const
 {
 	return _frame;
 }
-
-
-
-

@@ -29,19 +29,17 @@ Q_SIGNALS:
 	void errorPrinted(QString err);
 
 private:
-
-	/*static void myQDebugMessageHandler(QtMsgType, const QMessageLogContext &, const QString &msg)
+	/*static void myQDebugMessageHandler(QtMsgType, const QMessageLogContext
+    &, const QString &msg)
     {
 	std::cout << msg.toUtf8().toStdString();
     }*/
 
 protected:
-
-	//This is called when a std::endl has been inserted into the stream
+	// This is called when a std::endl has been inserted into the stream
 	virtual int_type overflow(int_type v)
 	{
-		if (v == '\n')
-		{
+		if (v == '\n') {
 			Q_EMIT errorPrinted(QString('\n'));
 		}
 		return v;

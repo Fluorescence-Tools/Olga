@@ -22,11 +22,11 @@ public:
 	}
 	virtual PositionSimulationResult
 	calculate(const Eigen::Vector3f &attachmentAtomPos,
-	          const std::vector<Eigen::Vector4f> &xyzW);
+		  const std::vector<Eigen::Vector4f> &xyzW);
 	virtual PositionSimulationResult
 	calculate(unsigned atom_i,
-	          const std::vector<Eigen::Vector4f>
-	                  &xyzW) = 0; // v.d.Waals radii
+		  const std::vector<Eigen::Vector4f>
+			  &xyzW) = 0; // v.d.Waals radii
 	static PositionSimulation *
 	create(const Position::SimulationType &simulationType);
 	virtual PositionSimulation *Clone() = 0;
@@ -47,7 +47,7 @@ public:
 	{
 		int pdbId;
 		is >> linkerLength >> linkerWidth >> radius[0] >> radius[1]
-		        >> radius[2] >> pdbId;
+			>> radius[2] >> pdbId;
 		return pdbId;
 	}
 	Setting setting(int row) const;

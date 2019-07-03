@@ -9,20 +9,23 @@ private:
 	std::vector<EvalId> _distCalcs;
 	std::vector<Distance> distances;
 	std::string _name;
-	void updateDistances() {
+	void updateDistances()
+	{
 		distances.clear();
-		for(const auto& id:_distCalcs)
-		{
-			auto eval=static_cast<const EvaluatorDistance&>(_storage.eval(id));
+		for (const auto &id : _distCalcs) {
+			auto eval = static_cast<const EvaluatorDistance &>(
+				_storage.eval(id));
 			distances.push_back(eval._dist);
 		}
 	}
-	int fitParamCount=0;
-	bool ignoreNan=false;
+	int fitParamCount = 0;
+	bool ignoreNan = false;
 
 public:
-	EvaluatorChi2r(const TaskStorage& storage,const std::string& name):
-		AbstractEvaluator(storage),_name(name){}
+	EvaluatorChi2r(const TaskStorage &storage, const std::string &name)
+	    : AbstractEvaluator(storage), _name(name)
+	{
+	}
 	virtual Task makeTask(const FrameDescriptor &frame) const noexcept;
 	virtual std::string columnName(int) const
 	{
@@ -36,50 +39,51 @@ public:
 	{
 		return _name;
 	}
-	virtual std::string className() const {
+	virtual std::string className() const
+	{
 		return "χᵣ²";
 	}
 	Setting setting(int row) const
 	{
-		if (row==0) {
+		if (row == 0) {
 			QList<EvalId> list;
-			for(const auto& evid:_distCalcs) {
-				if(_storage.isValid(evid)) {
+			for (const auto &evid : _distCalcs) {
+				if (_storage.isValid(evid)) {
 					list.append(evid);
 				}
 			}
-			if(list.isEmpty()) {
+			if (list.isEmpty()) {
 				list.append(_storage.evaluatorDistance);
 			}
-			return {"distances",QVariant::fromValue(list)};
-		} else if(row==1) {
-			return {"number of fit parameters",fitParamCount};
-		} else if(row==2) {
-			return {"ignore_nan",ignoreNan};
+			return {"distances", QVariant::fromValue(list)};
+		} else if (row == 1) {
+			return {"number of fit parameters", fitParamCount};
+		} else if (row == 2) {
+			return {"ignore_nan", ignoreNan};
 		}
-		return {"",""};
+		return {"", ""};
 	}
-	virtual void setSetting(int row, const QVariant& val)
+	virtual void setSetting(int row, const QVariant &val)
 	{
-		if(row==1) {
-			fitParamCount=val.toInt();
-			if (fitParamCount<0) {
-				fitParamCount=0;
+		if (row == 1) {
+			fitParamCount = val.toInt();
+			if (fitParamCount < 0) {
+				fitParamCount = 0;
 			}
-		} else if(row==0) {
+		} else if (row == 0) {
 			_distCalcs.clear();
-			const QList<EvalId>& list=val.value<QList<EvalId>>();
-			for(const EvalId& evId:list) {
+			const QList<EvalId> &list = val.value<QList<EvalId>>();
+			for (const EvalId &evId : list) {
 				_distCalcs.push_back(evId);
 			}
 			updateDistances();
-		} else if(row==2) {
-			ignoreNan=val.toBool();
+		} else if (row == 2) {
+			ignoreNan = val.toBool();
 		}
 	}
-	virtual void setName(const std::string& name)
+	virtual void setName(const std::string &name)
 	{
-		_name=name;
+		_name = name;
 	}
 	virtual int settingsCount() const
 	{

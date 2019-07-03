@@ -1,8 +1,8 @@
 #include "MolecularSystemDomain.h"
 #include <QJsonArray>
 
-MolecularSystemDomain::MolecularSystemDomain(const std::string &name):
-	name(QString::fromStdString(name))
+MolecularSystemDomain::MolecularSystemDomain(const std::string &name)
+    : name(QString::fromStdString(name))
 {
 	comSellPos.resize(4);
 }
@@ -47,5 +47,5 @@ QJsonObject MolecularSystemDomain::jsonObj() const
 
 size_t MolecularSystemDomain::numPoints() const
 {
-    return comSellPos.size();
+	return comSellPos.size();
 }

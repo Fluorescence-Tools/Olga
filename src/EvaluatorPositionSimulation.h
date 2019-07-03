@@ -7,19 +7,19 @@
 
 class EvaluatorPositionSimulation : public AbstractEvaluator
 {
-      private:
+private:
 	Position _position;
 	std::shared_ptr<AbstractCalcResult>
 	calculate(const pteros::System &system,
 		  const FrameDescriptor &frame) const;
 
-      public:
-        EvaluatorPositionSimulation(const TaskStorage &storage,
-                                    const std::string &name)
-            : AbstractEvaluator(storage), _position(name)
-        {
-        }
-        EvaluatorPositionSimulation(const TaskStorage &storage,
+public:
+	EvaluatorPositionSimulation(const TaskStorage &storage,
+				    const std::string &name)
+	    : AbstractEvaluator(storage), _position(name)
+	{
+	}
+	EvaluatorPositionSimulation(const TaskStorage &storage,
 				    const QString &legacy,
 				    const QString &pdbFileName)
 	    : EvaluatorPositionSimulation(storage, "")

@@ -9,21 +9,21 @@ EvaluatorSphereAVOverlap::makeTask(const FrameDescriptor &frame) const noexcept
 	Task av = getTask(frame, _av1, false);
 	using result_t = std::tuple<PterosSysTask, Task>;
 	return async::when_all(sysTask, av)
-	        .then([this](result_t result) {
-		        auto ptrAv = std::get<1>(result).get();
+		.then([this](result_t result) {
+			auto ptrAv = std::get<1>(result).get();
 			auto resAv = dynamic_cast<
-			        CalcResult<PositionSimulationResult> *>(
-			        ptrAv.get());
+				CalcResult<PositionSimulationResult> *>(
+				ptrAv.get());
 			PositionSimulationResult av = resAv->get();
 			pteros::System system = std::get<0>(result).get();
 			return calculate(system, av);
-	        })
-	        .share();
+		})
+		.share();
 }
 
 std::shared_ptr<AbstractCalcResult>
 EvaluatorSphereAVOverlap::calculate(const pteros::System &system,
-                                    const PositionSimulationResult &av) const
+				    const PositionSimulationResult &av) const
 {
 	pteros::Selection select;
 	try {
@@ -39,5 +39,5 @@ EvaluatorSphereAVOverlap::calculate(const pteros::System &system,
 	}
 
 	return std::make_shared<CalcResult<float>>(
-	        av.overlap(refs, _overlapRadius));
+		av.overlap(refs, _overlapRadius));
 }

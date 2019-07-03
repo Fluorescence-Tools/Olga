@@ -32,7 +32,7 @@
 
 
 MainWindow::MainWindow(const QString json, const QString pdbsDir,
-                       const QString csvOut, const QString selPairs,
+		       const QString csvOut, const QString selPairs,
 		       const QString dumpJsonPath, QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -221,8 +221,8 @@ MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) const
 	}
 
 	std::sort(indexes.begin(), indexes.end(),
-	          [](const QModelIndex &lhs, const QModelIndex &rhs) {
-		          if (lhs.sibling(rhs.row(), rhs.column()) == rhs) {
+		  [](const QModelIndex &lhs, const QModelIndex &rhs) {
+			  if (lhs.sibling(rhs.row(), rhs.column()) == rhs) {
 				  return lhs < rhs;
 			  }
 
@@ -242,18 +242,18 @@ MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) const
 			  }
 
 			  int nParents =
-			          std::min(lParents.size(), rParents.size())
-			          - 1;
+				  std::min(lParents.size(), rParents.size())
+				  - 1;
 
 			  for (int i = 0; i < nParents; i++) {
 				  if (lParents[i].row() != rParents[i].row()) {
 					  return lParents[i].row()
-					         < rParents[i].row();
+						 < rParents[i].row();
 				  }
 			  }
 
 			  return lParents.size() < rParents.size();
-	          });
+		  });
 
 	QString selectedText;
 	QModelIndex previous = indexes.takeFirst();
@@ -526,7 +526,7 @@ bool MainWindow::exportData()
 {
 	QString fileName = QFileDialog::getSaveFileName(
 		this, tr("Export data"), "",
-	        tr("Tab-separated values (*.dat *.csv *.tsv *.ol4);;Any file (*)"));
+		tr("Tab-separated values (*.dat *.csv *.tsv *.ol4);;Any file (*)"));
 
 	return exportData(fileName);
 }
@@ -689,7 +689,7 @@ void MainWindow::showAbout()
 void MainWindow::showDocumentation()
 {
 	QDesktopServices::openUrl(QUrl(
-	        "https://github.com/Fluorescence-Tools/Olga/blob/master/README.md"));
+		"https://github.com/Fluorescence-Tools/Olga/blob/master/README.md"));
 }
 
 void MainWindow::addLpBatch(bool all)
@@ -712,7 +712,7 @@ void MainWindow::addLpBatch(bool all)
 		QMessageBox::warning(
 			this, tr("Can not add labeling positions"),
 			tr("Could not populate the residue list.\n"
-		           "Import a molecule or trajectory first, please."));
+			   "Import a molecule or trajectory first, please."));
 		return;
 	}
 	if (evalsModel.evaluatorsAvailable<EvaluatorPositionSimulation>()
@@ -805,7 +805,7 @@ void MainWindow::loadResults()
 {
 	QString fileName = QFileDialog::getOpenFileName(
 		this, tr("Open data File"), "",
-	        tr("Tab-separated data (*.dat *.csv *.ol4);;All Files (*)"));
+		tr("Tab-separated data (*.dat *.csv *.ol4);;All Files (*)"));
 	_storage.setResults(fileName.toStdString(), trajectoriesModel.frames());
 }
 
@@ -821,17 +821,17 @@ void MainWindow::getInfromativePairs()
 	}
 
 	std::vector<EvalId> evalIds =
-	        _storage.evalIds<EvaluatorFretEfficiency>();
+		_storage.evalIds<EvaluatorFretEfficiency>();
 	if (evalIds.empty()) {
 		QMessageBox::warning(this, tr("No Efficiencies available"),
-		                     tr("No Efficiencies are available.\n"
-		                        "Create some, please."));
+				     tr("No Efficiencies are available.\n"
+					"Create some, please."));
 		return;
 	}
 
 	const int tasksCount = _storage.tasksPendingCount() + 1;
 	QProgressDialog progress("Calculating efficiencies...", QString(), 0,
-	                         tasksCount, this);
+				 tasksCount, this);
 	progress.setWindowModality(Qt::WindowModal);
 	do {
 		progress.setValue(tasksCount - _storage.tasksPendingCount());
