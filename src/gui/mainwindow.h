@@ -23,9 +23,9 @@ class MainWindow : public QMainWindow
 
 public:
 	explicit MainWindow(const QString json, const QString pdbsDir,
-			    const QString csvOut, const QString selPairs,
-			    const QString dumpJsonPath,
-			    QWidget *parent = nullptr);
+	                    const QString csvOut, const QString dumpJsonPath,
+	                    int numSelPairs, const QString selPairsPath,
+	                    float err, QWidget *parent = nullptr);
 	~MainWindow();
 
 protected:
@@ -61,6 +61,7 @@ private Q_SLOTS:
 	void addDistanceBatch();
 	void addEfficiencyBatch(bool all = false);
 	void getInfromativePairs();
+	void getInfromativePairs(int numPairs, float err, const QString &path);
 
 	void setPaused(bool state = true);
 
@@ -85,7 +86,9 @@ private:
 	void loadStructuresFolder(const QString &path);
 	void loadEvaluators(const QString &fileName);
 	bool exportData(const QString &fileName);
-	void autoSelectPairs(const QString &fileName);
+	void autoSelectPairs(int numPairs, float err, const QString &outPath);
+	void waitReady() const;
+	void waitEvaluators() const;
 
 private:
 	Ui::MainWindow *ui;

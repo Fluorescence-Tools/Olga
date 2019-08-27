@@ -24,10 +24,13 @@ class GetInformativePairsDialog : public QDialog
 
 public:
 	explicit GetInformativePairsDialog(
-		QWidget *parent, const std::vector<FrameDescriptor> &frames,
-		const Eigen::MatrixXf &effs,
-		const std::vector<std::string> &evalNames);
+	        QWidget *parent, const std::vector<FrameDescriptor> &frames,
+	        const Eigen::MatrixXf &effs,
+	        const std::vector<std::string> &evalNames);
 	~GetInformativePairsDialog();
+	void setMaxPairs(int numPairsMax);
+	void setError(float err);
+	void setOutFile(const QString &path);
 public Q_SLOTS:
 	virtual void accept() override;
 	void setFileName();

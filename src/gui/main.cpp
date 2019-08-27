@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QTextCodec>
 #include <QCommandLineParser>
+#include <QTimer>
 #include <boost/exception/diagnostic_information.hpp>
 #include <iostream>
 #include <fstream>
@@ -30,10 +31,13 @@ int main(int argc, char *argv[])
 		{"dir", "directory to load PDB files from", "path"},
 		{{"j", "json"},
 		 "setting file describing labelig positions and distances",
-		 "file"},
-		{{"o", "out"}, "results .dat filename", "file"},
-		{"selectpairs", "source PDB file", "path"},
+	         "path"},
+	        {{"o", "out"}, "results .dat filename", "path"},
 		{"savejson", "save generated evaluators", "path"},
+	        {"selectpairs", "number of pairs to select", "integer"},
+	        {"err", "Efficiency error to assume for pair selection",
+	         "float"},
+	        {"savepairs", "save selected pairs", "path"},
 	});
 	QCommandLineOption quietOption("quiet", "quiet");
 	parser.addOption(quietOption);
@@ -42,13 +46,20 @@ int main(int argc, char *argv[])
 	QString pdbsDirPath = parser.value("dir");
 	QString resultsFileName = parser.value("o");
 	bool quiet = parser.isSet(quietOption);
-	QString selectpairs = parser.value("selectpairs");
 	QString savejson = parser.value("savejson");
-	MainWindow w(settingsFileName, pdbsDirPath, resultsFileName,
-		     selectpairs, savejson);
+	int numSelPairs = parser.value("selectpairs").toInt();
+	float err = parser.value("err").toFloat();
+	QString pairsPath = parser.value("savepairs");
+	MainWindow w(settingsFileName, pdbsDirPath, resultsFileName, savejson,
+	             numSelPairs, pairsPath, err);
 	try {
 		if (!quiet) {
 			w.show();
+		} else {
+			QObject stub;
+			QObject::connect(&stub, &QObject::destroyed, &a,
+			                 &QCoreApplication::quit,
+			                 Qt::QueuedConnection);
 		}
 		return a.exec();
 	} catch (std::exception &e) {

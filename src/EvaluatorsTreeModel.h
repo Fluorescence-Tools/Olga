@@ -150,6 +150,10 @@ public:
 		}
 		return list;
 	}
+	int evaluatorsPendingCount() const
+	{
+		return pendingEvals.size();
+	}
 
 private:
 	// EvalPtr eval(const EvalPtr& oldEval, int newEvalRow);

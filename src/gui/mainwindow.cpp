@@ -32,8 +32,9 @@
 
 
 MainWindow::MainWindow(const QString json, const QString pdbsDir,
-		       const QString csvOut, const QString selPairs,
-		       const QString dumpJsonPath, QWidget *parent)
+                       const QString csvOut, const QString dumpJsonPath,
+                       int numSelPairs, const QString selPairsPath, float err,
+                       QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
 	qRegisterMetaType<std::shared_ptr<AbstractCalcResult>>(
@@ -105,26 +106,22 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir,
 
 	connect(&trajectoriesModel, SIGNAL(rowsInserted(QModelIndex, int, int)),
 		this, SLOT(expand(const QModelIndex &, int, int)));
-	if (json.size() > 0 && pdbsDir.size() > 0 && csvOut.size() > 0) {
+	if (json.size() > 0) {
 		loadEvaluators(json);
-		if (!selPairs.isEmpty()) {
-			autoSelectPairs(selPairs);
-		}
+		waitEvaluators();
+	}
+	if (pdbsDir.size() > 0) {
 		loadStructuresFolder(pdbsDir);
-		QTimer *timer = new QTimer(this);
-		timer->setSingleShot(false);
-		connect(timer, &QTimer::timeout, [=]() {
-			if (!_storage.ready()) {
-				return;
-			}
-			timer->stop();
-			exportData(csvOut);
-			if (!dumpJsonPath.isEmpty()) {
-				saveJson(dumpJsonPath);
-			}
-			close();
-		});
-		timer->start(1000);
+	}
+	if (numSelPairs > 0) {
+		autoSelectPairs(numSelPairs, err, selPairsPath);
+	}
+	if (!dumpJsonPath.isEmpty()) {
+		saveJson(dumpJsonPath);
+	}
+	if (csvOut.size() > 0) {
+		waitReady();
+		exportData(csvOut);
 	}
 }
 
@@ -406,23 +403,34 @@ bool MainWindow::exportData(const QString &fileName)
 	return true;
 }
 
-void MainWindow::autoSelectPairs(const QString &fileName)
+void MainWindow::autoSelectPairs(int numPairs, float err,
+                                 const QString &outPath)
 {
-	QStringList list;
-	list << fileName;
-	loadMolecules(list);
-	QApplication::processEvents();
+	// removeNanEffs();
 	addLpBatch(true);
 	QApplication::processEvents();
 	addEfficiencyBatch(true);
 	QApplication::processEvents();
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	QApplication::processEvents();
+	waitReady();
+	getInfromativePairs(numPairs, err, outPath);
+}
+
+void MainWindow::waitReady() const
+{
 	while (!_storage.ready()) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(25));
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		QApplication::processEvents();
 	}
-	removeNanEffs();
+}
+
+void MainWindow::waitEvaluators() const
+{
+	do {
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		QApplication::processEvents();
+	} while (evalsModel.evaluatorsPendingCount() > 0);
 }
 
 void MainWindow::setPaused(bool state)
@@ -812,26 +820,32 @@ void MainWindow::loadResults()
 
 void MainWindow::getInfromativePairs()
 {
+	getInfromativePairs(11, 0.06, QString());
+}
+
+void MainWindow::getInfromativePairs(int numPairs, float err,
+                                     const QString &path)
+{
 	std::vector<FrameDescriptor> frames = trajectoriesModel.frames();
 	if (frames.empty()) {
 		QMessageBox::warning(this, tr("No structures loaded"),
-				     tr("No structures loaded.\n"
-					"Load some, please."));
+		                     tr("No structures loaded.\n"
+		                        "Load some, please."));
 		return;
 	}
 
 	std::vector<EvalId> evalIds =
-		_storage.evalIds<EvaluatorFretEfficiency>();
+	        _storage.evalIds<EvaluatorFretEfficiency>();
 	if (evalIds.empty()) {
 		QMessageBox::warning(this, tr("No Efficiencies available"),
-				     tr("No Efficiencies are available.\n"
-					"Create some, please."));
+		                     tr("No Efficiencies are available.\n"
+		                        "Create some, please."));
 		return;
 	}
 
 	const int tasksCount = _storage.tasksPendingCount() + 1;
 	QProgressDialog progress("Calculating efficiencies...", QString(), 0,
-				 tasksCount, this);
+	                         tasksCount, this);
 	progress.setWindowModality(Qt::WindowModal);
 	do {
 		progress.setValue(tasksCount - _storage.tasksPendingCount());
@@ -857,17 +871,24 @@ void MainWindow::getInfromativePairs()
 		const auto &fr = frames[iFrame];
 		for (int iEv = 0; iEv < evalIds.size(); ++iEv) {
 			TaskStorage::Result res =
-				_storage.getResult(fr, evalIds[iEv]);
+			        _storage.getResult(fr, evalIds[iEv]);
 			auto dRes =
-				std::static_pointer_cast<CalcResult<double>>(
-					res);
+			        std::static_pointer_cast<CalcResult<double>>(
+			                res);
 			effs(iFrame, iEv) = dRes->get();
 		}
 		progress.setValue(iFrame);
 	}
 	progress.setValue(frames.size());
 	GetInformativePairsDialog dialog(this, frames, effs, evalNames);
-	dialog.exec();
+	dialog.setError(err);
+	dialog.setMaxPairs(numPairs);
+	if (path.isEmpty()) {
+		dialog.exec();
+	} else {
+		dialog.setOutFile(path);
+		dialog.accept();
+	}
 }
 
 QString MainWindow::timespan(unsigned seconds)

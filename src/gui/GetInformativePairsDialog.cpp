@@ -12,7 +12,7 @@
 
 GetInformativePairsDialog::GetInformativePairsDialog(
 	QWidget *parent, const std::vector<FrameDescriptor> &frames,
-	const Eigen::MatrixXf &effs, const std::vector<std::string> &evalNames)
+        const Eigen::MatrixXf &effs, const std::vector<std::string> &evalNames)
     : QDialog(parent), frames(frames), effs(effs), evalNames(evalNames),
       ui(new Ui::GetInformativePairsDialog)
 {
@@ -22,6 +22,21 @@ GetInformativePairsDialog::GetInformativePairsDialog(
 GetInformativePairsDialog::~GetInformativePairsDialog()
 {
 	delete ui;
+}
+
+void GetInformativePairsDialog::setMaxPairs(int numPairsMax)
+{
+	ui->maxPairs->setValue(numPairsMax);
+}
+
+void GetInformativePairsDialog::setError(float err)
+{
+	ui->errorSpinBox->setValue(err);
+}
+
+void GetInformativePairsDialog::setOutFile(const QString &path)
+{
+	ui->fileEdit->setText(path);
 }
 
 void dump_rmsds(const Eigen::MatrixXf &m, const std::string &fname)
@@ -129,7 +144,7 @@ GetInformativePairsDialog::buildTrajectory(const std::string &sel) const
 			traj.frame_append(system.frame(0));
 		} else {
 			std::cerr
-				<< "ERROR! Number of atoms does not match "
+			        << "ERROR! Number of atoms does not match "
 					   + fr.topologyFileName() + " atoms: "
 					   + std::to_string(system.num_atoms())
 					   + "/"
@@ -140,11 +155,11 @@ GetInformativePairsDialog::buildTrajectory(const std::string &sel) const
 		percDone = i * 100 / numFrames;
 	}
 	if (numFrames != traj.num_frames()) {
-		std::cout << "total frames loaded "
-				     + std::to_string(traj.num_frames()) + "/"
-				     + std::to_string(numFrames) + "\n"
+		std::cerr << "ERROR! loaded "
+		                     + std::to_string(traj.num_frames())
+		                     + " out of " + std::to_string(numFrames)
+		                     + " frames for pair selection.\n"
 			  << std::flush;
-		return System();
 	}
 	return traj;
 }
@@ -167,7 +182,14 @@ void GetInformativePairsDialog::accept()
 	showProgress("Building trajectory...",
 		     [&] { traj = buildTrajectory(sel); });
 	const size_t numFrames = traj.num_frames();
-	if (numFrames == 0) {
+	if (numFrames < 2) {
+		std::cerr
+		        << "ERROR! Number of frames in trajectory is less than 2!";
+		return;
+	}
+	if (numFrames != effs.rows()) {
+		std::cerr
+		        << "ERROR! Number of frames in trajectory does not match the number of rows in Efficiency matrix!";
 		return;
 	}
 
@@ -175,7 +197,7 @@ void GetInformativePairsDialog::accept()
 	showProgress("Calculating RMSD...", [&] { RMSDs = rmsds(traj); });
 
 	if (RMSDs.hasNaN()) {
-		std::cerr << "RMSDs has NAN!\n" << std::flush;
+		std::cerr << "RMSDs has NaN!\n" << std::flush;
 		return;
 	}
 
