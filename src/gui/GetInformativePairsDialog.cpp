@@ -39,95 +39,6 @@ void GetInformativePairsDialog::setOutFile(const QString &path)
 	ui->fileEdit->setText(path);
 }
 
-void dump_rmsds(const Eigen::MatrixXf &m, const std::string &fname)
-{
-	std::ofstream outfile;
-	outfile.open(fname, std::ifstream::out);
-	if (!outfile.is_open()) {
-		return;
-	}
-	outfile << std::setprecision(3);
-	for (int i = 0; i < m.rows(); ++i) {
-		outfile << m(i, 0) * 0.1;
-		for (int j = 1; j < m.cols(); ++j) {
-			outfile << "\t" << m(i, j) * 0.1;
-		}
-		outfile << "\n";
-	}
-}
-
-std::vector<float> sys2xyz(const pteros::System &s)
-{
-	std::vector<float> vec;
-	vec.reserve(s.num_atoms() * s.num_frames() * 3);
-	for (int fr = 0; fr < s.num_frames(); ++fr) {
-		const float *beg = s.frame(fr).coord.data()->data();
-		vec.insert(vec.end(), beg, beg + 3 * s.num_atoms());
-		/*
-		for(int at=0; at<s.num_atoms(); ++at) {
-			const float* beg=s.Frame_data(fr).coord.at(at).data();
-			vec.insert(vec.end(),beg,beg+3);
-		}*/
-	}
-	return vec;
-}
-
-Eigen::MatrixXf
-GetInformativePairsDialog::rmsds(const pteros::System &traj) const
-{
-	const int numFrames = traj.num_frames();
-	const int nAtoms = traj.num_atoms();
-	std::vector<float> xyz = sys2xyz(traj);
-	std::vector<float> traces(numFrames);
-	inplace_center_and_trace_atom_major(xyz.data(), traces.data(),
-					    numFrames, nAtoms);
-	Eigen::MatrixXf RMSDs(numFrames, numFrames);
-
-	const int64_t numRmsds = int64_t(numFrames) * numFrames / 2;
-	std::atomic<std::int64_t> rmsdsDone{0};
-
-	std::vector<std::thread> threads(std::thread::hardware_concurrency());
-	const int grainSize = numFrames / threads.size() + 1;
-	for (int t = 0; t < threads.size(); ++t) {
-		threads[t] = std::thread([=, &RMSDs, &xyz, &rmsdsDone] {
-			const int maxFr =
-				std::min((t + 1) * grainSize, numFrames);
-			for (int fr = t * grainSize; fr < maxFr; ++fr) {
-				for (int j = fr; j < numFrames; ++j) {
-					const float *xyz_fr =
-						xyz.data() + 3 * fr * nAtoms;
-					const float *xyz_j =
-						xyz.data() + 3 * j * nAtoms;
-					RMSDs(fr, j) = msd_atom_major(
-						nAtoms, nAtoms, xyz_fr, xyz_j,
-						traces[fr], traces[j], 0,
-						nullptr);
-					RMSDs(j, fr) = RMSDs(fr, j);
-				}
-				rmsdsDone += numFrames - fr;
-				percDone = rmsdsDone * 100 / numRmsds;
-			}
-		});
-	}
-	for (auto &&t : threads) {
-		t.join();
-	}
-
-	return RMSDs.cwiseSqrt() * 10.0f;
-
-
-	/*pteros::Selection s(traj,"all");
-	for(int i=0; i<numFrames; ++i) {
-		s.fit_trajectory(i,i);
-		for (int j=i; j<numFrames;++j) {
-			RMSDs(i,j)=RMSDs(j,i)=s.rmsd(i,j)*10.0f;
-		}
-		rmsdsDone+=numFrames-i;
-	}
-	//dump_rmsds(RMSDs,"rmsds_seq.dat");
-	return RMSDs;*/
-}
-
 pteros::System
 GetInformativePairsDialog::buildTrajectory(const std::string &sel) const
 {
@@ -152,7 +63,7 @@ GetInformativePairsDialog::buildTrajectory(const std::string &sel) const
 					   + "\n"
 				<< std::flush;
 		}
-		percDone = i * 100 / numFrames;
+		fracDone = float(i) / float(numFrames);
 	}
 	if (numFrames != traj.num_frames()) {
 		std::cerr << "ERROR! loaded "
@@ -194,7 +105,8 @@ void GetInformativePairsDialog::accept()
 	}
 
 	MatrixXf RMSDs;
-	showProgress("Calculating RMSD...", [&] { RMSDs = rmsds(traj); });
+	showProgress("Calculating RMSD...",
+	             [&] { RMSDs = rmsd2d(traj, fracDone); });
 
 	if (RMSDs.hasNaN()) {
 		std::cerr << "RMSDs has NaN!\n" << std::flush;
@@ -202,59 +114,36 @@ void GetInformativePairsDialog::accept()
 	}
 
 	// Cleanup Efficiencies
-	std::vector<std::string> pairNames = evalNames;
+	std::vector<std::string> pairNames;
 	const double maxNanFraction = 0.2;
 	const int maxNan = int(maxNanFraction * effs.rows());
+	Eigen::VectorXi numNanCol =
+	        effs.array().isNaN().cast<int>().colwise().sum();
 	std::vector<unsigned> keepIdxs;
 	for (unsigned i = 0; i < effs.cols(); ++i) {
-		int numNan = effs.array().col(i).isNaN().cast<int>().sum();
-		if (numNan > maxNan) {
-			pairNames[i].erase();
-		} else {
+		if (numNanCol[i] < maxNan) {
 			keepIdxs.push_back(i);
+			pairNames.push_back(evalNames[i]);
 		}
 	}
-
-	Eigen::MatrixXf E = sliceCols(effs, keepIdxs);
-	auto isEmptyStr = [](const std::string &s) { return s.empty(); };
-	auto it = remove_if(pairNames.begin(), pairNames.end(), isEmptyStr);
-	pairNames.erase(it, pairNames.end());
-
-	// replace NaNs with Efficiencies from similar structures
-	const float maxFloat = std::numeric_limits<float>::max();
-	for (unsigned col = 0; col < E.cols(); ++col) {
-		const Eigen::VectorXf filter =
-			E.col(col).array().isNaN().matrix().cast<float>()
-			* maxFloat;
-		for (unsigned row = 0; row < E.rows(); ++row) {
-			if (not std::isnan(E(row, col))) {
-				continue;
-			}
-			auto fRMSDS = RMSDs.col(row).cwiseMax(filter);
-			unsigned similarConf;
-			fRMSDS.minCoeff(&similarConf);
-			E(row, col) = E(similarConf, col);
-		}
-	}
+	MatrixXf E = sliceCols(effs, keepIdxs);
+	fillNans(E, RMSDs);
 
 	const int maxPairs = std::min(int(E.cols()), numPairsMax);
-	std::vector<unsigned> pairList;
+	std::vector<unsigned> pairIdxs;
 	showProgress("Greedy selection...", [&]() {
-		pairList =
+		pairIdxs =
 			greedySelection(err, E, RMSDs, maxPairs, numFitParams);
 	});
 
+	Eigen::VectorXf rmsdAve = precisionDecay(pairIdxs, E, RMSDs, err);
 	std::string report = "#\tPair_added\t<<RMSD>>/A\n";
-	std::vector<unsigned> tmpPairs;
-	for (int i = 0; i < pairList.size(); ++i) {
-		tmpPairs.push_back(pairList[i]);
-		auto chi2 = chiSquared(sliceCols(E, tmpPairs), err);
-		float rmsdAve = rmsdMeanMean(RMSDs, chi2, i + 1, 0.99f);
-		report += std::to_string(i + 1) + "\t" + pairNames[pairList[i]]
-			  + "\t" + std::to_string(rmsdAve) + "\n";
+	for (int i = 0; i < pairIdxs.size(); ++i) {
+		report += std::to_string(i + 1) + "\t" + pairNames[pairIdxs[i]]
+		          + "\t" + std::to_string(rmsdAve[i]) + "\n";
 	}
 
-	if (pairList.size() == 0) {
+	if (pairIdxs.size() == 0) {
 		report = "No NaN-free pairs found. Pair selection failed.\n";
 	}
 
@@ -288,21 +177,20 @@ template <typename Lambda>
 void GetInformativePairsDialog::showProgress(const QString &title,
 					     Lambda &&func)
 {
-	percDone = 0;
-	QProgressDialog dialog(title, QString(), 0, 100, this);
+	fracDone = 0.0f;
+	QProgressDialog dialog(title, QString(), 0, 1000, this);
 	dialog.setWindowModality(Qt::WindowModal);
 	dialog.setMinimumDuration(0);
-	auto &percDoneRef = percDone;
 	auto f = std::async(std::launch::async, func);
 	std::future_status status = f.wait_for(std::chrono::milliseconds(0));
 	while (status != std::future_status::ready) {
 		// setValue() calls processEvents() only if percDone has changed
-		dialog.setValue(percDone);
+		dialog.setValue(int(fracDone * 1000.0f));
 		QApplication::processEvents(); // makes GUI more responsive
 		status = f.wait_for(std::chrono::milliseconds(20));
 	}
 	f.get();
-	dialog.setValue(100);
+	dialog.setValue(1000);
 }
 
 std::vector<unsigned> GetInformativePairsDialog::greedySelection(
@@ -314,7 +202,7 @@ std::vector<unsigned> GetInformativePairsDialog::greedySelection(
 	for (int pairsDone = 0; pairsDone < maxPairs; ++pairsDone) {
 		unsigned best = bestPair(Effs, RMSDs, err, 0.99f, selPairs);
 		selPairs.push_back(best);
-		percDone = 100 * pairsDone / maxPairs;
+		fracDone = 100 * pairsDone / maxPairs;
 	}
 	return selPairs;
 }

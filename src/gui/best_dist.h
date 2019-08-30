@@ -4,11 +4,16 @@
 #include "chisqdist.hpp"
 #include "spline.hpp"
 
+#include <pteros/pteros.h>
+#include "theobald_rmsd.h"
+#include "center.h"
+
 #include <Eigen/Dense>
 
 #include <vector>
 #include <cstdint>
 #include <thread>
+
 
 // TODO:
 // 1) Utilize symmetry of the RMSD and Chi2 Matrices.
@@ -195,6 +200,107 @@ unsigned bestPair(const Eigen::MatrixXf &Effs, const Eigen::MatrixXf &RMSDs,
 	auto it = std::min_element(rmsdAve.begin(), rmsdAve.end());
 	return std::distance(rmsdAve.begin(), it);
 }
+
+std::vector<float> sys2xyz(const pteros::System &s)
+{
+	std::vector<float> vec;
+	vec.reserve(s.num_atoms() * s.num_frames() * 3);
+	for (int fr = 0; fr < s.num_frames(); ++fr) {
+		const float *beg = s.frame(fr).coord.data()->data();
+		vec.insert(vec.end(), beg, beg + 3 * s.num_atoms());
+		/*
+		for(int at=0; at<s.num_atoms(); ++at) {
+			const float* beg=s.Frame_data(fr).coord.at(at).data();
+			vec.insert(vec.end(),beg,beg+3);
+		}*/
+	}
+	return vec;
+}
+
+Eigen::MatrixXf rmsd2d(const pteros::System &traj,
+                       std::atomic<float> &fractionDone)
+{
+	const int numFrames = traj.num_frames();
+	const int nAtoms = traj.num_atoms();
+	std::vector<float> xyz = sys2xyz(traj);
+	std::vector<float> traces(numFrames);
+	inplace_center_and_trace_atom_major(xyz.data(), traces.data(),
+	                                    numFrames, nAtoms);
+	Eigen::MatrixXf RMSDs(numFrames, numFrames);
+
+	const int64_t numRmsds = int64_t(numFrames) * numFrames / 2;
+	std::atomic<std::int64_t> rmsdsDone{0};
+
+	std::vector<std::thread> threads(std::thread::hardware_concurrency());
+	const int grainSize = numFrames / threads.size() + 1;
+	for (int t = 0; t < threads.size(); ++t) {
+		threads[t] = std::thread([=, &RMSDs, &xyz, &rmsdsDone,
+		                          &fractionDone] {
+			const int maxFr =
+			        std::min((t + 1) * grainSize, numFrames);
+			for (int fr = t * grainSize; fr < maxFr; ++fr) {
+				for (int j = fr; j < numFrames; ++j) {
+					const float *xyz_fr =
+					        xyz.data() + 3 * fr * nAtoms;
+					const float *xyz_j =
+					        xyz.data() + 3 * j * nAtoms;
+					RMSDs(fr, j) = msd_atom_major(
+					        nAtoms, nAtoms, xyz_fr, xyz_j,
+					        traces[fr], traces[j], 0,
+					        nullptr);
+					RMSDs(j, fr) = RMSDs(fr, j);
+				}
+				rmsdsDone += numFrames - fr;
+				fractionDone =
+				        float(rmsdsDone) / float(numRmsds);
+			}
+		});
+	}
+	for (auto &&t : threads) {
+		t.join();
+	}
+	RMSDs = RMSDs.cwiseSqrt() * 10.0f;
+	return RMSDs;
+}
+
+Eigen::VectorXi fillNans(Eigen::MatrixXf &E, const Eigen::MatrixXf &RMSDs)
+{
+	// replace NaNs with Efficiencies from similar structures
+	Eigen::VectorXi nansFilled = Eigen::VectorXi::Zero(E.cols());
+	const float maxFloat = std::numeric_limits<float>::max();
+	for (unsigned col = 0; col < E.cols(); ++col) {
+		const Eigen::VectorXf filter =
+		        E.col(col).array().isNaN().matrix().cast<float>()
+		        * maxFloat;
+		for (unsigned row = 0; row < E.rows(); ++row) {
+			if (not std::isnan(E(row, col))) {
+				continue;
+			}
+			auto fRMSDS = RMSDs.col(row).cwiseMax(filter);
+			unsigned similarConf;
+			fRMSDS.minCoeff(&similarConf);
+			E(row, col) = E(similarConf, col);
+			nansFilled(col)++;
+		}
+	}
+	return nansFilled;
+}
+
+Eigen::VectorXf precisionDecay(const std::vector<unsigned> &pairIdxs,
+                               const Eigen::MatrixXf &E,
+                               const Eigen::MatrixXf &RMSDs, double err)
+{
+	Eigen::VectorXf decay(pairIdxs.size());
+	std::vector<unsigned> tmpPairs;
+	for (int i = 0; i < pairIdxs.size(); ++i) {
+		tmpPairs.push_back(pairIdxs[i]);
+		auto chi2 = chiSquared(sliceCols(E, tmpPairs), err);
+		decay[i] = rmsdMeanMean(RMSDs, chi2, i + 1, 0.99f);
+	}
+	return decay;
+}
+
+
 /*
 template <typename M>
 M load_tsv(const std::string &path, const unsigned skipRows = 0,

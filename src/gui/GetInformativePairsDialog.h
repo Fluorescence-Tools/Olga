@@ -46,10 +46,9 @@ private:
 					      const Eigen::MatrixXf &RMSDs,
 					      const int maxPairs,
 					      const int fitParams) const;
-	Eigen::MatrixXf rmsds(const pteros::System &traj) const;
 	pteros::System buildTrajectory(const std::string &sel) const;
 
-	mutable std::atomic<int> percDone{0};
+	mutable std::atomic<float> fracDone{0.0f};
 	template <typename Lambda>
 	void showProgress(const QString &title, Lambda &&func);
 };
