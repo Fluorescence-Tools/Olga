@@ -88,6 +88,9 @@ void BatchLPDialog::accept()
 		strip = strip.replace("{resID}", QString::number(resi),
 				      Qt::CaseInsensitive);
 		strip = strip.replace("{chainID}", chain, Qt::CaseInsensitive);
+		if (chain == "") {
+			strip = strip.replace("chain  and ", "");
+		}
 		_evModel.setEvaluatorOption(index, "strip_mask", strip);
 
 		_evModel.activateEvaluator(index);

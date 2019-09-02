@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	         "path"},
 	        {{"o", "out"}, "results .dat filename", "path"},
 		{"savejson", "save generated evaluators", "path"},
-	        {"selectpairs", "number of pairs to select", "integer"},
+	        {"numpairs", "number of pairs to select", "integer"},
 	        {"err", "Efficiency error to assume for pair selection",
 	         "float"},
 	        {"savepairs", "save selected pairs", "path"},
@@ -42,12 +42,13 @@ int main(int argc, char *argv[])
 	QCommandLineOption quietOption("quiet", "quiet");
 	parser.addOption(quietOption);
 	parser.process(a);
+
 	QString settingsFileName = parser.value("j");
 	QString pdbsDirPath = parser.value("dir");
 	QString resultsFileName = parser.value("o");
 	bool quiet = parser.isSet(quietOption);
 	QString savejson = parser.value("savejson");
-	int numSelPairs = parser.value("selectpairs").toInt();
+	int numSelPairs = parser.value("numpairs").toInt();
 	float err = parser.value("err").toFloat();
 	QString pairsPath = parser.value("savepairs");
 	MainWindow w(settingsFileName, pdbsDirPath, resultsFileName, savejson,

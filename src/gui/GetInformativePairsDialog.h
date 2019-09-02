@@ -41,11 +41,6 @@ private:
 	const std::vector<std::string> evalNames;
 	Ui::GetInformativePairsDialog *ui;
 
-	std::vector<unsigned> greedySelection(const float err,
-					      const Eigen::MatrixXf &Effs,
-					      const Eigen::MatrixXf &RMSDs,
-					      const int maxPairs,
-					      const int fitParams) const;
 	pteros::System buildTrajectory(const std::string &sel) const;
 
 	mutable std::atomic<float> fracDone{0.0f};

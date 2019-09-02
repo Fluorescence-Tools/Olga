@@ -201,6 +201,31 @@ unsigned bestPair(const Eigen::MatrixXf &Effs, const Eigen::MatrixXf &RMSDs,
 	return std::distance(rmsdAve.begin(), it);
 }
 
+std::vector<unsigned> greedySelection(const float err,
+                                      const Eigen::MatrixXf &Effs,
+                                      const Eigen::MatrixXf &RMSDs,
+                                      const int maxPairs,
+                                      std::atomic<float> &fractionDone)
+{
+	std::vector<unsigned> selPairs;
+	for (int pairsDone = 0; pairsDone < maxPairs; ++pairsDone) {
+		unsigned best = bestPair(Effs, RMSDs, err, 0.99f, selPairs);
+		selPairs.push_back(best);
+		fractionDone = pairsDone / maxPairs;
+	}
+	return selPairs;
+}
+
+std::vector<unsigned> greedySelection(const float err,
+                                      const Eigen::MatrixXf &Effs,
+                                      const Eigen::MatrixXf &RMSDs,
+                                      const int maxPairs)
+{
+	std::atomic<float> fractionDone;
+	assert(!Effs.hasNaN());
+	return greedySelection(err, Effs, RMSDs, maxPairs, fractionDone);
+}
+
 std::vector<float> sys2xyz(const pteros::System &s)
 {
 	std::vector<float> vec;
@@ -261,6 +286,28 @@ Eigen::MatrixXf rmsd2d(const pteros::System &traj,
 	}
 	RMSDs = RMSDs.cwiseSqrt() * 10.0f;
 	return RMSDs;
+}
+
+Eigen::MatrixXf rmsd2d(const pteros::System &traj)
+{
+	std::atomic<float> stub;
+	return rmsd2d(traj, stub);
+}
+
+std::vector<unsigned> thresholdNansPerCol(const Eigen::MatrixXf &E,
+                                          double maxNanFraction)
+{
+	std::vector<unsigned> goodIdxs;
+
+	const int maxNan = int(maxNanFraction * E.rows()) + 1;
+	Eigen::VectorXi numNanCol =
+	        E.array().isNaN().cast<int>().colwise().sum();
+	for (unsigned i = 0; i < E.cols(); ++i) {
+		if (numNanCol[i] < maxNan) {
+			goodIdxs.push_back(i);
+		}
+	}
+	return goodIdxs;
 }
 
 Eigen::VectorXi fillNans(Eigen::MatrixXf &E, const Eigen::MatrixXf &RMSDs)

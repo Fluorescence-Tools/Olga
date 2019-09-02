@@ -3,12 +3,16 @@ TEMPLATE = subdirs
 SUBDIRS = gui \
           av2restraints \
           irmsd \
-          screen-nox 
+          screen-nox  \
+          bestpairs
+
 gui.subdir = src/gui
 av2restraints.subdir = src/av2restraints
 irmsd.subdir = src/irmsd
 screen-nox.subdir = src/screen-nox
+bestpairs.subdir = src/bestpairs
 gui.depends = irmsd
+bestpairs.depends = irmsd
 
 DISTFILES += \
     .gitignore \

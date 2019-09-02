@@ -1,7 +1,7 @@
 #include "GetInformativePairsDialog.h"
 #include "ui_GetInformativePairsDialog.h"
 #include "best_dist.h"
-#include "theobald_rmsd.h"
+//#include "theobald_rmsd.h"
 #include "center.h"
 #include <fstream>
 #include <iomanip>
@@ -114,17 +114,10 @@ void GetInformativePairsDialog::accept()
 	}
 
 	// Cleanup Efficiencies
+	std::vector<unsigned> keepIdxs = thresholdNansPerCol(effs, 0.2);
 	std::vector<std::string> pairNames;
-	const double maxNanFraction = 0.2;
-	const int maxNan = int(maxNanFraction * effs.rows());
-	Eigen::VectorXi numNanCol =
-	        effs.array().isNaN().cast<int>().colwise().sum();
-	std::vector<unsigned> keepIdxs;
-	for (unsigned i = 0; i < effs.cols(); ++i) {
-		if (numNanCol[i] < maxNan) {
-			keepIdxs.push_back(i);
-			pairNames.push_back(evalNames[i]);
-		}
+	for (unsigned i : keepIdxs) {
+		pairNames.push_back(evalNames[i]);
 	}
 	MatrixXf E = sliceCols(effs, keepIdxs);
 	fillNans(E, RMSDs);
@@ -132,8 +125,7 @@ void GetInformativePairsDialog::accept()
 	const int maxPairs = std::min(int(E.cols()), numPairsMax);
 	std::vector<unsigned> pairIdxs;
 	showProgress("Greedy selection...", [&]() {
-		pairIdxs =
-			greedySelection(err, E, RMSDs, maxPairs, numFitParams);
+		pairIdxs = greedySelection(err, E, RMSDs, maxPairs, fracDone);
 	});
 
 	Eigen::VectorXf rmsdAve = precisionDecay(pairIdxs, E, RMSDs, err);
@@ -191,18 +183,4 @@ void GetInformativePairsDialog::showProgress(const QString &title,
 	}
 	f.get();
 	dialog.setValue(1000);
-}
-
-std::vector<unsigned> GetInformativePairsDialog::greedySelection(
-	const float err, const Eigen::MatrixXf &Effs,
-	const Eigen::MatrixXf &RMSDs, const int maxPairs,
-	const int fitParams) const
-{
-	std::vector<unsigned> selPairs;
-	for (int pairsDone = 0; pairsDone < maxPairs; ++pairsDone) {
-		unsigned best = bestPair(Effs, RMSDs, err, 0.99f, selPairs);
-		selPairs.push_back(best);
-		fracDone = 100 * pairsDone / maxPairs;
-	}
-	return selPairs;
 }
