@@ -8,6 +8,7 @@
 #include <QDir>
 #include <QString>
 #include <QSet>
+#include <QVector>
 
 #include <pteros/pteros.h>
 
@@ -53,6 +54,7 @@ struct EfficiencyTable {
 	vector<string> columnNames, conformerNames;
 	Eigen::MatrixXf E;
 	void fixNans(double maxNanFraction, const Eigen::MatrixXf &RMSDs);
+	void keepConfs(const QSet<QString> &validNames);
 };
 
 EfficiencyTable::EfficiencyTable(const string &path)
@@ -115,6 +117,29 @@ void EfficiencyTable::fixNans(double maxNanFraction,
 	fillNans(E, RMSDs);
 }
 
+void EfficiencyTable::keepConfs(const QSet<QString> &validNames)
+{
+	std::vector<int> validIdxs;
+	for (size_t i = 0; i < conformerNames.size(); ++i) {
+		QString conf = QString::fromStdString(conformerNames[i]);
+		if (validNames.contains(conf)) {
+			validIdxs.push_back(i);
+		}
+	}
+	// E = E(validIdxs, Eigen::all).eval(); //Since Eigen 3.4
+	const size_t rows = validIdxs.size();
+	Eigen::MatrixXf res(rows, E.cols());
+	vector<string> keepConfs;
+	keepConfs.reserve(rows);
+	for (size_t i = 0; i < rows; ++i) {
+		size_t validx = validIdxs[i];
+		res.row(i) = E.row(validx);
+		keepConfs.emplace_back(std::move(conformerNames[validx]));
+	}
+	E = res;
+	conformerNames = std::move(keepConfs);
+}
+
 int main(int argc, char *argv[])
 {
 	pteros::set_log_level("off");
@@ -139,6 +164,12 @@ int main(int argc, char *argv[])
 
 	// effs
 	EfficiencyTable effs(effsPath.toStdString());
+	QDir pdbsDir(pdbsDirPath);
+	QSet<QString> pdbs = pdbsDir.entryList(QStringList() << "*.pdb"
+	                                                     << "*.PDB",
+	                                       QDir::Files)
+	                             .toSet();
+	effs.keepConfs(pdbs);
 	if (effs.conformerNames.size() < 2) {
 		cerr << "Error! Too litle conformers were loaded. At least 2 are needed.\n";
 		return 1;
@@ -148,7 +179,8 @@ int main(int argc, char *argv[])
 	// traj
 	pteros::System traj = loadTrajectory(effs.conformerNames, pdbsDirPath);
 	if (traj.num_frames() == 0) {
-		cerr << "Error! could not load the pdbs.\n";
+		cerr << "Error! could not load the pdbs: "
+		                + pdbsDirPath.toStdString() + "\n";
 		return 2;
 	}
 	// rmsds
