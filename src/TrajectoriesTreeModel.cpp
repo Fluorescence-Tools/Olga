@@ -286,8 +286,9 @@ void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream &out) const
 	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1,
 					Qt::MatchWildcard | Qt::MatchRecursive);
 	int numCols = columnCount();
-	for (int c = 0; c < numCols; c++) {
-		out << headerData(c, Qt::Horizontal).toString() + "\t";
+	out << headerData(0, Qt::Horizontal).toString();
+	for (int c = 1; c < numCols; c++) {
+		out << "\t" + headerData(c, Qt::Horizontal).toString();
 	}
 	out << "\n";
 	for (const auto &idx : indexes) {
@@ -298,9 +299,10 @@ void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream &out) const
 			continue;
 		}
 		out << data(parent(idx)).toString() + " ";
-		for (int c = 0; c < numCols; c++) {
-			out << data(idx.sibling(idx.row(), c)).toString()
-					+ "\t";
+		out << data(idx.sibling(idx.row(), 0)).toString();
+		for (int c = 1; c < numCols; c++) {
+			out << "\t";
+			out << data(idx.sibling(idx.row(), c)).toString();
 		}
 		out << "\n";
 	}

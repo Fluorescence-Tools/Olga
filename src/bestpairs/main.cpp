@@ -29,6 +29,8 @@ pteros::System loadTrajectory(const vector<string> &basenames,
 	                             .toSet();
 	for (const string &pdb : basenames) {
 		if (!pdbs.contains(QString::fromStdString(pdb))) {
+			std::cerr << "ERROR! " + pdb + " was not found in "
+			                     + dirPath.toStdString() + "\n";
 			return pteros::System();
 		}
 	}
@@ -42,6 +44,9 @@ pteros::System loadTrajectory(const vector<string> &basenames,
 		pteros::System sys(path);
 		sys.keep(sel);
 		if (numAt != sys.num_atoms()) {
+			std::cerr
+			        << "ERROR! Number of atoms in the file does not match the previous frames: "
+			                   + path + "\n";
 			return pteros::System();
 		}
 		traj.frame_append(sys.frame(0));
