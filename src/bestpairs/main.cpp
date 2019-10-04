@@ -16,8 +16,8 @@
 
 using namespace std;
 
-pteros::System loadTrajectory(const vector<string> &basenames,
-                              const QString &dirPath)
+pteros::System loadTrajectory(const QString &dirPath,
+                              const vector<string> &basenames)
 {
 	pteros::System traj;
 	const string sel = "name CA";
@@ -44,16 +44,65 @@ pteros::System loadTrajectory(const vector<string> &basenames,
 		pteros::System sys(path);
 		sys.keep(sel);
 		if (numAt != sys.num_atoms()) {
-			std::cerr
-			        << "ERROR! Number of atoms in the file does not match the previous frames: "
-			                   + path + "\n";
+			cerr << "ERROR! Number of atoms in the file does not match the previous frames: "
+			                + path + "\n";
 			return pteros::System();
 		}
 		traj.frame_append(sys.frame(0));
 	}
 	return traj;
 }
+Eigen::MatrixXf loadDistanceMatrix(const std::string &path,
+                                   const vector<string> &refnames)
+{
+	ifstream indata(path);
+	if (!indata.is_open()) {
+		cerr << "ERROR! Could not open file: " + path + "\n";
+		return Eigen::MatrixXf();
+	}
+	string line;
+	getline(indata, line);
+	if (line.back() == '\t') {
+		line.pop_back();
+	}
 
+	// first column is the conformer name
+	int numConf = count(line.begin(), line.end(), '\t');
+	if (line[0] != '#') {
+		indata.clear();
+		indata.seekg(0);
+	}
+	Eigen::MatrixXf dm(numConf, numConf);
+	int row;
+	for (row = 0; getline(indata, line) && (row < numConf); ++row) {
+		stringstream lineStream(line);
+		string confName;
+		getline(lineStream, confName, '\t');
+		if (confName != refnames[row]) {
+			cerr << "ERROR! Order of conformers does not match to the reference: "
+			                + path + "\n";
+			return Eigen::MatrixXf();
+		}
+
+		string tmp;
+		int col;
+		for (col = 0; lineStream.good() && (col < numConf); ++col) {
+			getline(lineStream, tmp, '\t');
+			dm(row, col) = stof(tmp);
+		}
+		if (col != numConf) {
+			cerr << "ERROR! Number of elements in the row does not match the number of conformers: "
+			                + path + "\n";
+			return Eigen::MatrixXf();
+		}
+	}
+	if (row != numConf) {
+		cerr << "ERROR! Number of rows in the file does not match the number of conformers: "
+		                + path + "\n";
+		return Eigen::MatrixXf();
+	}
+	return dm;
+}
 struct EfficiencyTable {
 	EfficiencyTable(const std::string &path);
 	vector<string> columnNames, conformerNames;
@@ -65,6 +114,10 @@ struct EfficiencyTable {
 EfficiencyTable::EfficiencyTable(const string &path)
 {
 	ifstream indata(path);
+	if (!indata.is_open()) {
+		cerr << "ERROR! Could not open file: " + path + "\n";
+		return;
+	}
 	string line;
 
 	// columnNames
@@ -98,6 +151,8 @@ EfficiencyTable::EfficiencyTable(const string &path)
 			}
 		}
 		if (numVals != numCols) {
+			cerr << "ERROR! Number of elements in the row does not match the number of columns: "
+			                + path + "\n";
 			return;
 		}
 	}
@@ -158,6 +213,8 @@ int main(int argc, char *argv[])
 	        {"err", "Efficiency error to assume for pair selection",
 	         "float"},
 	        {"savepairs", "save selected pairs", "path"},
+	        {"distance-matrix",
+	         "matrix of distances between conformers (e.g. RMSD)", "path"},
 	});
 	parser.process(a);
 
@@ -166,37 +223,56 @@ int main(int argc, char *argv[])
 	int numSelPairs = parser.value("numpairs").toInt();
 	float err = parser.value("err").toFloat();
 	QString pairsPath = parser.value("savepairs");
+	QString distMatPath = parser.value("distance-matrix");
 
 	// effs
 	EfficiencyTable effs(effsPath.toStdString());
-	QDir pdbsDir(pdbsDirPath);
-	QSet<QString> pdbs = pdbsDir.entryList(QStringList() << "*.pdb"
-	                                                     << "*.PDB",
-	                                       QDir::Files)
-	                             .toSet();
-	effs.keepConfs(pdbs);
+
+	if (!pdbsDirPath.isEmpty()) {
+		QDir pdbsDir(pdbsDirPath);
+		QSet<QString> pdbs = pdbsDir.entryList(QStringList() << "*.pdb"
+		                                                     << "*.PDB",
+		                                       QDir::Files)
+		                             .toSet();
+		effs.keepConfs(pdbs);
+	}
 	if (effs.conformerNames.size() < 2) {
 		cerr << "Error! Too litle conformers were loaded. At least 2 are needed.\n";
 		return 1;
 	}
-	const auto &pairNames = effs.columnNames;
 
-	// traj
-	pteros::System traj = loadTrajectory(effs.conformerNames, pdbsDirPath);
-	if (traj.num_frames() == 0) {
-		cerr << "Error! could not load the pdbs: "
-		                + pdbsDirPath.toStdString() + "\n";
-		return 2;
+	Eigen::MatrixXf distMat;
+	if (distMatPath.isEmpty()) {
+		// rmsds
+		pteros::System traj =
+		        loadTrajectory(pdbsDirPath, effs.conformerNames);
+		if (traj.num_frames() == 0) {
+			cerr << "Error! could not load the pdbs: "
+			                + pdbsDirPath.toStdString() + "\n";
+			return 2;
+		}
+		distMat = rmsd2d(traj);
+	} else {
+		// External dissmilarity (distance) matrix.
+		distMat = loadDistanceMatrix(distMatPath.toStdString(),
+		                             effs.conformerNames);
+		if (effs.E.rows() != distMat.rows()) {
+			cerr << "Number of rows in efficiency table does not match to the number of rows in distance matrix: "
+			                + to_string(effs.E.rows()) + " != "
+			                + to_string(distMat.rows()) + "\n";
+			return 3;
+		}
 	}
-	// rmsds
-	Eigen::MatrixXf RMSDs = rmsd2d(traj);
-	effs.fixNans(0.2, RMSDs);
+
+	effs.fixNans(0.2, distMat);
 	// decay
 	vector<unsigned> pairIdxs;
-	pairIdxs = greedySelection(err, effs.E, RMSDs, numSelPairs);
+	pairIdxs = greedySelection(err, effs.E, distMat, numSelPairs);
 	// report
-	Eigen::VectorXf rmsdAve = precisionDecay(pairIdxs, effs.E, RMSDs, err);
+	Eigen::VectorXf rmsdAve =
+	        precisionDecay(pairIdxs, effs.E, distMat, err);
 	string report = "#\tPair_added\t<<RMSD>>/A\n";
+	const auto &pairNames = effs.columnNames;
 	for (size_t i = 0; i < pairIdxs.size(); ++i) {
 		report += std::to_string(i + 1) + "\t" + pairNames[pairIdxs[i]]
 		          + "\t" + std::to_string(rmsdAve[i]) + "\n";
@@ -214,7 +290,7 @@ int main(int argc, char *argv[])
 			cerr << "Warning! could not open file for saving: "
 			                + pairsPath.toStdString() + "\n"
 			     << flush;
-			return 3;
+			return 4;
 		}
 		outfile << report;
 	}
