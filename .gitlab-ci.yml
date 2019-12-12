@@ -21,7 +21,7 @@ build-ubuntu:
 
 build-win64:
   stage: compile
-  image: burningdaylight/docker-mingw-qt5
+  image: burningdaylight/docker-mingw-qt5:20181109
   script:
     - mkdir -p ${CI_BUILD_NAME}
     - rm -f ${CI_BUILD_NAME}/src/gui/release/Olga.exe ${CI_BUILD_NAME}/src/gui/release/main.o
@@ -39,7 +39,7 @@ build-win64:
 
 build-win32:
   stage: compile
-  image: burningdaylight/docker-mingw-qt5
+  image: burningdaylight/docker-mingw-qt5:20181109
   script:
     - mkdir -p ${CI_BUILD_NAME}
     - rm -f ${CI_BUILD_NAME}/src/gui/release/Olga.exe ${CI_BUILD_NAME}/src/gui/release/main.o;
@@ -61,6 +61,7 @@ pack-ubuntu:
     - ./src/pack_ubuntu.sh build-ubuntu Olga
   dependencies:
     - build-ubuntu
+  needs: ["build-ubuntu"]
   artifacts:
     expire_in: 1 week
     name: "Olga_ubuntu18.04_${CI_BUILD_REF_NAME}-${CI_BUILD_REF:0:8}"
@@ -69,11 +70,12 @@ pack-ubuntu:
 
 pack-win64:
   stage: package
-  image: burningdaylight/docker-mingw-qt5
+  image: burningdaylight/docker-mingw-qt5:20181109
   script:
     - ./src/pack_mingw.sh build-win64 /usr/x86_64-w64-mingw32 Olga
   dependencies:
     - build-win64
+  needs: ["build-win64"]
   artifacts:
     name: "Olga_win64_${CI_BUILD_REF_NAME}-${CI_BUILD_REF:0:8}"
     expire_in: 1 week
@@ -82,11 +84,12 @@ pack-win64:
 
 pack-win32:
   stage: package
-  image: burningdaylight/docker-mingw-qt5
+  image: burningdaylight/docker-mingw-qt5:20181109
   script:
     - ./src/pack_mingw.sh build-win32 /usr/i686-w64-mingw32 Olga
   dependencies:
     - build-win32
+  needs: ["build-win32"]
   artifacts:
     expire_in: 1 week
     name: "Olga_win32_${CI_BUILD_REF_NAME}-${CI_BUILD_REF:0:8}"

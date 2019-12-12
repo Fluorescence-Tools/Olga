@@ -19,7 +19,7 @@ mkdir -p "${DESTDIR}"
 cat << EOF > "${DESTDIR}"/Olga.sh
 #!/bin/bash
 export LD_LIBRARY_PATH=./
-./Olga "$@"
+./Olga "\$@"
 EOF
 chmod +x "${DESTDIR}"/Olga.sh
 
