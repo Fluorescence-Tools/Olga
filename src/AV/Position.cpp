@@ -186,6 +186,12 @@ std::pair<QString, QVariant> Position::setting(int row) const
 	return Setting();
 }
 
+bool isUpper(const std::string &s)
+{
+	return std::all_of(s.begin(), s.end(),
+	                   [](unsigned char c) { return std::isupper(c); });
+}
+
 void Position::setSetting(int row, const QVariant &val)
 {
 	switch (row) {
@@ -196,7 +202,11 @@ void Position::setSetting(int row, const QVariant &val)
 		_residueSeqNumber = val.toInt();
 		return;
 	case 2:
-		_residueName = val.toString().toUpper().toStdString();
+		_residueName = val.toString().toStdString();
+		if (!isUpper(_residueName)) {
+			std::cout << "Info: residue name '" + _residueName
+			                     + "' is not uppercase.\n";
+		}
 		return;
 	case 3:
 		_atomName = val.toString().toStdString();
