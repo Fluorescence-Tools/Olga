@@ -9,7 +9,7 @@ BatchLPDialog::BatchLPDialog(QWidget *parent, EvaluatorsTreeModel &evModel)
 
 	connect(ui->residuesWidget, &QListWidget::itemChanged,
 		[this](QListWidgetItem *item) {
-			if (!item->isSelected()) {
+		        if (!(item == ui->residuesWidget->currentItem())) {
 				return;
 			}
 			auto newState = item->checkState();

@@ -702,7 +702,6 @@ void MainWindow::showDocumentation()
 
 void MainWindow::addLpBatch(bool all)
 {
-
 	BatchLPDialog dialog(this, evalsModel);
 	auto system = trajectoriesModel.firstSystem();
 	std::vector<std::tuple<int, std::string, char>> residues;
