@@ -54,15 +54,19 @@ public:
 	}
 	virtual void setSetting(int row, const QVariant &val)
 	{
+		using std::cerr;
 		switch (row) {
 		case 0: {
 			auto tmpId = val.value<EvalId>();
 			if (tmpId == EvalId(-1)) {
-				std::cerr << "Can not set position\n"
-					  << std::flush;
-				return;
+				cerr << "Can not set position option <"
+				                + val.toString().toStdString()
+				                + "> for evaluator " + _name
+				                + "\n"
+				     << std::flush;
+			} else {
+				_av = tmpId;
 			}
-			_av = tmpId;
 			return;
 		}
 		case 1:
