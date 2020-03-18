@@ -64,7 +64,8 @@ public:
 		case 0: {
 			auto tmpId = val.value<EvalId>();
 			if (tmpId == EvalId(-1)) {
-				std::cerr << "Can not set position_1\n"
+                std::cerr << "Can not set position1 for " + name()
+                             + "\n"
 					  << std::flush;
 				return;
 			}
@@ -76,7 +77,8 @@ public:
 		case 1: {
 			auto tmpId = val.value<EvalId>();
 			if (tmpId == EvalId(-1)) {
-				std::cerr << "Can not set position_2\n"
+                std::cerr << "Can not set position2 for " + name()
+                             + "\n"
 					  << std::flush;
 				return;
 			}
