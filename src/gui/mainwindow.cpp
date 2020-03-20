@@ -32,9 +32,9 @@
 
 
 MainWindow::MainWindow(const QString json, const QString pdbsDir,
-                       const QString csvOut, const QString dumpJsonPath,
-                       int numSelPairs, const QString selPairsPath, float err,
-                       QWidget *parent)
+		       const QString csvOut, const QString dumpJsonPath,
+		       int numSelPairs, const QString selPairsPath, float err,
+		       QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
 	qRegisterMetaType<std::shared_ptr<AbstractCalcResult>>(
@@ -98,7 +98,7 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir,
 	timer->start(timerInterval);
 
 	auto degugStream = new QDebugStream(std::cerr); // Capture stderr
-	auto infoStream = new QDebugStream(std::cout);  // Capture stderr
+	auto infoStream = new QDebugStream(std::cout);	// Capture stderr
 	connect(degugStream, SIGNAL(errorPrinted(QString)), ui->logTextEdit,
 		SLOT(append(const QString &)));
 	connect(infoStream, SIGNAL(errorPrinted(QString)), ui->infoTextEdit,
@@ -283,11 +283,11 @@ MainWindow::tabSeparatedData(const QItemSelectionModel *selectionModel) const
 	return selectedText;
 }
 
-void MainWindow::loadMolecules(const QStringList &fileNames)
+void MainWindow::loadPdbs(const QStringList &fileNames)
 {
 	using namespace std;
 	auto pause = _storage.pause();
-	trajectoriesModel.loadSystems(fileNames);
+	trajectoriesModel.loadPdbs(fileNames);
 
 	/*//This is a hack. It prevents from lags when scrolling
 	const int vPosStart=ui->mainTreeView->verticalScrollBar()->value();
@@ -317,7 +317,7 @@ void MainWindow::loadStructuresFolder(const QString &path)
 		progress.setValue(i);
 	}
 	progress.setValue(size);
-	loadMolecules(fileNames);
+	loadPdbs(fileNames);
 }
 
 void MainWindow::loadEvaluators(const QString &fileName)
@@ -404,7 +404,7 @@ bool MainWindow::exportData(const QString &fileName)
 }
 
 void MainWindow::autoSelectPairs(int numPairs, float err,
-                                 const QString &outPath)
+				 const QString &outPath)
 {
 	// removeNanEffs();
 	addLpBatch(true);
@@ -464,12 +464,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	event->accept();
 }
 
-void MainWindow::loadStructures()
+void MainWindow::loadPdbsDialog()
 {
 	QStringList fileNames = QFileDialog::getOpenFileNames(
 		this, tr("Load strcutures from files"), "",
-		tr("Molecular Structure Files (*.pdb)"));
-	loadMolecules(fileNames);
+		tr("Protein Data Bank (*.pdb)"));
+	loadPdbs(fileNames);
 	// ui->mainTreeView->resizeColumnsToContents();
 }
 
@@ -823,28 +823,28 @@ void MainWindow::getInfromativePairs()
 }
 
 void MainWindow::getInfromativePairs(int numPairs, float err,
-                                     const QString &path)
+				     const QString &path)
 {
 	std::vector<FrameDescriptor> frames = trajectoriesModel.frames();
 	if (frames.empty()) {
 		QMessageBox::warning(this, tr("No structures loaded"),
-		                     tr("No structures loaded.\n"
-		                        "Load some, please."));
+				     tr("No structures loaded.\n"
+					"Load some, please."));
 		return;
 	}
 
 	std::vector<EvalId> evalIds =
-	        _storage.evalIds<EvaluatorFretEfficiency>();
+		_storage.evalIds<EvaluatorFretEfficiency>();
 	if (evalIds.empty()) {
 		QMessageBox::warning(this, tr("No Efficiencies available"),
-		                     tr("No Efficiencies are available.\n"
-		                        "Create some, please."));
+				     tr("No Efficiencies are available.\n"
+					"Create some, please."));
 		return;
 	}
 
 	const int tasksCount = _storage.tasksPendingCount() + 1;
 	QProgressDialog progress("Calculating efficiencies...", QString(), 0,
-	                         tasksCount, this);
+				 tasksCount, this);
 	progress.setWindowModality(Qt::WindowModal);
 	do {
 		progress.setValue(tasksCount - _storage.tasksPendingCount());
@@ -870,10 +870,10 @@ void MainWindow::getInfromativePairs(int numPairs, float err,
 		const auto &fr = frames[iFrame];
 		for (int iEv = 0; iEv < evalIds.size(); ++iEv) {
 			TaskStorage::Result res =
-			        _storage.getResult(fr, evalIds[iEv]);
+				_storage.getResult(fr, evalIds[iEv]);
 			auto dRes =
-			        std::static_pointer_cast<CalcResult<double>>(
-			                res);
+				std::static_pointer_cast<CalcResult<double>>(
+					res);
 			effs(iFrame, iEv) = dRes->get();
 		}
 		progress.setValue(iFrame);

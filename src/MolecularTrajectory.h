@@ -58,6 +58,7 @@ public:
 		Chunk c;
 		// c.fileName=std::make_shared<std::string>(fileName);
 		c.fileName = fileName;
+		// TODO:replace with emplace_back
 		_chunks.push_back(std::move(c));
 		return true;
 	}
@@ -82,6 +83,9 @@ public:
 			return start + frameIndex * stride;
 		}
 	};
+	static MolecularTrajectory fromPdb(const std::string &fileName);
+	static std::vector<MolecularTrajectory>
+	fromPdbs(const std::vector<std::string> &fileNames);
 
 private:
 	// std::shared_ptr<std::string> _topFileName;

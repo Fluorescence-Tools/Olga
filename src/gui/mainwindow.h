@@ -23,16 +23,16 @@ class MainWindow : public QMainWindow
 
 public:
 	explicit MainWindow(const QString json, const QString pdbsDir,
-	                    const QString csvOut, const QString dumpJsonPath,
-	                    int numSelPairs, const QString selPairsPath,
-	                    float err, QWidget *parent = nullptr);
+			    const QString csvOut, const QString dumpJsonPath,
+			    int numSelPairs, const QString selPairsPath,
+			    float err, QWidget *parent = nullptr);
 	~MainWindow();
 
 protected:
 	void closeEvent(QCloseEvent *event);
 
 private Q_SLOTS:
-	void loadStructures();
+	void loadPdbsDialog();
 	void loadStructuresFolder();
 	void metropolisSampling();
 	void loadEvaluators();
@@ -81,7 +81,7 @@ private:
 
 	QString
 	tabSeparatedData(const QItemSelectionModel *selectionModel) const;
-	void loadMolecules(const QStringList &fileNames);
+	void loadPdbs(const QStringList &fileNames);
 
 	void loadStructuresFolder(const QString &path);
 	void loadEvaluators(const QString &fileName);

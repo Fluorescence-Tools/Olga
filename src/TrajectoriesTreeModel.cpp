@@ -18,7 +18,8 @@ TrajectoriesTreeModel::TrajectoriesTreeModel(const TaskStorage &storage,
 					     QObject *parent)
     : QAbstractItemModel(parent), _storage(storage)
 {
-	connect(&_storage, &TaskStorage::evaluatorAdded, this,
+	connect(
+		&_storage, &TaskStorage::evaluatorAdded, this,
 		[this](const EvalId &id) { evaluatorAdded(id); },
 		Qt::QueuedConnection);
 	connect(&_storage, &TaskStorage::evaluatorIsGoingToBeRemoved,
@@ -219,65 +220,69 @@ bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
 	}
 	return false;
 }
-
-void TrajectoriesTreeModel::loadSystems(const QStringList &fileNames)
+void TrajectoriesTreeModel::loadTrajectories(
+	QVector<MolecularTrajectory> trajVec)
 {
-	/*		auto now=chrono::steady_clock::now();
-		auto diff = now - prevUpd;
-		if(chrono::duration <double, milli> (diff).count()>20) {
-			progress.setValue(i);
-			prevUpd=now;
-		}*/
+	int numFrames = 0;
+	for (const MolecularTrajectory &tr : trajVec) {
+		numFrames += tr.totalFrameCount();
+	}
+	QProgressDialog progress("Submitting jobs...", "Cancel", 0, numFrames);
+	progress.setWindowModality(Qt::ApplicationModal);
+	progress.setValue(0);
+
+	// insert Rows
+	const int numTraj = trajVec.size();
+	const int firstTraj = _molTrajs.size();
+	const int lastTraj = _molTrajs.size() + numTraj - 1;
+	beginInsertRows(QModelIndex(), firstTraj, lastTraj);
+	_molTrajs.append(std::move(trajVec));
+	endInsertRows();
+
+	// evaluate
+	std::set<EvalId> evIds;
+	for (const CalcColumn &cc : _columns) {
+		EvalId evId = cc.first;
+		evIds.emplace(evId);
+	}
+	std::vector<EvalId> evVec(evIds.begin(), evIds.end());
+	int frLoaded = 0;
+	for (int iTr = firstTraj; iTr <= lastTraj; ++iTr) {
+		const int numChunks = _molTrajs[iTr].chunkCount();
+		for (int iChunk = 0; iChunk < numChunks; ++iChunk) {
+			const int numFrames = _molTrajs[iTr].frameCount(iChunk);
+			for (int iFr = 0; iFr < numFrames; ++iFr) {
+				_storage.evaluate(
+					_molTrajs[iTr].descriptor(iChunk, iFr),
+					evVec);
+				progress.setValue(frLoaded++);
+			}
+		}
+	}
+	progress.setValue(numFrames);
+}
+
+void TrajectoriesTreeModel::loadPdbs(const QStringList &fileNames)
+{
+
 	const int rawSize = fileNames.size();
 	QProgressDialog progress("Checking files...", "Cancel", 0, rawSize);
 	progress.setWindowModality(Qt::ApplicationModal);
 
 	// prepare trajectories
 	QVector<MolecularTrajectory> tmpTrajVec;
-	for (int i = 0; i < rawSize; ++i) {
-		const QString &fileName = fileNames[i];
-		if (fileName.isEmpty()) {
+	for (const QString &fName : fileNames) {
+		if (fName.isEmpty()
+		    || !fName.endsWith(".pdb", Qt::CaseInsensitive)) {
 			continue;
 		}
-		MolecularTrajectory tmpTrj;
-		auto fileNamePtr =
-			std::make_shared<std::string>(fileName.toStdString());
-		tmpTrj.setTopology(fileNamePtr);
-		if (tmpTrj.addPdbChunk(fileNamePtr)) {
-			tmpTrajVec.push_back(tmpTrj);
-		}
-		progress.setValue(i);
+		tmpTrajVec.push_back(
+			MolecularTrajectory::fromPdb(fName.toStdString()));
+		progress.setValue(tmpTrajVec.size());
 	}
+	progress.setValue(rawSize);
 
-	// insert Rows
-	const int size = tmpTrajVec.size();
-	progress.setLabelText("Inserting rows");
-	progress.setValue(0);
-	progress.setMaximum(size);
-
-	const int firstTraj = _molTrajs.size();
-	const int lastTraj = _molTrajs.size() + size - 1;
-	beginInsertRows(QModelIndex(), firstTraj, lastTraj);
-	_molTrajs.append(std::move(tmpTrajVec));
-	endInsertRows();
-
-	// evaluate
-	progress.setLabelText("Submitting jobs");
-	progress.setValue(0);
-	progress.setMaximum(size);
-
-	std::set<EvalId> evIds;
-	for (const CalcColumn &cc : _columns) {
-		EvalId evId = cc.first;
-		evIds.emplace(evId);
-	}
-	for (int i = firstTraj; i <= lastTraj; ++i) {
-		_storage.evaluate(
-			_molTrajs[i].descriptor(0, 0),
-			std::vector<EvalId>(evIds.begin(), evIds.end()));
-		progress.setValue(i - firstTraj);
-	}
-	progress.setValue(size);
+	loadTrajectories(std::move(tmpTrajVec));
 }
 
 void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream &out) const

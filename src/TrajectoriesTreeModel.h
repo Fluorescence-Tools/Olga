@@ -40,7 +40,7 @@ public:
 	int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
 	bool loadSystem(const QString &fileName);
-	void loadSystems(const QStringList &fileNames);
+	void loadPdbs(const QStringList &fileNames);
 	bool exportSystem(int row, const QString &filename)
 	{
 		(void)row;
@@ -118,6 +118,8 @@ private:
 	calculate(const FrameDescriptor desc,
 		  const std::shared_ptr<AbstractEvaluator> calc) const;
 	// pteros::System system(const FrameDescriptor &desc) const;
+	void loadTrajectories(QVector<MolecularTrajectory> trajVec);
+
 private:
 	QVector<MolecularTrajectory> _molTrajs;
 	mutable std::unordered_set<TrajectoriesTreeItem> items;
