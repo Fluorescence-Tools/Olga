@@ -1,9 +1,9 @@
 #include "MolecularTrajectory.h"
 
+
 MolecularTrajectory::MolecularTrajectory()
 {
 }
-
 MolecularTrajectory MolecularTrajectory::fromPdb(const std::string &fileName)
 {
 	MolecularTrajectory tr;
@@ -24,4 +24,19 @@ MolecularTrajectory::fromPdbs(const std::vector<std::string> &fileNames)
 		trajectories.emplace_back(fromPdb(fName));
 	}
 	return trajectories;
+}
+
+MolecularTrajectory MolecularTrajectory::fromDcd(const std::string &topPath,
+						 const std::string &trajPath,
+						 int numFrames)
+{
+	MolecularTrajectory tr;
+	auto topPathPtr = std::make_shared<std::string>(topPath);
+	auto trajPathPtr = std::make_shared<std::string>(trajPath);
+	tr.setTopology(topPathPtr);
+	Chunk c;
+	c.fileName = std::move(trajPathPtr);
+	c.frameCount = numFrames;
+	tr._chunks.emplace_back(std::move(c));
+	return tr;
 }

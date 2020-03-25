@@ -19,6 +19,7 @@ else:unix: LIBS += -L$$OUT_PWD/../irmsd/ -lirmsd
 RESOURCES += icons.qrc
 
 FORMS += \
+    loadtrajectorydialog.ui \
     mainwindow.ui \
     BatchLPDialog.ui \
     BatchDistanceDialog.ui \
@@ -26,6 +27,7 @@ FORMS += \
     BatchFretEfficiencyDialog.ui
 
 HEADERS += \
+    loadtrajectorydialog.h \
     mainwindow.h \
     Q_DebugStream.h \
     EvaluatorSphereAVOverlap.h \
@@ -72,6 +74,7 @@ HEADERS += \
     polynomial.hpp
 
 SOURCES += \
+    loadtrajectorydialog.cpp \
     main.cpp \
     mainwindow.cpp \
     EvaluatorSphereAVOverlap.cpp \

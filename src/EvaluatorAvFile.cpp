@@ -28,10 +28,11 @@ EvaluatorAvFile::makeTask(const FrameDescriptor &frame) const noexcept
 {
 	Task av = getTask(frame, _av, false);
 	std::string trajFname = frame.trajFileName();
+	const unsigned iFrame = frame.frame();
 	std::string posName = _storage.eval(_av).name();
 	using result_t = Task;
 	return av
-		.then([this, trajFname, posName](result_t result) {
+		.then([this, trajFname, posName, iFrame](result_t result) {
 			if (!result.valid()) {
 				auto res = std::make_shared<CalcResult<bool>>(
 					false);
@@ -56,6 +57,9 @@ EvaluatorAvFile::makeTask(const FrameDescriptor &frame) const noexcept
 					+ trajInfo.baseName().toStdString()
 					+ "_" + stripSpecial(posName);
 			}
+			if (iFrame > 0) {
+				fname += "_" + std::to_string(iFrame);
+			}
 			QFileInfo fileInfo(QString::fromStdString(fname));
 			if (QFileInfo(fileInfo.absolutePath()).isFile()) {
 				std::cerr << _writeDirPath
@@ -65,7 +69,9 @@ EvaluatorAvFile::makeTask(const FrameDescriptor &frame) const noexcept
 				return std::shared_ptr<AbstractCalcResult>(res);
 			}
 			if (!fileInfo.absoluteDir().exists()) {
-				std::cout<<_writeDirPath+" does not exist, creating.\n";
+				std::cout
+					<< _writeDirPath
+						   + " does not exist, creating.\n";
 				QDir().mkpath(fileInfo.absolutePath());
 			}
 			return calculate(av, fname);

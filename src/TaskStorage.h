@@ -22,6 +22,11 @@
 
 #include <libcuckoo/cuckoohash_map.hh>
 
+// TODO: remove this. Added for compatibility with older versions of libcuckoo.
+namespace libcuckoo
+{
+}
+using namespace libcuckoo;
 template <typename K, typename V>
 using CuckooMap = cuckoohash_map<K, V, std::hash<K>>;
 class AbstractEvaluator;
@@ -97,6 +102,8 @@ public:
 	void setResults(const std::string &fName,
 			const std::vector<FrameDescriptor> &frames);
 	const PterosSysTask &getSysTask(const FrameDescriptor &frame) const;
+	async::task<int> numFrames(const std::string &topPath,
+				   const std::string &trajPath) const;
 	std::string getColumnName(const EvalId &id, int col) const;
 	const AbstractEvaluator &eval(EvalId id) const
 	{
@@ -307,7 +314,7 @@ private:
 	PterosSystemLoader _systemLoader;
 
 	std::unordered_map<std::string, EvalId> _evalNames; // main thread
-	std::unordered_map<EvalId, EvalUPtr> _evals;	// main thread
+	std::unordered_map<EvalId, EvalUPtr> _evals;	    // main thread
 	std::vector<EvalUPtr> _removedEvals;
 	EvalId _currentId;   // main thread
 	EvalId _maxStubEval; // main thread

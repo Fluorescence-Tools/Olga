@@ -10,6 +10,7 @@
 #include "BatchDistanceDialog.h"
 #include "BatchFretEfficiencyDialog.h"
 #include "GetInformativePairsDialog.h"
+#include "loadtrajectorydialog.h"
 #include "EvaluatorFretEfficiency.h"
 #include "CalcResult.h"
 
@@ -471,6 +472,23 @@ void MainWindow::loadPdbsDialog()
 		tr("Protein Data Bank (*.pdb)"));
 	loadPdbs(fileNames);
 	// ui->mainTreeView->resizeColumnsToContents();
+}
+
+void MainWindow::loadTrajDialog()
+{
+	LoadTrajectoryDialog dialog(this);
+	if (!dialog.exec()) {
+		return;
+	}
+	auto pause = _storage.pause();
+
+	const std::string &topPath = dialog.topologyPath().toStdString();
+	const std::string &trajPath = dialog.trajectoryPath().toStdString();
+
+	trajectoriesModel.loadDcd(topPath, trajPath);
+	const int numFrames = _storage.numFrames(topPath, trajPath).get();
+
+	statusBar()->showMessage(tr("Loaded %1 frames").arg(numFrames), 5000);
 }
 
 void MainWindow::loadStructuresFolder()

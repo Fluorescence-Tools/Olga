@@ -33,6 +33,7 @@ protected:
 
 private Q_SLOTS:
 	void loadPdbsDialog();
+	void loadTrajDialog();
 	void loadStructuresFolder();
 	void metropolisSampling();
 	void loadEvaluators();

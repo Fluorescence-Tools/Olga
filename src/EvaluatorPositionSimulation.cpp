@@ -7,8 +7,8 @@ EvaluatorPositionSimulation::calculate(const pteros::System &system,
 {
 	PositionSimulationResult res = _position.calculate(system);
 	if (res.empty()) {
-		std::cerr << frame.fullName() + " simulation "
-				     + _position.name() + " failed: empty AV\n";
+		std::cerr << "Simulation failed, empty AV: " + _position.name()
+				     + ", " + frame.fullName();
 		// std::cerr.flush();
 	}
 	/*std::string fname=_position.name();

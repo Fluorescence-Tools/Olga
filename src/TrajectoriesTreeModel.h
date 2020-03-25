@@ -39,8 +39,8 @@ public:
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
-	bool loadSystem(const QString &fileName);
 	void loadPdbs(const QStringList &fileNames);
+	void loadDcd(const std::string &topPath, const std::string &trajPath);
 	bool exportSystem(int row, const QString &filename)
 	{
 		(void)row;
@@ -118,10 +118,10 @@ private:
 	calculate(const FrameDescriptor desc,
 		  const std::shared_ptr<AbstractEvaluator> calc) const;
 	// pteros::System system(const FrameDescriptor &desc) const;
-	void loadTrajectories(QVector<MolecularTrajectory> trajVec);
+	void loadTrajectories(std::vector<MolecularTrajectory> trajVec);
 
 private:
-	QVector<MolecularTrajectory> _molTrajs;
+	std::vector<MolecularTrajectory> _molTrajs;
 	mutable std::unordered_set<TrajectoriesTreeItem> items;
 	using CalcColumn = std::pair<EvalId, int>; // EvId,calcCol
 	std::vector<CalcColumn> _columns;

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LoadTrajectoryDialog</class>
+ <widget class="QDialog" name="LoadTrajectoryDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>325</width>
+    <height>126</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Load molecular trajectory</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Topology</string>
+     </property>
+     <property name="buddy">
+      <cstring>topologyLineEdit</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLineEdit" name="topologyLineEdit"/>
+   </item>
+   <item row="0" column="2">
+    <widget class="QPushButton" name="topologyBrowseButton">
+     <property name="text">
+      <string>Browse</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Trajectory</string>
+     </property>
+     <property name="buddy">
+      <cstring>trajectoryLineEdit</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="trajectoryLineEdit"/>
+   </item>
+   <item row="1" column="2">
+    <widget class="QPushButton" name="trajectoryBrowseButton">
+     <property name="text">
+      <string>Browse</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="3">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>topologyLineEdit</tabstop>
+  <tabstop>topologyBrowseButton</tabstop>
+  <tabstop>trajectoryLineEdit</tabstop>
+  <tabstop>trajectoryBrowseButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>LoadTrajectoryDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>254</x>
+     <y>119</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>LoadTrajectoryDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>318</x>
+     <y>119</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>topologyBrowseButton</sender>
+   <signal>pressed()</signal>
+   <receiver>LoadTrajectoryDialog</receiver>
+   <slot>browseTopology()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>26</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>230</x>
+     <y>8</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>trajectoryBrowseButton</sender>
+   <signal>pressed()</signal>
+   <receiver>LoadTrajectoryDialog</receiver>
+   <slot>browseTrajectory()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>288</x>
+     <y>68</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>230</x>
+     <y>64</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>browseTrajectory()</slot>
+  <slot>browseTopology()</slot>
+ </slots>
+</ui>

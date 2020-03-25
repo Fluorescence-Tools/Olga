@@ -37,10 +37,8 @@ TrajectoriesTreeModel::TrajectoriesTreeModel(const TaskStorage &storage,
 		QTime runningTime;
 		runningTime.start();
 		auto pause = _storage.pause();
-		for (const MolecularTrajectory &mt :
-		     _molTrajs) // iterate over all frames in
-				// trajectories
-		{
+		// iterate over all frames in trajectories
+		for (const MolecularTrajectory &mt : _molTrajs) {
 			for (int trajIdx = 0; trajIdx < mt.chunkCount();
 			     ++trajIdx) {
 				for (int frIdx = 0;
@@ -194,34 +192,8 @@ int TrajectoriesTreeModel::columnCount(const QModelIndex & /*parent*/) const
 	return _columns.size() + 1;
 }
 
-bool TrajectoriesTreeModel::loadSystem(const QString &fileName)
-{
-	if (fileName.isEmpty()) {
-		return false;
-	}
-	MolecularTrajectory tmpTrj;
-	auto fileNamePtr =
-		std::make_shared<std::string>(fileName.toStdString());
-	tmpTrj.setTopology(fileNamePtr);
-	if (tmpTrj.addPdbChunk(fileNamePtr)) {
-		beginInsertRows(QModelIndex(), _molTrajs.size(),
-				_molTrajs.size());
-		_molTrajs.push_back(tmpTrj);
-		endInsertRows();
-		std::set<EvalId> evIds;
-		for (const CalcColumn &cc : _columns) {
-			EvalId evId = cc.first;
-			evIds.emplace(evId);
-		}
-		_storage.evaluate(
-			tmpTrj.descriptor(0, 0),
-			std::vector<EvalId>(evIds.begin(), evIds.end()));
-		return true;
-	}
-	return false;
-}
 void TrajectoriesTreeModel::loadTrajectories(
-	QVector<MolecularTrajectory> trajVec)
+	std::vector<MolecularTrajectory> trajVec)
 {
 	int numFrames = 0;
 	for (const MolecularTrajectory &tr : trajVec) {
@@ -236,7 +208,8 @@ void TrajectoriesTreeModel::loadTrajectories(
 	const int firstTraj = _molTrajs.size();
 	const int lastTraj = _molTrajs.size() + numTraj - 1;
 	beginInsertRows(QModelIndex(), firstTraj, lastTraj);
-	_molTrajs.append(std::move(trajVec));
+	std::move(trajVec.begin(), trajVec.end(),
+		  std::back_inserter(_molTrajs));
 	endInsertRows();
 
 	// evaluate
@@ -270,18 +243,40 @@ void TrajectoriesTreeModel::loadPdbs(const QStringList &fileNames)
 	progress.setWindowModality(Qt::ApplicationModal);
 
 	// prepare trajectories
-	QVector<MolecularTrajectory> tmpTrajVec;
+	std::vector<MolecularTrajectory> tmpTrajVec;
 	for (const QString &fName : fileNames) {
 		if (fName.isEmpty()
 		    || !fName.endsWith(".pdb", Qt::CaseInsensitive)) {
 			continue;
 		}
-		tmpTrajVec.push_back(
+		tmpTrajVec.emplace_back(
 			MolecularTrajectory::fromPdb(fName.toStdString()));
 		progress.setValue(tmpTrajVec.size());
 	}
 	progress.setValue(rawSize);
 
+	loadTrajectories(std::move(tmpTrajVec));
+}
+
+void TrajectoriesTreeModel::loadDcd(const std::string &topPath,
+				    const std::string &trajPath)
+{
+	async::task<int> numFrames = _storage.numFrames(topPath, trajPath);
+	QProgressDialog dlg;
+	dlg.setLabelText("Loading trajectory...");
+	dlg.setRange(0, 0);
+	dlg.setWindowModality(Qt::WindowModal);
+	dlg.show();
+	while (!numFrames.ready()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		QCoreApplication::processEvents();
+	}
+	dlg.close();
+
+	MolecularTrajectory mt = MolecularTrajectory::fromDcd(topPath, trajPath,
+							      numFrames.get());
+	std::vector<MolecularTrajectory> tmpTrajVec;
+	tmpTrajVec.emplace_back(std::move(mt));
 	loadTrajectories(std::move(tmpTrajVec));
 }
 
@@ -338,7 +333,7 @@ QString TrajectoriesTreeModel::frameName(const TrajectoriesTreeItem *parent,
 		name = QFileInfo(name).fileName();
 		break;
 	case 2:
-		return QString("#%1").arg(row);
+		return QString("%1").arg(row);
 		break;
 	case 1:
 		name = QString::fromStdString(
@@ -378,7 +373,8 @@ TrajectoriesTreeModel::frameDescriptor(const TrajectoriesTreeItem *parent,
 		break;
 	case 2:
 		top = _molTrajs[parent->moltrajIndex].topologyFileName();
-		traj = _molTrajs[parent->moltrajIndex].trajectoryFileName(row);
+		traj = _molTrajs[parent->moltrajIndex].trajectoryFileName(
+			parent->trajindex);
 		frame = row;
 		break;
 	default:

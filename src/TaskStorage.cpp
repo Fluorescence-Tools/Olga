@@ -412,6 +412,12 @@ TaskStorage::getSysTask(const FrameDescriptor &frame) const
 	}
 }
 
+async::task<int> TaskStorage::numFrames(const std::string &topPath,
+					const std::string &trajPath) const
+{
+	return _systemLoader.numFrames(topPath, trajPath);
+}
+
 std::string TaskStorage::getColumnName(const EvalId &id, int col) const
 {
 	return eval(id).columnName(col);

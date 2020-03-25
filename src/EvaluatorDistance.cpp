@@ -7,7 +7,16 @@ EvaluatorDistance::EvaluatorDistance(const TaskStorage &storage,
     : AbstractEvaluator(storage), _av1(av1), _av2(av2), _dist(dist)
 {
 }
-
+void handle_eptr(std::exception_ptr eptr) // passing by value is ok
+{
+	try {
+		if (eptr) {
+			std::rethrow_exception(eptr);
+		}
+	} catch (const std::exception &e) {
+		std::cout << std::string("Caught exception:") + e.what() + "\n";
+	}
+}
 AbstractEvaluator::Task
 EvaluatorDistance::makeTask(const FrameDescriptor &frame) const noexcept
 {
@@ -23,7 +32,8 @@ EvaluatorDistance::makeTask(const FrameDescriptor &frame) const noexcept
 	using result_t = std::tuple<Task, Task>;
 	return async::when_all(av1, av2)
 		.then([this](result_t result) {
-			auto ptrAv1 = std::get<0>(result).get();
+			const Task &av1task = std::get<0>(result);
+			auto ptrAv1 = av1task.get();
 			auto ptrAv2 = std::get<1>(result).get();
 			auto resAv1 = dynamic_cast<
 				CalcResult<PositionSimulationResult> *>(

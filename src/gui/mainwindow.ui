@@ -290,6 +290,7 @@
      <string>File</string>
     </property>
     <addaction name="actionLoadStructures"/>
+    <addaction name="actionImportTrajectory"/>
     <addaction name="actionLoadSettings"/>
     <addaction name="actionSaveSettings"/>
     <addaction name="actionExportData"/>
@@ -555,6 +556,11 @@
    </property>
    <property name="toolTip">
     <string>Show documentation page</string>
+   </property>
+  </action>
+  <action name="actionImportTrajectory">
+   <property name="text">
+    <string>Import trajectory</string>
    </property>
   </action>
  </widget>
@@ -863,6 +869,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionExportStructures</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>loadTrajDialog()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>356</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionImportTrajectory</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>loadTrajDialog()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>356</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>loadEvaluators()</slot>
@@ -884,5 +922,6 @@
   <slot>loadResults()</slot>
   <slot>showDocumentation()</slot>
   <slot>loadPdbsDialog()</slot>
+  <slot>loadTrajDialog()</slot>
  </slots>
 </ui>
