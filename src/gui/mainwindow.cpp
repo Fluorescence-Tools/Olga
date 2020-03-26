@@ -32,8 +32,9 @@
 #include "Q_DebugStream.h"
 
 
-MainWindow::MainWindow(const QString json, const QString pdbsDir,
-		       const QString csvOut, const QString dumpJsonPath,
+MainWindow::MainWindow(const QString json, const QString csvOut,
+		       const QString trajPath, const QString topPath,
+		       const QString pdbsDir, const QString dumpJsonPath,
 		       int numSelPairs, const QString selPairsPath, float err,
 		       QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -113,6 +114,10 @@ MainWindow::MainWindow(const QString json, const QString pdbsDir,
 	}
 	if (pdbsDir.size() > 0) {
 		loadStructuresFolder(pdbsDir);
+	}
+	if (topPath.size() > 0 && trajPath.size() > 0) {
+		trajectoriesModel.loadDcd(topPath.toStdString(),
+					  trajPath.toStdString());
 	}
 	if (numSelPairs > 0) {
 		autoSelectPairs(numSelPairs, err, selPairsPath);

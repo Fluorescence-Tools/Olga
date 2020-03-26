@@ -29,15 +29,17 @@ int main(int argc, char *argv[])
 	QCommandLineParser parser;
 	parser.addOptions({
 		{"dir", "directory to load PDB files from", "path"},
+		{"traj", "trajectory file", "path"},
+		{"top", "topology file", "path"},
 		{{"j", "json"},
 		 "setting file describing labelig positions and distances",
-	         "path"},
-	        {{"o", "out"}, "results .dat filename", "path"},
+		 "path"},
+		{{"o", "out"}, "results .dat filename", "path"},
 		{"savejson", "save generated evaluators", "path"},
-	        {"numpairs", "number of pairs to select", "integer"},
-	        {"err", "Efficiency error to assume for pair selection",
-	         "float"},
-	        {"savepairs", "save selected pairs", "path"},
+		{"numpairs", "number of pairs to select", "integer"},
+		{"err", "Efficiency error to assume for pair selection",
+		 "float"},
+		{"savepairs", "save selected pairs", "path"},
 	});
 	QCommandLineOption quietOption("quiet", "quiet");
 	parser.addOption(quietOption);
@@ -45,22 +47,24 @@ int main(int argc, char *argv[])
 
 	QString settingsFileName = parser.value("j");
 	QString pdbsDirPath = parser.value("dir");
+	QString trajPath = parser.value("traj");
+	QString topPath = parser.value("top");
 	QString resultsFileName = parser.value("o");
 	bool quiet = parser.isSet(quietOption);
 	QString savejson = parser.value("savejson");
 	int numSelPairs = parser.value("numpairs").toInt();
 	float err = parser.value("err").toFloat();
 	QString pairsPath = parser.value("savepairs");
-	MainWindow w(settingsFileName, pdbsDirPath, resultsFileName, savejson,
-	             numSelPairs, pairsPath, err);
+	MainWindow w(settingsFileName, resultsFileName, trajPath, topPath,
+		     pdbsDirPath, savejson, numSelPairs, pairsPath, err);
 	try {
 		if (!quiet) {
 			w.show();
 		} else {
 			QObject stub;
 			QObject::connect(&stub, &QObject::destroyed, &a,
-			                 &QCoreApplication::quit,
-			                 Qt::QueuedConnection);
+					 &QCoreApplication::quit,
+					 Qt::QueuedConnection);
 		}
 		return a.exec();
 	} catch (std::exception &e) {
