@@ -21,7 +21,7 @@ build-ubuntu:
 
 build-win64:
   stage: compile
-  image: burningdaylight/docker-mingw-qt5:20181109
+  image: burningdaylight/mingw-arch-mol
   script:
     - mkdir -p ${CI_BUILD_NAME}
     - rm -f ${CI_BUILD_NAME}/src/gui/release/Olga.exe ${CI_BUILD_NAME}/src/gui/release/main.o
@@ -39,7 +39,7 @@ build-win64:
 
 build-win32:
   stage: compile
-  image: burningdaylight/docker-mingw-qt5:20181109
+  image: burningdaylight/mingw-arch-mol
   script:
     - mkdir -p ${CI_BUILD_NAME}
     - rm -f ${CI_BUILD_NAME}/src/gui/release/Olga.exe ${CI_BUILD_NAME}/src/gui/release/main.o;
@@ -70,7 +70,7 @@ pack-ubuntu:
 
 pack-win64:
   stage: package
-  image: burningdaylight/docker-mingw-qt5:20181109
+  image: burningdaylight/mingw-arch-mol
   script:
     - ./src/pack_mingw.sh build-win64 /usr/x86_64-w64-mingw32 Olga
   dependencies:
@@ -84,7 +84,7 @@ pack-win64:
 
 pack-win32:
   stage: package
-  image: burningdaylight/docker-mingw-qt5:20181109
+  image: burningdaylight/mingw-arch-mol
   script:
     - ./src/pack_mingw.sh build-win32 /usr/i686-w64-mingw32 Olga
   dependencies:

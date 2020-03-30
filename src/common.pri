@@ -22,7 +22,8 @@ CONFIG(release, debug|release): DEFINES+=NDEBUG
 QMAKE_CXXFLAGS += -std=c++14 -fext-numeric-literals -Wextra -Winit-self -Wold-style-cast \
 -Woverloaded-virtual -Wuninitialized -Winit-self -pedantic-errors -Wno-attributes #-Werror
 
-LIBS += -lasync++ -lpteros -lpteros_analysis -ltng_io
+LIBS += -lasync++ -lpteros
+!system("grep Ubuntu /etc/os-release -q"): LIBS += -lspdlog -lfmt
 
 INCLUDEPATH += $$PWD
 VPATH += $$PWD

@@ -12,7 +12,8 @@ else:unix: LIBS += -L$$OUT_PWD/../irmsd/ -lirmsd
 
 win32: QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_SSE3
 
-LIBS += -lpteros -lpteros_analysis -ltng_io
+LIBS += -lpteros
+!system("grep Ubuntu /etc/os-release -q"): LIBS += -lspdlog -lfmt
 
 SOURCES += \
         main.cpp

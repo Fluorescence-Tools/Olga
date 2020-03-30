@@ -26,7 +26,6 @@ chmod +x "${DESTDIR}"/Olga.sh
 cp "${BUILDDIR}/src/gui/Olga" "${DESTDIR}"/
 cp "${BUILDDIR}/src/irmsd/libirmsd.so.1.0.0" "${DESTDIR}"/libirmsd.so.1
 
-cp /usr/lib/libsasa.so "${DESTDIR}"/
 cp /usr/lib/libtng_io.so "${DESTDIR}"/
 cp /usr/lib/libtng_io.so.1 "${DESTDIR}"/
 cp /usr/lib/libasync++.so "${DESTDIR}"/
