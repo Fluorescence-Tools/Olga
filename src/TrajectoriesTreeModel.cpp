@@ -261,20 +261,26 @@ void TrajectoriesTreeModel::loadPdbs(const QStringList &fileNames)
 void TrajectoriesTreeModel::loadDcd(const std::string &topPath,
 				    const std::string &trajPath)
 {
-	async::task<int> numFrames = _storage.numFrames(topPath, trajPath);
+	async::task<int> numFramesTsk = _storage.numFrames(topPath, trajPath);
 	QProgressDialog dlg;
 	dlg.setLabelText("Loading trajectory...");
 	dlg.setRange(0, 0);
 	dlg.setWindowModality(Qt::WindowModal);
 	dlg.show();
-	while (!numFrames.ready()) {
+	while (!numFramesTsk.ready()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		QCoreApplication::processEvents();
 	}
 	dlg.close();
+	const int numFrames = numFramesTsk.get();
+	if (numFrames == 0) {
+		std::cerr << "ERROR! Empty trajectory " + trajPath + "\n"
+			  << std::flush;
+		return;
+	}
 
-	MolecularTrajectory mt = MolecularTrajectory::fromDcd(topPath, trajPath,
-							      numFrames.get());
+	MolecularTrajectory mt =
+		MolecularTrajectory::fromDcd(topPath, trajPath, numFrames);
 	std::vector<MolecularTrajectory> tmpTrajVec;
 	tmpTrajVec.emplace_back(std::move(mt));
 	loadTrajectories(std::move(tmpTrajVec));
