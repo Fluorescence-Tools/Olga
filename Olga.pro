@@ -20,6 +20,7 @@ DISTFILES += \
     src/pack_mingw.sh \
     src/pack_ubuntu.sh \
     .clang-format \
+    src/qt_c_code-style_linux-kernel.xml \
     src/vdWRadii.json \
     src/weighting_function.csv \
     README.md \
