@@ -18,8 +18,11 @@ mkdir -p "${DESTDIR}"
 
 cat << EOF > "${DESTDIR}"/Olga.sh
 #!/bin/bash
-export LD_LIBRARY_PATH=./
-./Olga "\$@"
+#Depends on boost and qt5. On ubuntu dependencies can be installed via:
+#sudo apt-get install libboost-system1.71 libboost-date-time1.71 libgomp1 qt5-default
+export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:./
+SCRPTDIR="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+"$SCRPTDIR/Olga" "\$@"
 EOF
 chmod +x "${DESTDIR}"/Olga.sh
 

@@ -76,6 +76,9 @@ MainWindow::MainWindow(const QString json, const QString csvOut,
 
 	setupMenus();
 
+	const QString verHash =
+		QCoreApplication::applicationVersion().split('-').last();
+
 	ui->statusBar->addPermanentWidget(&tasksStatus);
 	const int timerInterval = 5000;
 	QTimer *timer = new QTimer(this);
@@ -89,11 +92,12 @@ MainWindow::MainWindow(const QString json, const QString csvOut,
 		tasksPendindOld = tasksPending;
 
 		QString message =
-			QString("Tasks pending/ready/running: %1/%2/%3; ETA: ")
+			QString("v. #%1 | Tasks pending/ready/running: %2/%3/%4; ETA: %5")
+				.arg(verHash)
 				.arg(tasksPending)
 				.arg(trajectoriesModel.resultsCount())
 				.arg(trajectoriesModel.tasksRunningCount())
-			+ timespan(ETA);
+				.arg(timespan(ETA));
 		tasksStatus.setText(message);
 		ui->mainTreeView->viewport()->update();
 	});

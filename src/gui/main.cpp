@@ -27,19 +27,21 @@ int main(int argc, char *argv[])
 	QApplication a(argc, argv);
 	a.setApplicationVersion(APP_VERSION);
 	QCommandLineParser parser;
+	parser.addHelpOption();
+	parser.addVersionOption();
 	parser.addOptions({
-		{"dir", "directory to load PDB files from", "path"},
-		{"traj", "trajectory file", "path"},
-		{"top", "topology file", "path"},
+		{"dir", "Directory to load PDB files from", "path"},
+		{"traj", "Trajectory file", "path"},
+		{"top", "Topology file", "path"},
 		{{"j", "json"},
-		 "setting file describing labelig positions and distances",
+		 "Settings file with labelig positions, distances, etc.",
 		 "path"},
-		{{"o", "out"}, "results .dat filename", "path"},
-		{"savejson", "save generated evaluators", "path"},
-		{"numpairs", "number of pairs to select", "integer"},
+		{{"o", "out"}, "File to save results in (.dat)", "path"},
+		{"savejson", "Save generated evaluators", "path"},
+		{"numpairs", "Number of pairs to select", "integer"},
 		{"err", "Efficiency error to assume for pair selection",
 		 "float"},
-		{"savepairs", "save selected pairs", "path"},
+		{"savepairs", "Save selected pairs", "path"},
 	});
 	QCommandLineOption noguiOption("nogui",
 				       "Don't show the main window GUI");
