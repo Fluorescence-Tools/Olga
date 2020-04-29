@@ -41,8 +41,9 @@ int main(int argc, char *argv[])
 		 "float"},
 		{"savepairs", "save selected pairs", "path"},
 	});
-	QCommandLineOption quietOption("quiet", "quiet");
-	parser.addOption(quietOption);
+	QCommandLineOption noguiOption("nogui",
+				       "Don't show the main window GUI");
+	parser.addOption(noguiOption);
 	parser.process(a);
 
 	QString settingsFileName = parser.value("j");
@@ -50,7 +51,7 @@ int main(int argc, char *argv[])
 	QString trajPath = parser.value("traj");
 	QString topPath = parser.value("top");
 	QString resultsFileName = parser.value("o");
-	bool quiet = parser.isSet(quietOption);
+	bool nogui = parser.isSet(noguiOption);
 	QString savejson = parser.value("savejson");
 	int numSelPairs = parser.value("numpairs").toInt();
 	float err = parser.value("err").toFloat();
@@ -58,7 +59,7 @@ int main(int argc, char *argv[])
 	MainWindow w(settingsFileName, resultsFileName, trajPath, topPath,
 		     pdbsDirPath, savejson, numSelPairs, pairsPath, err);
 	try {
-		if (!quiet) {
+		if (!nogui) {
 			w.show();
 		} else {
 			QObject stub;
