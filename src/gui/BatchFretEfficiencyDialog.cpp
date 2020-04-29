@@ -55,6 +55,7 @@ void BatchFretEfficiencyDialog::accept()
 	const long numEffs = ui->lpList1->count() * ui->lpList2->count() / 2;
 	QProgressDialog addProgress("Creating efficiencies...", QString(), 0,
 				    numEffs, this);
+	addProgress.setWindowTitle("Creating efficiencies...");
 	addProgress.setWindowModality(Qt::WindowModal);
 	addProgress.setMinimumDuration(10);
 	addProgress.setValue(0);

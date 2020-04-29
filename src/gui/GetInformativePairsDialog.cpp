@@ -12,7 +12,7 @@
 
 GetInformativePairsDialog::GetInformativePairsDialog(
 	QWidget *parent, const std::vector<FrameDescriptor> &frames,
-        const Eigen::MatrixXf &effs, const std::vector<std::string> &evalNames)
+	const Eigen::MatrixXf &effs, const std::vector<std::string> &evalNames)
     : QDialog(parent), frames(frames), effs(effs), evalNames(evalNames),
       ui(new Ui::GetInformativePairsDialog)
 {
@@ -55,7 +55,7 @@ GetInformativePairsDialog::buildTrajectory(const std::string &sel) const
 			traj.frame_append(system.frame(0));
 		} else {
 			std::cerr
-			        << "ERROR! Number of atoms does not match "
+				<< "ERROR! Number of atoms does not match "
 					   + fr.topologyFileName() + " atoms: "
 					   + std::to_string(system.num_atoms())
 					   + "/"
@@ -67,9 +67,9 @@ GetInformativePairsDialog::buildTrajectory(const std::string &sel) const
 	}
 	if (numFrames != traj.num_frames()) {
 		std::cerr << "ERROR! loaded "
-		                     + std::to_string(traj.num_frames())
-		                     + " out of " + std::to_string(numFrames)
-		                     + " frames for pair selection.\n"
+				     + std::to_string(traj.num_frames())
+				     + " out of " + std::to_string(numFrames)
+				     + " frames for pair selection.\n"
 			  << std::flush;
 	}
 	return traj;
@@ -95,18 +95,18 @@ void GetInformativePairsDialog::accept()
 	const size_t numFrames = traj.num_frames();
 	if (numFrames < 2) {
 		std::cerr
-		        << "ERROR! Number of frames in trajectory is less than 2!";
+			<< "ERROR! Number of frames in trajectory is less than 2!";
 		return;
 	}
 	if (numFrames != effs.rows()) {
 		std::cerr
-		        << "ERROR! Number of frames in trajectory does not match the number of rows in Efficiency matrix!";
+			<< "ERROR! Number of frames in trajectory does not match the number of rows in Efficiency matrix!";
 		return;
 	}
 
 	MatrixXf RMSDs;
 	showProgress("Calculating RMSD...",
-	             [&] { RMSDs = rmsd2d(traj, fracDone); });
+		     [&] { RMSDs = rmsd2d(traj, fracDone); });
 
 	if (RMSDs.hasNaN()) {
 		std::cerr << "RMSDs has NaN!\n" << std::flush;
@@ -132,7 +132,7 @@ void GetInformativePairsDialog::accept()
 	std::string report = "#\tPair_added\t<<RMSD>>/A\n";
 	for (int i = 0; i < pairIdxs.size(); ++i) {
 		report += std::to_string(i + 1) + "\t" + pairNames[pairIdxs[i]]
-		          + "\t" + std::to_string(rmsdAve[i]) + "\n";
+			  + "\t" + std::to_string(rmsdAve[i]) + "\n";
 	}
 
 	if (pairIdxs.size() == 0) {
@@ -171,6 +171,7 @@ void GetInformativePairsDialog::showProgress(const QString &title,
 {
 	fracDone = 0.0f;
 	QProgressDialog dialog(title, QString(), 0, 1000, this);
+	dialog.setWindowTitle(title);
 	dialog.setWindowModality(Qt::WindowModal);
 	dialog.setMinimumDuration(0);
 	auto f = std::async(std::launch::async, func);

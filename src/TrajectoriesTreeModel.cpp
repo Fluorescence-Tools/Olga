@@ -200,6 +200,7 @@ void TrajectoriesTreeModel::loadTrajectories(
 		numFrames += tr.totalFrameCount();
 	}
 	QProgressDialog progress("Submitting jobs...", "Cancel", 0, numFrames);
+	progress.setWindowTitle("Submitting jobs...");
 	progress.setWindowModality(Qt::ApplicationModal);
 	progress.setValue(0);
 
@@ -240,6 +241,7 @@ void TrajectoriesTreeModel::loadPdbs(const QStringList &fileNames)
 
 	const int rawSize = fileNames.size();
 	QProgressDialog progress("Checking files...", "Cancel", 0, rawSize);
+	progress.setWindowTitle("Checking files...");
 	progress.setWindowModality(Qt::ApplicationModal);
 
 	// prepare trajectories
@@ -264,9 +266,11 @@ void TrajectoriesTreeModel::loadDcd(const std::string &topPath,
 	async::task<int> numFramesTsk = _storage.numFrames(topPath, trajPath);
 	QProgressDialog dlg;
 	dlg.setLabelText("Loading trajectory...");
+	dlg.setWindowTitle("Loading trajectory...");
 	dlg.setRange(0, 0);
 	dlg.setWindowModality(Qt::WindowModal);
 	dlg.show();
+	dlg.setCancelButton(0);
 	while (!numFramesTsk.ready()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		QCoreApplication::processEvents();
@@ -297,7 +301,16 @@ void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream &out) const
 		out << "\t" + headerData(c, Qt::Horizontal).toString();
 	}
 	out << "\n";
+
+	QProgressDialog progress("Saving results...", "Cancel", 0,
+				 indexes.size());
+	progress.setWindowModality(Qt::ApplicationModal);
+	progress.setWindowTitle("Saving results...");
+	progress.setValue(0);
 	for (const auto &idx : indexes) {
+		if (progress.wasCanceled()) {
+			break;
+		}
 		TrajectoriesTreeItem *parentItem;
 		parentItem = static_cast<TrajectoriesTreeItem *>(
 			idx.internalPointer());
@@ -311,7 +324,9 @@ void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream &out) const
 			out << data(idx.sibling(idx.row(), c)).toString();
 		}
 		out << "\n";
+		progress.setValue(progress.value() + 1);
 	}
+	progress.setValue(indexes.size());
 }
 
 const TrajectoriesTreeItem *

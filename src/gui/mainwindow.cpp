@@ -320,6 +320,8 @@ void MainWindow::loadStructuresFolder(const QString &path)
 	QStringList fileNames = dir.entryList({"*.pdb"});
 	const int size = fileNames.size();
 	QProgressDialog progress("Listing files...", QString(), 0, size, this);
+	progress.setWindowTitle("Listing files...");
+
 	progress.setWindowModality(Qt::WindowModal);
 	for (int i = 0; i < size; ++i) {
 		auto &s = fileNames[i];
@@ -872,6 +874,7 @@ void MainWindow::getInfromativePairs(int numPairs, float err,
 	const int tasksCount = _storage.tasksPendingCount() + 1;
 	QProgressDialog progress("Calculating efficiencies...", QString(), 0,
 				 tasksCount, this);
+	progress.setWindowTitle("Calculating efficiencies...");
 	progress.setWindowModality(Qt::WindowModal);
 	do {
 		progress.setValue(tasksCount - _storage.tasksPendingCount());
