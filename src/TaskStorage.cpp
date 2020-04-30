@@ -535,8 +535,9 @@ void TaskStorage::setResults(const std::string &fName,
 	std::unordered_map<string, FrameDescriptor> frameMap;
 	for (const FrameDescriptor &frame : frames) {
 		QString shortName;
-		shortName = QString::fromStdString(frame.topologyFileName());
-		shortName = QFileInfo(shortName).fileName() + " #0";
+		shortName = QString::fromStdString(frame.trajFileName());
+		shortName = QFileInfo(shortName).fileName() + " "
+			    + QString::number(frame.frame());
 		frameMap[shortName.toStdString()] = frame;
 	}
 
