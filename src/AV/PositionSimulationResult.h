@@ -106,6 +106,11 @@ public:
 		return overlapVol / totalVol;
 	}
 
+private:
+	double
+	meanFretEfficiencyExhaustive(const PositionSimulationResult &other,
+				     const double R0) const;
+
 protected:
 	typedef boost::multi_array<float, 3> densityArray_t;
 	typedef densityArray_t::extent_range densityArrayRange_t;

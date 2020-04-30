@@ -62,6 +62,11 @@ double PositionSimulationResult::meanFretEfficiency(
 		return std::numeric_limits<double>::quiet_NaN();
 	}
 	const unsigned long rndLim = (av1length - 1) * (av2length - 1);
+
+	if (rndLim < nsamples) {
+		return meanFretEfficiencyExhaustive(other, R0);
+	}
+
 	std::random_device rd;
 	std::mt19937 engine(rd());
 	double eff = 0.0;
@@ -92,7 +97,23 @@ double PositionSimulationResult::meanFretEfficiency(
 	}
 	return eff / totalW;
 }
-
+double PositionSimulationResult::meanFretEfficiencyExhaustive(
+	const PositionSimulationResult &other, const double R0) const
+{
+	double totalW = 0.0;
+	double eff = 0.0;
+	for (int i = 0; i < _points.size(); ++i) {
+		for (int j = 0; j < other._points.size(); ++j) {
+			double w = _points.at(i)[3] * other._points.at(j)[3];
+			totalW += w;
+			double r = (_points.at(i) - other._points.at(j))
+					   .head<3>()
+					   .norm();
+			eff += 1.0 / (1.0 + std::pow(r / R0, 6.0)) * w;
+		}
+	}
+	return eff / totalW;
+}
 double PositionSimulationResult::Rda(const PositionSimulationResult &other,
 				     unsigned nsamples) const
 {
@@ -353,6 +374,7 @@ bool PositionSimulationResult::dump_dxmap(const std::string &fileName) const
 	outfile.close();
 	return true;
 }
+
 std::ostream &PositionSimulationResult::dumpShellXyz(std::ostream &os) const
 {
 	if (_points.size() == 0) {
