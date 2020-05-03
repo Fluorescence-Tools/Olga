@@ -290,8 +290,10 @@ void TrajectoriesTreeModel::loadDcd(const std::string &topPath,
 	loadTrajectories(std::move(tmpTrajVec));
 }
 
-void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream &out) const
+QString TrajectoriesTreeModel::dumpTabSeparatedData() const
 {
+	QString result;
+	QTextStream out(&result, QIODevice::WriteOnly);
 	QModelIndex start = index(0, 0);
 	QModelIndexList indexes = match(start, Qt::DisplayRole, "*", -1,
 					Qt::MatchWildcard | Qt::MatchRecursive);
@@ -302,7 +304,7 @@ void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream &out) const
 	}
 	out << "\n";
 
-	QProgressDialog progress("Saving results...", "Cancel", 0,
+	QProgressDialog progress("Generating the table...", "Cancel", 0,
 				 indexes.size());
 	progress.setWindowModality(Qt::ApplicationModal);
 	progress.setWindowTitle("Saving results...");
@@ -327,6 +329,7 @@ void TrajectoriesTreeModel::dumpTabSeparatedData(QTextStream &out) const
 		progress.setValue(progress.value() + 1);
 	}
 	progress.setValue(indexes.size());
+	return result;
 }
 
 const TrajectoriesTreeItem *

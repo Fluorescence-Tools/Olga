@@ -409,8 +409,21 @@ bool MainWindow::exportData(const QString &fileName)
 					     .arg(file.errorString()));
 		return false;
 	}
+	QString s = trajectoriesModel.dumpTabSeparatedData();
+	QStringList lines = s.split('\n');
+	QProgressDialog dlg;
+	dlg.setLabelText("Saving the file...");
+	dlg.setWindowTitle("Saving the file...");
+	dlg.setRange(0, lines.size());
+	dlg.setWindowModality(Qt::WindowModal);
+	dlg.show();
+	dlg.setCancelButton(0);
 	QTextStream out(&file);
-	trajectoriesModel.dumpTabSeparatedData(out);
+	for (int i = 0; i < lines.size(); ++i) {
+		out << lines[i] << "\n";
+		dlg.setValue(i);
+	}
+	dlg.setValue(lines.size());
 	statusBar()->showMessage(tr("File %1 saved").arg(fileName), 5000);
 	return true;
 }

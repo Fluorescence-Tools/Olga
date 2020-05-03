@@ -47,7 +47,7 @@ public:
 		(void)filename;
 		return false; // TODO: implement
 	}
-	void dumpTabSeparatedData(QTextStream &out) const;
+	QString dumpTabSeparatedData() const;
 	int tasksRunningCount() const
 	{
 		return _storage.tasksRunningCount();
