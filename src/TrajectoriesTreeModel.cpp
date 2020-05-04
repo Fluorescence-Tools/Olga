@@ -307,10 +307,11 @@ QString TrajectoriesTreeModel::dumpTabSeparatedData() const
 	QProgressDialog progress("Generating the table...", "Cancel", 0,
 				 indexes.size());
 	progress.setWindowModality(Qt::ApplicationModal);
-	progress.setWindowTitle("Saving results...");
+	progress.setWindowTitle("Generating the table...");
 	progress.setValue(0);
 	for (const auto &idx : indexes) {
 		if (progress.wasCanceled()) {
+			result.clear();
 			break;
 		}
 		TrajectoriesTreeItem *parentItem;

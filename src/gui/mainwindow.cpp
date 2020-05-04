@@ -410,6 +410,12 @@ bool MainWindow::exportData(const QString &fileName)
 		return false;
 	}
 	QString s = trajectoriesModel.dumpTabSeparatedData();
+	if (s.isEmpty()) {
+		file.remove();
+		statusBar()->showMessage(tr("Export cancelled").arg(fileName),
+					 5000);
+		return false;
+	}
 	QStringList lines = s.split('\n');
 	QProgressDialog dlg;
 	dlg.setLabelText("Saving the file...");
@@ -417,9 +423,13 @@ bool MainWindow::exportData(const QString &fileName)
 	dlg.setRange(0, lines.size());
 	dlg.setWindowModality(Qt::WindowModal);
 	dlg.show();
-	dlg.setCancelButton(0);
 	QTextStream out(&file);
 	for (int i = 0; i < lines.size(); ++i) {
+		if (dlg.wasCanceled()) {
+			statusBar()->showMessage(
+				tr("Export cancelled").arg(fileName), 5000);
+			return false;
+		}
 		out << lines[i] << "\n";
 		dlg.setValue(i);
 	}
