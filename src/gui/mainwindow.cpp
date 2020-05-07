@@ -91,14 +91,21 @@ MainWindow::MainWindow(const QString json, const QString csvOut,
 				  : 0;
 		tasksPendindOld = tasksPending;
 
+		const int tasksReady = trajectoriesModel.resultsCount();
+		int readyPct =
+			tasksReady * 100 / (tasksPending + tasksReady + 1);
 		QString message =
-			QString("v. #%1 | Tasks pending/ready/running: %2/%3/%4; ETA: %5")
+			QString("v. #%1 | Tasks pending/ready/running: %2/%3/%4; ETA: %5 %6%")
 				.arg(verHash)
 				.arg(tasksPending)
-				.arg(trajectoriesModel.resultsCount())
+				.arg(tasksReady)
 				.arg(trajectoriesModel.tasksRunningCount())
-				.arg(timespan(ETA));
+				.arg(timespan(ETA))
+				.arg(readyPct);
 		tasksStatus.setText(message);
+		message = message.leftJustified(74, ' ');
+		printf("\r%s", message.toStdString().c_str());
+		fflush(stdout);
 		ui->mainTreeView->viewport()->update();
 	});
 	timer->start(timerInterval);

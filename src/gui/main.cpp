@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 	/*std::cout<<"std::thread::hardware_concurrency()="<<
 		   std::thread::hardware_concurrency()<<std::endl;*/
 	pteros::Log::instance().logger->set_level(
-		spdlog::level::level_enum::warn);
+		spdlog::level::level_enum::err);
 	QApplication a(argc, argv);
 	a.setApplicationVersion(APP_VERSION);
 	QCommandLineParser parser;
