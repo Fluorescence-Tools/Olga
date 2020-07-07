@@ -43,15 +43,6 @@ private Q_SLOTS:
 	bool exportStructures();
 	void addEvaluator();
 
-	/*void deleteSelectedDistances();
-	void deleteSelectedDomains();
-	void deleteSelectedPositions();
-
-	void ShowSystemsContextMenu(const QPoint& pos);
-	void ShowDistancesContextMenu(const QPoint& pos);
-	void ShowDomainsContextMenu(const QPoint& pos);
-	void ShowPositionsContextMenu(const QPoint& pos);
-*/
 	void copySelectedText(const QItemSelectionModel *selModel) const;
 	void pasteText(QAbstractItemView *view) const;
 
@@ -64,6 +55,7 @@ private Q_SLOTS:
 	void addEfficiencyBatch(bool all = false);
 	void getInfromativePairs();
 	void getInfromativePairs(int numPairs, float err, const QString &path);
+	void testSelectionExpression();
 
 	void setPaused(bool state = true);
 
@@ -72,6 +64,16 @@ private Q_SLOTS:
 
 	void loadResults();
 
+	/*
+	void deleteSelectedDistances();
+	void deleteSelectedDomains();
+	void deleteSelectedPositions();
+
+	void ShowSystemsContextMenu(const QPoint& pos);
+	void ShowDistancesContextMenu(const QPoint& pos);
+	void ShowDomainsContextMenu(const QPoint& pos);
+	void ShowPositionsContextMenu(const QPoint& pos);
+	*/
 private:
 	bool saveJson(const QString &fileName);
 	QString timespan(unsigned seconds);

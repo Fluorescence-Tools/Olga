@@ -13,6 +13,7 @@
 #include "loadtrajectorydialog.h"
 #include "EvaluatorFretEfficiency.h"
 #include "CalcResult.h"
+#include "AtomSelectionTestDialog.h"
 
 #include <QSettings>
 #include <QCloseEvent>
@@ -92,8 +93,12 @@ MainWindow::MainWindow(const QString json, const QString csvOut,
 		tasksPendindOld = tasksPending;
 
 		const int tasksReady = trajectoriesModel.resultsCount();
-		int readyPct =
-			tasksReady * 100 / (tasksPending + tasksReady + 1);
+
+		int readyPct = 100;
+		if (tasksPending > 0) {
+			readyPct =
+				tasksReady * 100 / (tasksPending + tasksReady);
+		}
 		QString message =
 			QString("v. #%1 | Tasks pending/ready/running: %2/%3/%4; ETA: %5 %6%")
 				.arg(verHash)
@@ -948,6 +953,13 @@ void MainWindow::getInfromativePairs(int numPairs, float err,
 		dialog.setOutFile(path);
 		dialog.accept();
 	}
+}
+
+void MainWindow::testSelectionExpression()
+{
+	std::string top = trajectoriesModel.firstFrame().topologyFileName();
+	AtomSelectionTestDialog dialog(QString::fromStdString(top), this);
+	dialog.exec();
 }
 
 QString MainWindow::timespan(unsigned seconds)

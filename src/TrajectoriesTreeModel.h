@@ -67,6 +67,16 @@ public:
 	/*void updateColumn(int column);
 	void updateRow(const QModelIndex & parent, int row);
 	*/
+	FrameDescriptor firstFrame() const
+	{
+		if (_molTrajs.empty()) {
+			return FrameDescriptor();
+		}
+		if (_molTrajs[0].empty()) {
+			return FrameDescriptor();
+		}
+		return frameDescriptor(childItem(nullptr, 0), 0);
+	}
 	pteros::System firstSystem() const
 	{
 		pteros::System system;

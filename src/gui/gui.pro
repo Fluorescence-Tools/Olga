@@ -19,6 +19,7 @@ else:unix: LIBS += -L$$OUT_PWD/../irmsd/ -lirmsd
 RESOURCES += icons.qrc
 
 FORMS += \
+    AtomSelectionTestDialog.ui \
     loadtrajectorydialog.ui \
     mainwindow.ui \
     BatchLPDialog.ui \
@@ -27,6 +28,7 @@ FORMS += \
     BatchFretEfficiencyDialog.ui
 
 HEADERS += \
+    AtomSelectionTestDialog.h \
     loadtrajectorydialog.h \
     mainwindow.h \
     Q_DebugStream.h \
@@ -74,6 +76,7 @@ HEADERS += \
     polynomial.hpp
 
 SOURCES += \
+    AtomSelectionTestDialog.cpp \
     loadtrajectorydialog.cpp \
     main.cpp \
     mainwindow.cpp \
