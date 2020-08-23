@@ -1,7 +1,7 @@
 # Olga
 Software for FRET-based screening of conformations and experiment planning with a graphical user interface
 
-[**Download (Windows x64)**][1]
+[**Download (Windows/Linux)**][1]
 
 # General description
 Olga is a program for the simulation of small probes flexibly coupled to biomolecules and analysis of inter-label distance distributions. Olga software calculates the spatial distribution of flexible labels around attachment points. Typically, these labels are fluorescent dyes. Olga can also calculate FRET observables (apparent distances, FRET Efficiencies, etc).
@@ -45,6 +45,6 @@ See the [page of C. Seidel research group](http://www.mpc.hhu.de/) for more fluo
 
 [LabelLib][3] - a C++/Python library for the simulation of small probes flexibly coupled to biomolecules
 
-[1]: https://github.com/Fluorescence-Tools/Olga/releases/download/20190326/Olga_win64_master-61e08437.zip
+[1]: https://github.com/Fluorescence-Tools/Olga/releases/latest
 [2]: https://doi.org/10.1038/nmeth.2222
 [3]: https://github.com/Fluorescence-Tools/LabelLib
