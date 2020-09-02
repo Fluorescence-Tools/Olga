@@ -7,6 +7,33 @@
 #include <iostream>
 #include <fstream>
 
+using namespace std::string_literals;
+
+class ExceptApplication : public QApplication
+{
+public:
+	ExceptApplication(int &argc, char **argv) : QApplication(argc, argv)
+	{
+	}
+	bool notify(QObject *receiver, QEvent *event) override;
+};
+bool ExceptApplication::notify(QObject *receiver, QEvent *event)
+{
+	bool done = true;
+	try {
+		done = QApplication::notify(receiver, event);
+	} catch (const std::exception &ex) {
+		std::cerr << "EXCEPTION! Type: "s + typeid(ex).name()
+				     + ex.what() + "\n"s
+			  << std::flush;
+	} catch (...) {
+		std::cerr
+			<< "EXCEPTION! Unknown exception in QApplication::notify()\n"
+			<< std::flush;
+	}
+	return done;
+}
+
 void dumpException(const std::string &str)
 {
 	std::ofstream outfile;
@@ -24,7 +51,7 @@ int main(int argc, char *argv[])
 		   std::thread::hardware_concurrency()<<std::endl;*/
 	pteros::Log::instance().logger->set_level(
 		spdlog::level::level_enum::err);
-	QApplication a(argc, argv);
+	ExceptApplication a(argc, argv);
 	a.setApplicationVersion(APP_VERSION);
 	QCommandLineParser parser;
 	parser.addHelpOption();

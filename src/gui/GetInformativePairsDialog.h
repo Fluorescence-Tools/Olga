@@ -17,6 +17,7 @@ class GetInformativePairsDialog;
 }
 
 class FRETEfficiencies;
+class TaskStorage;
 
 class GetInformativePairsDialog : public QDialog
 {
@@ -24,9 +25,10 @@ class GetInformativePairsDialog : public QDialog
 
 public:
 	explicit GetInformativePairsDialog(
-	        QWidget *parent, const std::vector<FrameDescriptor> &frames,
-	        const Eigen::MatrixXf &effs,
-	        const std::vector<std::string> &evalNames);
+		QWidget *parent, const std::vector<FrameDescriptor> &frames,
+		const Eigen::MatrixXf &effs,
+		const std::vector<std::string> &evalNames,
+		const TaskStorage &storage);
 	~GetInformativePairsDialog();
 	void setMaxPairs(int numPairsMax);
 	void setError(float err);
@@ -38,6 +40,7 @@ public Q_SLOTS:
 private:
 	const std::vector<FrameDescriptor> frames;
 	const Eigen::MatrixXf &effs;
+	const TaskStorage &storage;
 	const std::vector<std::string> evalNames;
 	Ui::GetInformativePairsDialog *ui;
 

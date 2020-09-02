@@ -944,7 +944,8 @@ void MainWindow::getInfromativePairs(int numPairs, float err,
 		progress.setValue(iFrame);
 	}
 	progress.setValue(frames.size());
-	GetInformativePairsDialog dialog(this, frames, effs, evalNames);
+	GetInformativePairsDialog dialog(this, frames, effs, evalNames,
+					 _storage);
 	dialog.setError(err);
 	dialog.setMaxPairs(numPairs);
 	if (path.isEmpty()) {

@@ -178,7 +178,7 @@ Eigen::MatrixXf chiSquared(const Eigen::MatrixXf &Effs, const float err)
 
 unsigned bestPair(const Eigen::MatrixXf &Effs, const Eigen::MatrixXf &RMSDs,
 		  const float err, const float diagWeight,
-		  const std::vector<unsigned> &selPairs)
+		  const std::vector<unsigned> &selPairs, const bool uniqueOnly)
 {
 	using Eigen::MatrixXf;
 	using Eigen::VectorXf;
@@ -197,19 +197,27 @@ unsigned bestPair(const Eigen::MatrixXf &Effs, const Eigen::MatrixXf &RMSDs,
 					     diagWeight);
 	});
 
+	if (uniqueOnly) {
+		// TODO: optimize, this is slow in some cases
+		for (int i : selPairs) {
+			rmsdAve[i] = std::numeric_limits<float>::max();
+		}
+	}
+
 	auto it = std::min_element(rmsdAve.begin(), rmsdAve.end());
+	assert(*it >= 0.0f);
 	return std::distance(rmsdAve.begin(), it);
 }
 
-std::vector<unsigned> greedySelection(const float err,
-                                      const Eigen::MatrixXf &Effs,
-                                      const Eigen::MatrixXf &RMSDs,
-                                      const int maxPairs,
-                                      std::atomic<float> &fractionDone)
+std::vector<unsigned>
+greedySelection(const float err, const Eigen::MatrixXf &Effs,
+		const Eigen::MatrixXf &RMSDs, const int maxPairs,
+		std::atomic<float> &fractionDone, const bool uniqueOnly)
 {
 	std::vector<unsigned> selPairs;
 	for (int pairsDone = 0; pairsDone < maxPairs; ++pairsDone) {
-		unsigned best = bestPair(Effs, RMSDs, err, 0.99f, selPairs);
+		unsigned best =
+			bestPair(Effs, RMSDs, err, 0.99f, selPairs, uniqueOnly);
 		selPairs.push_back(best);
 		fractionDone = pairsDone / maxPairs;
 	}
@@ -217,13 +225,14 @@ std::vector<unsigned> greedySelection(const float err,
 }
 
 std::vector<unsigned> greedySelection(const float err,
-                                      const Eigen::MatrixXf &Effs,
-                                      const Eigen::MatrixXf &RMSDs,
-                                      const int maxPairs)
+				      const Eigen::MatrixXf &Effs,
+				      const Eigen::MatrixXf &RMSDs,
+				      const int maxPairs, const bool uniqueOnly)
 {
 	std::atomic<float> fractionDone;
 	assert(!Effs.hasNaN());
-	return greedySelection(err, Effs, RMSDs, maxPairs, fractionDone);
+	return greedySelection(err, Effs, RMSDs, maxPairs, fractionDone,
+			       uniqueOnly);
 }
 
 std::vector<float> sys2xyz(const pteros::System &s)
@@ -243,14 +252,14 @@ std::vector<float> sys2xyz(const pteros::System &s)
 }
 
 Eigen::MatrixXf rmsd2d(const pteros::System &traj,
-                       std::atomic<float> &fractionDone)
+		       std::atomic<float> &fractionDone)
 {
 	const int numFrames = traj.num_frames();
 	const int nAtoms = traj.num_atoms();
 	std::vector<float> xyz = sys2xyz(traj);
 	std::vector<float> traces(numFrames);
 	inplace_center_and_trace_atom_major(xyz.data(), traces.data(),
-	                                    numFrames, nAtoms);
+					    numFrames, nAtoms);
 	Eigen::MatrixXf RMSDs(numFrames, numFrames);
 
 	const int64_t numRmsds = int64_t(numFrames) * numFrames / 2;
@@ -260,24 +269,24 @@ Eigen::MatrixXf rmsd2d(const pteros::System &traj,
 	const int grainSize = numFrames / threads.size() + 1;
 	for (int t = 0; t < threads.size(); ++t) {
 		threads[t] = std::thread([=, &RMSDs, &xyz, &rmsdsDone,
-		                          &fractionDone] {
+					  &fractionDone] {
 			const int maxFr =
-			        std::min((t + 1) * grainSize, numFrames);
+				std::min((t + 1) * grainSize, numFrames);
 			for (int fr = t * grainSize; fr < maxFr; ++fr) {
 				for (int j = fr; j < numFrames; ++j) {
 					const float *xyz_fr =
-					        xyz.data() + 3 * fr * nAtoms;
+						xyz.data() + 3 * fr * nAtoms;
 					const float *xyz_j =
-					        xyz.data() + 3 * j * nAtoms;
+						xyz.data() + 3 * j * nAtoms;
 					RMSDs(fr, j) = msd_atom_major(
-					        nAtoms, nAtoms, xyz_fr, xyz_j,
-					        traces[fr], traces[j], 0,
-					        nullptr);
+						nAtoms, nAtoms, xyz_fr, xyz_j,
+						traces[fr], traces[j], 0,
+						nullptr);
 					RMSDs(j, fr) = RMSDs(fr, j);
 				}
 				rmsdsDone += numFrames - fr;
 				fractionDone =
-				        float(rmsdsDone) / float(numRmsds);
+					float(rmsdsDone) / float(numRmsds);
 			}
 		});
 	}
@@ -295,13 +304,13 @@ Eigen::MatrixXf rmsd2d(const pteros::System &traj)
 }
 
 std::vector<unsigned> thresholdNansPerCol(const Eigen::MatrixXf &E,
-                                          double maxNanFraction)
+					  double maxNanFraction)
 {
 	std::vector<unsigned> goodIdxs;
 
 	const int maxNan = int(maxNanFraction * E.rows()) + 1;
 	Eigen::VectorXi numNanCol =
-	        E.array().isNaN().cast<int>().colwise().sum();
+		E.array().isNaN().cast<int>().colwise().sum();
 	for (unsigned i = 0; i < E.cols(); ++i) {
 		if (numNanCol[i] < maxNan) {
 			goodIdxs.push_back(i);
@@ -317,8 +326,8 @@ Eigen::VectorXi fillNans(Eigen::MatrixXf &E, const Eigen::MatrixXf &RMSDs)
 	const float maxFloat = std::numeric_limits<float>::max();
 	for (unsigned col = 0; col < E.cols(); ++col) {
 		const Eigen::VectorXf filter =
-		        E.col(col).array().isNaN().matrix().cast<float>()
-		        * maxFloat;
+			E.col(col).array().isNaN().matrix().cast<float>()
+			* maxFloat;
 		for (unsigned row = 0; row < E.rows(); ++row) {
 			if (not std::isnan(E(row, col))) {
 				continue;
@@ -334,8 +343,8 @@ Eigen::VectorXi fillNans(Eigen::MatrixXf &E, const Eigen::MatrixXf &RMSDs)
 }
 
 Eigen::VectorXf precisionDecay(const std::vector<unsigned> &pairIdxs,
-                               const Eigen::MatrixXf &E,
-                               const Eigen::MatrixXf &RMSDs, double err)
+			       const Eigen::MatrixXf &E,
+			       const Eigen::MatrixXf &RMSDs, double err)
 {
 	Eigen::VectorXf decay(pairIdxs.size());
 	std::vector<unsigned> tmpPairs;

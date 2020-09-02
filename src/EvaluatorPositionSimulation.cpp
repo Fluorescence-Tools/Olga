@@ -7,9 +7,8 @@ EvaluatorPositionSimulation::calculate(const pteros::System &system,
 {
 	PositionSimulationResult res = _position.calculate(system);
 	if (res.empty()) {
-		std::cerr << "Simulation failed, empty AV: " + _position.name()
-				     + ", " + frame.fullName();
-		// std::cerr.flush();
+		std::cout << "Empty AV: " + _position.name() + ", "
+				     + frame.fullName() + "\n";
 	}
 	/*std::string fname=_position.name();
 	std::replace(fname.begin(),fname.end(),'/','_');
@@ -20,9 +19,8 @@ EvaluatorPositionSimulation::calculate(const pteros::System &system,
 		std::move(res));
 }
 
-AbstractEvaluator::Task
-EvaluatorPositionSimulation::makeTask(const FrameDescriptor &frame) const
-	noexcept
+AbstractEvaluator::Task EvaluatorPositionSimulation::makeTask(
+	const FrameDescriptor &frame) const noexcept
 {
 	auto sysTask = getSysTask(frame);
 	return sysTask

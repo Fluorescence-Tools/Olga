@@ -16,7 +16,8 @@
 EvaluatorsTreeModel::EvaluatorsTreeModel(TaskStorage &storage, QObject *parent)
     : QAbstractItemModel(parent), _storage(storage)
 {
-	connect(&_storage, &TaskStorage::evaluatorAdded, this,
+	connect(
+		&_storage, &TaskStorage::evaluatorAdded, this,
 		[this](const EvalId &id) { loadEvaluator(id); },
 		Qt::QueuedConnection);
 }
@@ -482,8 +483,8 @@ QModelIndex EvaluatorsTreeModel::duplicateEvaluator(const QModelIndex &index)
 
 void EvaluatorsTreeModel::loadEvaluators(const QVariantMap &settings)
 {
-	std::vector<MutableEvalPtr> evs = _storage.loadEvaluators(settings);
-	for (auto &ev : evs) {
+	std::vector<MutableEvalPtr> drafts = _storage.loadEvaluators(settings);
+	for (auto &ev : drafts) {
 		addEvaluator(std::move(ev));
 	} /*
 	 //TODO:split between here and TaskStorage

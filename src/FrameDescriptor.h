@@ -61,27 +61,40 @@ private:
 	std::shared_ptr<const std::string> _topologyFileName, _trajFileName;
 	unsigned _frame = 0;
 };
-template <class T> inline void hash_combine(std::size_t &seed, const T &v)
+
+template <typename T>
+inline void hash_combine(std::uint16_t &seed, const T &val)
 {
-	std::hash<T> hasher;
-	seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	seed ^= std::hash<T>{}(val) + 0x9e37U + (seed << 3) + (seed >> 1);
 }
+
+template <typename T>
+inline void hash_combine(std::uint32_t &seed, const T &val)
+{
+	seed ^= std::hash<T>{}(val) + 0x9e3779b9U + (seed << 6) + (seed >> 2);
+}
+
+template <typename T>
+inline void hash_combine(std::uint64_t &seed, const T &val)
+{
+	seed ^= std::hash<T>{}(val) + 0x9e3779b97f4a7c15LLU + (seed << 12)
+		+ (seed >> 4);
+}
+
 namespace std
 {
 template <> struct hash<FrameDescriptor> {
 	size_t operator()(const FrameDescriptor &desc) const
 	{
 
-		size_t seed;
+		size_t seed = hash<unsigned>()(desc._frame);
 		if (desc._topologyFileName) {
-			seed = hash<std::string>()(*(desc._topologyFileName));
-		} else {
-			seed = hash<std::string>()("");
+			// TODO: use last 32 characters only for performance
+			hash_combine(seed, *(desc._topologyFileName));
 		}
 		if (desc._trajFileName) {
 			hash_combine(seed, *(desc._trajFileName));
 		}
-		hash_combine(seed, desc._frame);
 		return seed;
 	}
 };

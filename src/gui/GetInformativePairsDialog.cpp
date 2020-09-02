@@ -1,20 +1,26 @@
+#include <fstream>
+#include <iomanip>
+#include <future>
+
+#include <QProgressDialog>
+#include <QFileDialog>
+
+#include <pteros/pteros.h>
+
 #include "GetInformativePairsDialog.h"
 #include "ui_GetInformativePairsDialog.h"
 #include "best_dist.h"
 //#include "theobald_rmsd.h"
 #include "center.h"
-#include <fstream>
-#include <iomanip>
-#include <pteros/pteros.h>
-#include <QProgressDialog>
-#include <QFileDialog>
-#include <future>
+#include "TaskStorage.h"
+
 
 GetInformativePairsDialog::GetInformativePairsDialog(
 	QWidget *parent, const std::vector<FrameDescriptor> &frames,
-	const Eigen::MatrixXf &effs, const std::vector<std::string> &evalNames)
-    : QDialog(parent), frames(frames), effs(effs), evalNames(evalNames),
-      ui(new Ui::GetInformativePairsDialog)
+	const Eigen::MatrixXf &effs, const std::vector<std::string> &evalNames,
+	const TaskStorage &storage)
+    : QDialog(parent), frames(frames), effs(effs), storage(storage),
+      evalNames(evalNames), ui(new Ui::GetInformativePairsDialog)
 {
 	ui->setupUi(this);
 }
@@ -49,7 +55,8 @@ GetInformativePairsDialog::buildTrajectory(const std::string &sel) const
 	traj.keep(sel);
 	for (int i = 1; i < numFrames; ++i) {
 		const FrameDescriptor &fr = frames[i];
-		System system(fr.topologyFileName());
+		const auto &sysTsk = storage.getSysTask(fr);
+		System system = sysTsk.get();
 		system.keep(sel);
 		if (traj.num_atoms() == system.num_atoms()) {
 			traj.frame_append(system.frame(0));
@@ -122,14 +129,17 @@ void GetInformativePairsDialog::accept()
 	MatrixXf E = sliceCols(effs, keepIdxs);
 	fillNans(E, RMSDs);
 
+	const bool uniqueOnly = ui->uniqueOnly->isChecked();
 	const int maxPairs = std::min(int(E.cols()), numPairsMax);
 	std::vector<unsigned> pairIdxs;
 	showProgress("Greedy selection...", [&]() {
-		pairIdxs = greedySelection(err, E, RMSDs, maxPairs, fracDone);
+		pairIdxs = greedySelection(err, E, RMSDs, maxPairs, fracDone,
+					   uniqueOnly);
 	});
 
 	Eigen::VectorXf rmsdAve = precisionDecay(pairIdxs, E, RMSDs, err);
 	std::string report = "#\tPair_added\t<<RMSD>>/A\n";
+	report += "0\t--\t" + std::to_string(RMSDs.mean()) + "\n";
 	for (int i = 0; i < pairIdxs.size(); ++i) {
 		report += std::to_string(i + 1) + "\t" + pairNames[pairIdxs[i]]
 			  + "\t" + std::to_string(rmsdAve[i]) + "\n";

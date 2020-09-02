@@ -24,13 +24,13 @@ pteros::System loadTrajectory(const QString &dirPath,
 
 	QDir dir(dirPath);
 	QSet<QString> pdbs = dir.entryList(QStringList() << "*.pdb"
-	                                                 << "*.PDB",
-	                                   QDir::Files)
-	                             .toSet();
+                                                         << "*.PDB",
+                                           QDir::Files)
+                                     .toSet();
 	for (const string &pdb : basenames) {
 		if (!pdbs.contains(QString::fromStdString(pdb))) {
 			std::cerr << "ERROR! " + pdb + " was not found in "
-			                     + dirPath.toStdString() + "\n";
+                                             + dirPath.toStdString() + "\n";
 			return pteros::System();
 		}
 	}
@@ -45,7 +45,7 @@ pteros::System loadTrajectory(const QString &dirPath,
 		sys.keep(sel);
 		if (numAt != sys.num_atoms()) {
 			cerr << "ERROR! Number of atoms in the file does not match the previous frames: "
-			                + path + "\n";
+                                        + path + "\n";
 			return pteros::System();
 		}
 		traj.frame_append(sys.frame(0));
@@ -80,7 +80,7 @@ Eigen::MatrixXf loadDistanceMatrix(const std::string &path,
 		getline(lineStream, confName, '\t');
 		if (confName != refnames[row]) {
 			cerr << "ERROR! Order of conformers does not match to the reference: "
-			                + path + "\n";
+                                        + path + "\n";
 			return Eigen::MatrixXf();
 		}
 
@@ -92,13 +92,13 @@ Eigen::MatrixXf loadDistanceMatrix(const std::string &path,
 		}
 		if (col != numConf) {
 			cerr << "ERROR! Number of elements in the row does not match the number of conformers: "
-			                + path + "\n";
+                                        + path + "\n";
 			return Eigen::MatrixXf();
 		}
 	}
 	if (row != numConf) {
 		cerr << "ERROR! Number of rows in the file does not match the number of conformers: "
-		                + path + "\n";
+                                + path + "\n";
 		return Eigen::MatrixXf();
 	}
 	return dm;
@@ -152,14 +152,14 @@ EfficiencyTable::EfficiencyTable(const string &path)
 		}
 		if (numVals != numCols) {
 			cerr << "ERROR! Number of elements in the row does not match the number of columns: "
-			                + path + "\n";
+                                        + path + "\n";
 			return;
 		}
 	}
 	const size_t numRows = conformerNames.size();
 	assert(numRows * numCols == vals.size());
 	using MatrixXfRM = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
-	                                 Eigen::RowMajor>;
+                                         Eigen::RowMajor>;
 	E = Eigen::Map<MatrixXfRM>(vals.data(), numRows, numCols);
 }
 
@@ -206,15 +206,15 @@ int main(int argc, char *argv[])
 	QCoreApplication a(argc, argv);
 	QCommandLineParser parser;
 	parser.addOptions({
-	        {"data", "a file containing FRET efficiencies for an ensmeble",
-	         "path"},
-	        {{"dir", "d"}, "a directory with pdb files (for RMSD)", "path"},
-	        {"numpairs", "number of pairs to select", "integer"},
-	        {"err", "Efficiency error to assume for pair selection",
-	         "float"},
-	        {"savepairs", "save selected pairs", "path"},
-	        {"distance-matrix",
-	         "matrix of distances between conformers (e.g. RMSD)", "path"},
+                {"data", "a file containing FRET efficiencies for an ensmeble",
+                 "path"},
+                {{"dir", "d"}, "a directory with pdb files (for RMSD)", "path"},
+                {"numpairs", "number of pairs to select", "integer"},
+                {"err", "Efficiency error to assume for pair selection",
+                 "float"},
+                {"savepairs", "save selected pairs", "path"},
+                {"distance-matrix",
+                 "matrix of distances between conformers (e.g. RMSD)", "path"},
 	});
 	parser.process(a);
 
@@ -231,9 +231,9 @@ int main(int argc, char *argv[])
 	if (!pdbsDirPath.isEmpty()) {
 		QDir pdbsDir(pdbsDirPath);
 		QSet<QString> pdbs = pdbsDir.entryList(QStringList() << "*.pdb"
-		                                                     << "*.PDB",
-		                                       QDir::Files)
-		                             .toSet();
+                                                                     << "*.PDB",
+                                                       QDir::Files)
+                                             .toSet();
 		effs.keepConfs(pdbs);
 	}
 	if (effs.conformerNames.size() < 2) {
@@ -245,37 +245,38 @@ int main(int argc, char *argv[])
 	if (distMatPath.isEmpty()) {
 		// rmsds
 		pteros::System traj =
-		        loadTrajectory(pdbsDirPath, effs.conformerNames);
+                        loadTrajectory(pdbsDirPath, effs.conformerNames);
 		if (traj.num_frames() == 0) {
 			cerr << "Error! could not load the pdbs: "
-			                + pdbsDirPath.toStdString() + "\n";
+                                        + pdbsDirPath.toStdString() + "\n";
 			return 2;
 		}
 		distMat = rmsd2d(traj);
 	} else {
 		// External dissmilarity (distance) matrix.
 		distMat = loadDistanceMatrix(distMatPath.toStdString(),
-		                             effs.conformerNames);
+                                             effs.conformerNames);
 		if (effs.E.rows() != distMat.rows()) {
 			cerr << "Number of rows in efficiency table does not match to the number of rows in distance matrix: "
-			                + to_string(effs.E.rows()) + " != "
-			                + to_string(distMat.rows()) + "\n";
+                                        + to_string(effs.E.rows()) + " != "
+                                        + to_string(distMat.rows()) + "\n";
 			return 3;
 		}
 	}
 
 	effs.fixNans(0.2, distMat);
+
 	// decay
 	vector<unsigned> pairIdxs;
-	pairIdxs = greedySelection(err, effs.E, distMat, numSelPairs);
+        pairIdxs = greedySelection(err, effs.E, distMat, numSelPairs, true);
 	// report
 	Eigen::VectorXf rmsdAve =
-	        precisionDecay(pairIdxs, effs.E, distMat, err);
+                precisionDecay(pairIdxs, effs.E, distMat, err);
 	string report = "#\tPair_added\t<<RMSD>>/A\n";
 	const auto &pairNames = effs.columnNames;
 	for (size_t i = 0; i < pairIdxs.size(); ++i) {
 		report += std::to_string(i + 1) + "\t" + pairNames[pairIdxs[i]]
-		          + "\t" + std::to_string(rmsdAve[i]) + "\n";
+                          + "\t" + std::to_string(rmsdAve[i]) + "\n";
 	}
 
 	if (pairIdxs.size() == 0) {
@@ -288,7 +289,7 @@ int main(int argc, char *argv[])
 		ofstream outfile(pairsPath.toStdString(), std::ifstream::out);
 		if (!outfile.is_open()) {
 			cerr << "Warning! could not open file for saving: "
-			                + pairsPath.toStdString() + "\n"
+                                        + pairsPath.toStdString() + "\n"
 			     << flush;
 			return 4;
 		}

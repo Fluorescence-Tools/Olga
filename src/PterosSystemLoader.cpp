@@ -54,7 +54,7 @@ pteros::System PterosSystemLoader::load(const FrameDescriptor &frame) const
 	const std::string &trajPath = frame.trajFileName();
 	const std::string &trajSfx = trajPath.substr(trajPath.length() - 4);
 	const std::unordered_set<std::string> trajExtensions = {".dcd", ".DCD"};
-	if (trajExtensions.count(trajSfx)) {
+	if (trajExtensions.count(trajSfx) > 0) {
 		auto dcdIt = getDcd(frame.topologyFileName(), trajPath);
 		pteros::Selection sel = dcdIt->second.select_all();
 		sel.set_frame(frame.frame());
