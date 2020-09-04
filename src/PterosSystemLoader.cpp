@@ -4,7 +4,6 @@
 #include "PterosSystemLoader.h"
 #include "CalcResult.h"
 
-async::threadpool_scheduler PterosSystemLoader::_threadpool(1);
 PterosSystemLoader::PterosSystemLoader()
 {
 }
@@ -49,6 +48,7 @@ auto PterosSystemLoader::getDcd(const std::string &topPath,
 	return it;
 }
 
+
 pteros::System PterosSystemLoader::load(const FrameDescriptor &frame) const
 {
 	const std::string &trajPath = frame.trajFileName();
@@ -81,4 +81,38 @@ PterosSystemLoader::numFrames(const std::string &topPath,
 		return getDcd(topPath, trajPath)->second.num_frames();
 	});
 	return task;
+}
+
+auto PterosSystemLoader::getTaskIterator(const FrameDescriptor &frame) const
+{
+	static auto tid = std::this_thread::get_id();
+	assert(tid == std::this_thread::get_id());
+	auto it = _sysCache.find(frame);
+	if (it != _sysCache.end()) {
+		return it;
+	} else {
+		auto &oldKey = _sysRingBuf[sysRingBufIndex];
+		_sysCache.erase(oldKey);
+		oldKey = frame;
+		++sysRingBufIndex;
+		sysRingBufIndex %= _sysRingBufSize;
+		auto pair = _sysCache.emplace(frame, makeTask(frame));
+		return pair.first;
+	}
+}
+PterosSystemLoader::PterosSysTask
+PterosSystemLoader::getTask(const FrameDescriptor &frame) const
+{
+	return async::spawn(_threadpool,
+			    [frame, this] {
+				    auto it = getTaskIterator(frame);
+				    return it->second;
+			    })
+		.share();
+}
+
+int PterosSystemLoader::taskCount() const
+{
+	return async::spawn(_threadpool, [this] { return _sysCache.size(); })
+		.get();
 }

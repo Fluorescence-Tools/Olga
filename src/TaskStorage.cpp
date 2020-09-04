@@ -31,8 +31,7 @@ const int TaskStorage::vec3dType =
 
 
 TaskStorage::TaskStorage()
-    : _tasksRingBuf(_tasksRingBufSize), _sysRingBuf(_sysRingBufSize),
-      _currentId(EvalId(0))
+    : _tasksRingBuf(_tasksRingBufSize), _currentId(EvalId(0))
 {
 	addEvaluator(std::make_unique<const EvaluatorPositionSimulation>(
 		*this, "unknown"));
@@ -74,13 +73,12 @@ TaskStorage::TaskStorage()
 	evaluatorEulerAngle = _currentId;
 
 	_maxStubEval = _currentId;
-	_runRequestsThread = std::thread([this] { runRequests(); });
+	async::spawn(_runRequestsThread, [this] { runRequests(); });
 }
 
 TaskStorage::~TaskStorage()
 {
 	_runRequests.clear();
-	_runRequestsThread.join();
 	while (tasksRunningCount()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(25));
 	}
@@ -391,27 +389,6 @@ void TaskStorage::setEval(TaskStorage::MutableEvalPtr &ev,
 	}
 }
 
-// must only run in worker thread
-const TaskStorage::PterosSysTask &
-TaskStorage::getSysTask(const FrameDescriptor &frame) const
-{
-	static auto tid = std::this_thread::get_id();
-	assert(tid == std::this_thread::get_id());
-	auto it = _sysCache.find(frame);
-	if (it != _sysCache.end()) {
-		return it->second;
-	} else {
-		auto &oldKey = _sysRingBuf[sysRingBufIndex];
-		_sysCache.erase(oldKey);
-		oldKey = frame;
-		++sysRingBufIndex;
-		sysRingBufIndex %= _sysRingBufSize;
-		auto pair =
-			_sysCache.emplace(frame, _systemLoader.makeTask(frame));
-		return pair.first->second;
-	}
-}
-
 async::task<int> TaskStorage::numFrames(const std::string &topPath,
 					const std::string &trajPath) const
 {
@@ -542,9 +519,13 @@ void TaskStorage::setResults(const std::string &fName,
 	}
 
 	while (getline(infile, str)) {
+		str.erase(std::remove(str.begin(), str.end(), '\r'), str.end());
 		vector<string> values = split(str, '\t');
+		if (values.size() == 0) {
+			continue;
+		}
 		if (frameMap.count(values[0]) == 0) {
-			std::cout << "Not found: " + values[0] + "\n"
+			std::cout << "Not found: <" + values[0] + ">\n"
 				  << std::flush;
 			continue;
 		}
@@ -555,7 +536,14 @@ void TaskStorage::setResults(const std::string &fName,
 			}
 			const EvalId evId = evIds[i - 1];
 			CacheKey key = CacheKey(frame, evId);
-			double val = std::atof(values[i].c_str());
+			double val = -9999.9;
+			try {
+				val = std::atof(values[i].c_str());
+			} catch (...) {
+				std::cerr
+					<< "ERROR! float conversion failed!\n";
+				return;
+			}
 			Result res = std::make_shared<CalcResult<double>>(val);
 			_results.insert(key, res);
 			_requests.erase(key);

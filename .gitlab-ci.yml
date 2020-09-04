@@ -64,7 +64,7 @@ pack-ubuntu:
   needs: ["build-ubuntu"]
   artifacts:
     expire_in: 1 week
-    name: "Olga_ubuntu18.04_${CI_BUILD_REF_NAME}-${CI_BUILD_REF:0:8}"
+    name: "Olga_ubuntu_${CI_BUILD_REF_NAME}-${CI_BUILD_REF:0:8}"
     paths:
       - Olga
 

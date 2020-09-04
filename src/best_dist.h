@@ -219,7 +219,7 @@ greedySelection(const float err, const Eigen::MatrixXf &Effs,
 		unsigned best =
 			bestPair(Effs, RMSDs, err, 0.99f, selPairs, uniqueOnly);
 		selPairs.push_back(best);
-		fractionDone = pairsDone / maxPairs;
+		fractionDone = float(pairsDone) / maxPairs;
 	}
 	return selPairs;
 }

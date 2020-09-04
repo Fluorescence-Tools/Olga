@@ -32,6 +32,7 @@
 #include <QScrollBar>
 #include "Q_DebugStream.h"
 
+using namespace std::string_literals;
 
 MainWindow::MainWindow(const QString json, const QString csvOut,
 		       const QString trajPath, const QString topPath,
@@ -877,7 +878,18 @@ void MainWindow::loadResults()
 	QString fileName = QFileDialog::getOpenFileName(
 		this, tr("Open data File"), "",
 		tr("Tab-separated data (*.dat *.csv *.ol4);;All Files (*)"));
-	_storage.setResults(fileName.toStdString(), trajectoriesModel.frames());
+	try {
+		_storage.setResults(fileName.toStdString(),
+				    trajectoriesModel.frames());
+	} catch (std::exception &ex) {
+		std::cerr << "EXCEPTION! Type: "s + typeid(ex).name()
+				     + ex.what() + "\n"s
+			  << std::flush;
+	} catch (...) {
+		std::cerr
+			<< "EXCEPTION! Unknown exception in MainWindow::loadResults()\n"
+			<< std::flush;
+	}
 }
 
 

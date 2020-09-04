@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iomanip>
 #include <future>
+#include <sstream>
 
 #include <QProgressDialog>
 #include <QFileDialog>
@@ -10,10 +11,10 @@
 #include "GetInformativePairsDialog.h"
 #include "ui_GetInformativePairsDialog.h"
 #include "best_dist.h"
-//#include "theobald_rmsd.h"
 #include "center.h"
 #include "TaskStorage.h"
 
+using namespace std::string_literals;
 
 GetInformativePairsDialog::GetInformativePairsDialog(
 	QWidget *parent, const std::vector<FrameDescriptor> &frames,
@@ -49,13 +50,30 @@ pteros::System
 GetInformativePairsDialog::buildTrajectory(const std::string &sel) const
 {
 	using namespace pteros;
-	const size_t numFrames = frames.size();
+	const int numFrames = frames.size();
 	System traj;
 	traj.load(frames[0].topologyFileName());
-	traj.keep(sel);
+	if (traj.select(sel).size() == 0) {
+		std::cerr << "ERROR! Selection <"s + sel + "> found 0 atoms!\n"
+			  << std::flush;
+		return pteros::System();
+	}
+	try {
+		traj.keep(sel);
+
+	} catch (std::exception &e) {
+		std::cerr << "EXCEPTION! "s + e.what() + "\n" << std::flush;
+		return pteros::System();
+	}
 	for (int i = 1; i < numFrames; ++i) {
 		const FrameDescriptor &fr = frames[i];
 		const auto &sysTsk = storage.getSysTask(fr);
+
+		if (i + 1 < numFrames) {
+			// prefetch:
+			storage.getSysTask(frames[i + 1]);
+		}
+
 		System system = sysTsk.get();
 		system.keep(sel);
 		if (traj.num_atoms() == system.num_atoms()) {
@@ -138,20 +156,23 @@ void GetInformativePairsDialog::accept()
 	});
 
 	Eigen::VectorXf rmsdAve = precisionDecay(pairIdxs, E, RMSDs, err);
-	std::string report = "#\tPair_added\t<<RMSD>>/A\n";
-	report += "0\t--\t" + std::to_string(RMSDs.mean()) + "\n";
+	std::ostringstream report;
+	report << "#\tPair_added\t<<RMSD>>/A\n";
+	report << std::fixed << std::setprecision(2);
+	report << "0\t--\t" << RMSDs.mean() << "\n";
 	for (int i = 0; i < pairIdxs.size(); ++i) {
-		report += std::to_string(i + 1) + "\t" + pairNames[pairIdxs[i]]
-			  + "\t" + std::to_string(rmsdAve[i]) + "\n";
+		report << i + 1 << "\t" << pairNames[pairIdxs[i]] << "\t"
+		       << rmsdAve[i] << "\n";
 	}
 
 	if (pairIdxs.size() == 0) {
-		report = "No NaN-free pairs found. Pair selection failed.\n";
+		report.clear();
+		report << "No NaN-free pairs found. Pair selection failed.\n";
 	}
 
 	std::string fname = ui->fileEdit->text().toStdString();
 	if (fname.empty()) {
-		std::cout << report << std::flush;
+		std::cout << report.str() << std::flush;
 	} else {
 		std::ofstream outfile(fname, std::ifstream::out);
 		if (!outfile.is_open()) {
@@ -160,7 +181,7 @@ void GetInformativePairsDialog::accept()
 				  << std::flush;
 			return;
 		}
-		outfile << report;
+		outfile << report.str();
 	}
 
 	QDialog::accept();

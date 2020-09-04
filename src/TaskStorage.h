@@ -101,7 +101,10 @@ public:
 			 const EvalId &evId) const;
 	void setResults(const std::string &fName,
 			const std::vector<FrameDescriptor> &frames);
-	const PterosSysTask &getSysTask(const FrameDescriptor &frame) const;
+	const PterosSysTask getSysTask(const FrameDescriptor &frame) const
+	{
+		return _systemLoader.getTask(frame);
+	}
 	async::task<int> numFrames(const std::string &topPath,
 				   const std::string &trajPath) const;
 	std::string getColumnName(const EvalId &id, int col) const;
@@ -143,7 +146,7 @@ public:
 	}
 	int sysTaskCount() const
 	{
-		return _sysCache.size();
+		return _systemLoader.taskCount();
 	}
 	int tasksRunningCount() const
 	{
@@ -209,9 +212,7 @@ public:
 		sz += "_requests:\n" + cuckooMapStats(_requests);
 		sz += "\n_results:\n" + cuckooMapStats(_results);
 		sz += "\n_tasks:\n" + uoMapStats(_tasks);
-		sz += "\n_sysCache:\n" + uoMapStats(_sysCache);
 		sz += "\n_tasksRingBuf\n" + vectorStats(_tasksRingBuf);
-		sz += "\n_sysRingBuf\n" + vectorStats(_sysRingBuf);
 		sz += "\n_requestQueue.size_approx() = "
 		      + std::to_string(_requestQueue.size_approx());
 		return sz;
@@ -280,7 +281,7 @@ private:
 
 private:
 	mutable std::atomic_flag _runRequests = ATOMIC_FLAG_INIT;
-	std::thread _runRequestsThread;
+	async::threadpool_scheduler _runRequestsThread{1};
 
 	static const int evalType;
 	static const int simulationType;
@@ -307,10 +308,7 @@ private:
 	mutable std::vector<CacheKey> _tasksRingBuf;
 	mutable size_t _tasksRBpos = 0;
 
-	mutable std::unordered_map<FrameDescriptor, PterosSysTask> _sysCache;
-	const size_t _sysRingBufSize = _maxRunningCount;
-	mutable std::vector<FrameDescriptor> _sysRingBuf;
-	mutable size_t sysRingBufIndex = 0;
+
 	PterosSystemLoader _systemLoader;
 
 	std::unordered_map<std::string, EvalId> _evalNames; // main thread
