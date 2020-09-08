@@ -73,12 +73,14 @@ TaskStorage::TaskStorage()
 	evaluatorEulerAngle = _currentId;
 
 	_maxStubEval = _currentId;
-	async::spawn(_runRequestsThread, [this] { runRequests(); });
+	_runRequestsTask =
+		async::spawn(_runRequestsThread, [this] { runRequests(); });
 }
 
 TaskStorage::~TaskStorage()
 {
 	_runRequests.clear();
+	_runRequestsTask.wait();
 	while (tasksRunningCount()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(25));
 	}

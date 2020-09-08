@@ -282,6 +282,7 @@ private:
 private:
 	mutable std::atomic_flag _runRequests = ATOMIC_FLAG_INIT;
 	async::threadpool_scheduler _runRequestsThread{1};
+	async::task<void> _runRequestsTask;
 
 	static const int evalType;
 	static const int simulationType;
@@ -309,7 +310,7 @@ private:
 	mutable size_t _tasksRBpos = 0;
 
 
-	PterosSystemLoader _systemLoader;
+	mutable PterosSystemLoader _systemLoader;
 
 	std::unordered_map<std::string, EvalId> _evalNames; // main thread
 	std::unordered_map<EvalId, EvalUPtr> _evals;	    // main thread

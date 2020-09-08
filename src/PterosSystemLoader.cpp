@@ -13,7 +13,7 @@ PterosSystemLoader::~PterosSystemLoader()
 }
 
 PterosSystemLoader::PterosSysTask
-PterosSystemLoader::makeTask(const FrameDescriptor &frame) const
+PterosSystemLoader::makeTask(const FrameDescriptor &frame)
 {
 	return async::
 		spawn(_threadpool, [frame, this] {
@@ -29,7 +29,7 @@ PterosSystemLoader::makeTask(const FrameDescriptor &frame) const
 }
 
 auto PterosSystemLoader::getDcd(const std::string &topPath,
-				const std::string &trajPath) const
+				const std::string &trajPath)
 {
 	auto it = _trajCache.find(trajPath);
 	if (it == _trajCache.end()) {
@@ -49,7 +49,7 @@ auto PterosSystemLoader::getDcd(const std::string &topPath,
 }
 
 
-pteros::System PterosSystemLoader::load(const FrameDescriptor &frame) const
+pteros::System PterosSystemLoader::load(const FrameDescriptor &frame)
 {
 	const std::string &trajPath = frame.trajFileName();
 	const std::string &trajSfx = trajPath.substr(trajPath.length() - 4);
@@ -72,9 +72,8 @@ pteros::System PterosSystemLoader::load(const FrameDescriptor &frame) const
 		return pteros::System();
 	}
 }
-async::task<int>
-PterosSystemLoader::numFrames(const std::string &topPath,
-			      const std::string &trajPath) const
+async::task<int> PterosSystemLoader::numFrames(const std::string &topPath,
+					       const std::string &trajPath)
 
 {
 	auto task = async::spawn(_threadpool, [&topPath, &trajPath, this] {
@@ -83,7 +82,7 @@ PterosSystemLoader::numFrames(const std::string &topPath,
 	return task;
 }
 
-auto PterosSystemLoader::getTaskIterator(const FrameDescriptor &frame) const
+auto PterosSystemLoader::getTaskIterator(const FrameDescriptor &frame)
 {
 	static auto tid = std::this_thread::get_id();
 	assert(tid == std::this_thread::get_id());
@@ -101,7 +100,7 @@ auto PterosSystemLoader::getTaskIterator(const FrameDescriptor &frame) const
 	}
 }
 PterosSystemLoader::PterosSysTask
-PterosSystemLoader::getTask(const FrameDescriptor &frame) const
+PterosSystemLoader::getTask(const FrameDescriptor &frame)
 {
 	return async::spawn(_threadpool,
 			    [frame, this] {
