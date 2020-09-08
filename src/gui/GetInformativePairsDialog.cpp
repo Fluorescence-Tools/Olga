@@ -5,6 +5,7 @@
 
 #include <QProgressDialog>
 #include <QFileDialog>
+#include <QTime>
 
 #include <pteros/pteros.h>
 
@@ -200,14 +201,28 @@ template <typename Lambda>
 void GetInformativePairsDialog::showProgress(const QString &title,
 					     Lambda &&func)
 {
+	using namespace std::chrono;
 	fracDone = 0.0f;
 	QProgressDialog dialog(title, QString(), 0, 1000, this);
 	dialog.setWindowTitle(title);
 	dialog.setWindowModality(Qt::WindowModal);
 	dialog.setMinimumDuration(0);
+	auto start = std::chrono::system_clock::now();
 	auto f = std::async(std::launch::async, func);
 	std::future_status status = f.wait_for(std::chrono::milliseconds(0));
 	while (status != std::future_status::ready) {
+		auto now = system_clock::now();
+		double dt_s =
+			duration_cast<duration<double>>(now - start).count();
+		int remaining_seconds = dt_s / (fracDone + 0.001f) - dt_s;
+		QString eta = QTime(0, 0)
+				      .addSecs(remaining_seconds)
+				      .toString("hh:mm:ss");
+		eta = "\nEstimated runtime remaining: " + eta;
+		if (fracDone > 0.0f) {
+			dialog.setLabelText(title + eta);
+		}
+
 		// setValue() calls processEvents() only if percDone has changed
 		dialog.setValue(int(fracDone * 1000.0f));
 		QApplication::processEvents(); // makes GUI more responsive
