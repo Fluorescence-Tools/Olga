@@ -47,8 +47,8 @@ private:
 	pteros::System buildTrajectory(const std::string &sel) const;
 
 	mutable std::atomic<float> fracDone{0.0f};
-	template <typename Lambda>
-	void showProgress(const QString &title, Lambda &&func);
+	template <typename T>
+	void showProgress(const QString &title, const std::future<T> &future);
 };
 
 #endif // GETINFORMATIVEPAIRSDIALOG_H

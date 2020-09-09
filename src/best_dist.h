@@ -214,6 +214,7 @@ greedySelection(const float err, const Eigen::MatrixXf &Effs,
 		const Eigen::MatrixXf &RMSDs, const int maxPairs,
 		std::atomic<float> &fractionDone, const bool uniqueOnly)
 {
+	fractionDone = 0.0f;
 	std::vector<unsigned> selPairs;
 	for (int pairsDone = 0; pairsDone < maxPairs; ++pairsDone) {
 		unsigned best =
