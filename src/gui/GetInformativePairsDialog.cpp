@@ -160,7 +160,9 @@ void GetInformativePairsDialog::accept()
 	std::ostringstream report;
 	report << "#\tPair_added\t<<RMSD>>/A\n";
 	report << std::fixed << std::setprecision(2);
-	report << "0\t--\t" << RMSDs.mean() << "\n";
+	// colwise() helps preventing float overflow
+	const float rmsdMeanInit = RMSDs.colwise().mean().mean();
+	report << "0\t--\t" << rmsdMeanInit << "\n";
 	for (int i = 0; i < pairIdxs.size(); ++i) {
 		report << i + 1 << "\t" << pairNames[pairIdxs[i]] << "\t"
 		       << rmsdAve[i] << "\n";
