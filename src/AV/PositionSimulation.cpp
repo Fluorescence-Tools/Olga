@@ -102,7 +102,7 @@ PositionSimulation::calculate(const Eigen::Vector3f &attachmentAtomPos,
 	}
 	if (atom_i < 0) {
 		std::cerr
-			<< "error, attachment atom is not found in the stripped molecule\n"
+			<< "ERROR! Attachment atom is not found in the stripped molecule\n"
 			<< std::flush;
 		return PositionSimulationResult();
 	}

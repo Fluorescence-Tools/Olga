@@ -9,50 +9,11 @@
 #include <QApplication>
 
 EvaluatorDelegate::EvaluatorDelegate(QAbstractItemView *parent)
-    : QStyledItemDelegate(parent), _view(parent) //,_evalModel(evalModel)
+    : QStyledItemDelegate(parent), _view(parent)
 {
-	// evalComboBox.setModel(&evalModel);
-	comboBox.setFrame(false);
-	checkBoxList.setFrame(false);
-	vec3dedit.setFrame(false);
-	QRegularExpression re(
-		"([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?[;\\s]+){2}"
-		"[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?[;\\s]*");
-	QRegularExpressionValidator *validator =
-		new QRegularExpressionValidator(re);
-	vec3dedit.setValidator(validator);
-
-	connect(&save, &QAction::triggered, [this] {
-		const QModelIndex &index =
-			toolBar.property("index").value<QModelIndex>();
-		ButtonFlags flgs;
-		flgs.save = true;
-		QVariant var;
-		var.setValue(flgs);
-		_view->model()->setData(index, var, Qt::EditRole);
-	});
-	connect(&del, &QAction::triggered, [this] {
-		const QModelIndex &index =
-			toolBar.property("index").value<QModelIndex>();
-		ButtonFlags flgs;
-		flgs.remove = true;
-		QVariant var;
-		var.setValue(flgs);
-		_view->model()->setData(index, var, Qt::EditRole);
-	});
-	connect(&duplicate, &QAction::triggered, [this] {
-		const QModelIndex &index =
-			toolBar.property("index").value<QModelIndex>();
-		ButtonFlags flgs;
-		flgs.duplicate = true;
-		QVariant var;
-		var.setValue(flgs);
-		_view->model()->setData(index, var, Qt::EditRole);
-	});
-	setupToolBar(toolBar);
+	toolBarPaint = new QToolBar(parent);
 	setupToolBar(toolBarPaint);
-	toolBarPaint.setParent(_view);
-	toolBarPaint.hide();
+	toolBarPaint->hide();
 
 	_view->setMouseTracking(true);
 	connect(_view, SIGNAL(entered(QModelIndex)), this,
@@ -63,53 +24,48 @@ QWidget *EvaluatorDelegate::createEditor(QWidget *parent,
 					 const QStyleOptionViewItem &option,
 					 const QModelIndex &index) const
 {
-	QVariant data = index.data(Qt::EditRole);
-	if (data.type() == QVariant::StringList) {
-		const auto &dispData = index.data();
-		if (dispData.type() == QVariant::Int) { // single selection
-			comboBox.clear();
-			comboBox.addItems(data.toStringList());
-			comboBox.setCurrentIndex(dispData.toInt());
-			comboBox.setParent(parent);
-			return &comboBox;
-		} else if (dispData.userType() == intListType) {
-			checkBoxList.clear();
-			checkBoxList.addItems(data.toStringList());
-			checkBoxList.setChecked(dispData.value<QList<int>>());
-			checkBoxList.setParent(parent);
-			return &checkBoxList;
+	QVariant edata = index.data(Qt::EditRole);
+	if (edata.type() == QVariant::StringList) {
+		if (index.data().type() == QVariant::Int) {
+			auto comboBox = new QComboBox(parent);
+			comboBox->addItems(edata.toStringList());
+			comboBox->setCurrentIndex(index.data().toInt());
+			comboBox->setFrame(false);
+
+			return comboBox;
+		} else if (index.data().userType() == intListType) {
+			auto checkBoxList = new CheckBoxList(parent);
+			checkBoxList->addItems(edata.toStringList());
+			checkBoxList->setChecked(
+				index.data().value<QList<int>>());
+			checkBoxList->setFrame(false);
+
+			return checkBoxList;
 		}
-	} else if (data.userType() == vec3dType) {
-		const Eigen::Vector3d &vec = data.value<Eigen::Vector3d>();
+	} else if (edata.userType() == vec3dType) {
+		auto vec3dedit = new QLineEdit(parent);
+		vec3dedit->setFrame(false);
+		QRegularExpression re(
+			"([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?[;\\s]+){2}"
+			"[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?[;\\s]*");
+		QRegularExpressionValidator *validator =
+			new QRegularExpressionValidator(re);
+		vec3dedit->setValidator(validator);
+		const Eigen::Vector3d &vec = edata.value<Eigen::Vector3d>();
 		QString str =
 			QString("%1 %2 %3").arg(vec[0]).arg(vec[1]).arg(vec[2]);
-		vec3dedit.setText(str);
-		vec3dedit.setParent(parent);
-		return &vec3dedit;
-	} else if (data.userType() == buttonsType) {
-		updateToolBar(toolBar, data.value<ButtonFlags>());
-		toolBar.setProperty("index", index);
-		toolBar.setParent(parent);
-		toolBar.setGeometry(option.rect);
-		return &toolBar;
+		vec3dedit->setText(str);
+		return vec3dedit;
+	} else if (edata.userType() == buttonsType) {
+		auto toolBar = new QToolBar(parent);
+		setupToolBar(toolBar);
+		toolBar->setGeometry(option.rect);
+		fillToolbar(toolBar, edata.value<ButtonFlags>());
+		connect(toolBar, &QToolBar::actionTriggered, this,
+			&EvaluatorDelegate::processAction);
+		return toolBar;
 	}
 	return QStyledItemDelegate::createEditor(parent, option, index);
-}
-
-void EvaluatorDelegate::destroyEditor(QWidget *editor,
-				      const QModelIndex &index) const
-{
-	if (editor == &comboBox || editor == &toolBar || editor == &checkBoxList
-	    || editor == &vec3dedit) {
-		editor->setParent(nullptr);
-		/*comboBox.setParent(nullptr);
-		toolBar.setParent(nullptr);
-		toolBarPaint.setParent(nullptr);
-		checkBoxList.setParent(nullptr);
-		vec3dedit.setParent(nullptr);*/
-		return;
-	}
-	QStyledItemDelegate::destroyEditor(editor, index);
 }
 
 void EvaluatorDelegate::setEditorData(QWidget *editor,
@@ -119,21 +75,26 @@ void EvaluatorDelegate::setEditorData(QWidget *editor,
 	if (data.type() == QVariant::StringList) {
 		QVariant displayData = index.data();
 		if (displayData.type() == QVariant::String) {
-			comboBox.setCurrentIndex(displayData.toInt());
+			auto comboBox = qobject_cast<QComboBox *>(editor);
+			comboBox->setCurrentIndex(displayData.toInt());
 			return;
 		} else if (displayData.userType() == intListType) {
-			checkBoxList.setChecked(
+			auto checkBoxList =
+				qobject_cast<CheckBoxList *>(editor);
+			checkBoxList->setChecked(
 				displayData.value<QList<int>>());
 			return;
 		} else if (data.userType() == buttonsType) {
-			updateToolBar(toolBar, data.value<ButtonFlags>());
+			auto toolBar = qobject_cast<QToolBar *>(editor);
+			fillToolbar(toolBar, data.value<ButtonFlags>());
 			return;
 		}
 	} else if (data.userType() == vec3dType) {
 		const Eigen::Vector3d &vec = data.value<Eigen::Vector3d>();
 		QString str =
 			QString("%1 %2 %3").arg(vec[0]).arg(vec[1]).arg(vec[2]);
-		vec3dedit.setText(str);
+		auto vec3dedit = qobject_cast<QLineEdit *>(editor);
+		vec3dedit->setText(str);
 		return;
 	}
 	if (data.canConvert<ButtonFlags>()) {
@@ -149,19 +110,23 @@ void EvaluatorDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 	if (data.type() == QVariant::StringList) {
 		QVariant displayData = index.data();
 		if (displayData.type() == QVariant::Int) {
-			model->setData(index, comboBox.currentIndex(),
+			auto comboBox = qobject_cast<QComboBox *>(editor);
+			model->setData(index, comboBox->currentIndex(),
 				       Qt::EditRole);
 			return;
 		} else if (displayData.userType() == intListType) {
+			auto checkBoxList =
+				qobject_cast<CheckBoxList *>(editor);
 			const auto &var =
-				QVariant::fromValue(checkBoxList.getChecked());
+				QVariant::fromValue(checkBoxList->getChecked());
 			model->setData(index, var, Qt::EditRole);
 			return;
 		}
 	} else if (data.userType() == vec3dType) {
 		Eigen::Vector3d vec;
 		QRegularExpression re("[;\\s]+");
-		const QString &str = vec3dedit.text();
+		auto vec3dedit = qobject_cast<QLineEdit *>(editor);
+		const QString &str = vec3dedit->text();
 		QVector<QStringRef> list =
 			str.splitRef(re, QString::SkipEmptyParts);
 		for (int i : {0, 1, 2}) {
@@ -170,6 +135,8 @@ void EvaluatorDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 		model->setData(index, QVariant::fromValue(vec), Qt::EditRole);
 		return;
 	} else if (data.canConvert<ButtonFlags>()) {
+		model->setData(index, editor->property("btnFlags"),
+			       Qt::EditRole);
 		return;
 	}
 	QStyledItemDelegate::setModelData(editor, model, index);
@@ -225,10 +192,9 @@ void EvaluatorDelegate::paint(QPainter *painter,
 			painter->fillRect(option.rect,
 					  option.palette.highlight());
 		}
-		toolBarPaint.setParent(_view);
-		toolBarPaint.setGeometry(option.rect);
-		updateToolBar(toolBarPaint, data.value<ButtonFlags>());
-		QPixmap map = toolBarPaint.grab();
+		toolBarPaint->setGeometry(option.rect);
+		fillToolbar(toolBarPaint, data.value<ButtonFlags>());
+		QPixmap map = toolBarPaint->grab();
 		painter->drawPixmap(option.rect.x(), option.rect.y(), map);
 	} else {
 		QStyledItemDelegate::paint(painter, option, index);
@@ -239,18 +205,11 @@ void EvaluatorDelegate::cellEntered(const QModelIndex &index)
 {
 	QVariant data = index.data(Qt::EditRole);
 	if (data.canConvert<ButtonFlags>()) {
-		if (isOneCellInEditMode) {
-			toolBar.hide();
-			_view->closePersistentEditor(currentEditedCellIndex);
+		if (_view->isPersistentEditorOpen(persistentEditorIdx)) {
+			_view->closePersistentEditor(persistentEditorIdx);
 		}
 		_view->openPersistentEditor(index);
-		isOneCellInEditMode = true;
-		currentEditedCellIndex = index;
-	} else {
-		if (isOneCellInEditMode) {
-			isOneCellInEditMode = false;
-			_view->closePersistentEditor(currentEditedCellIndex);
-		}
+		persistentEditorIdx = index;
 	}
 }
 bool EvaluatorDelegate::editorEvent(QEvent *event, QAbstractItemModel *model,
@@ -260,38 +219,52 @@ bool EvaluatorDelegate::editorEvent(QEvent *event, QAbstractItemModel *model,
 	return QStyledItemDelegate::editorEvent(event, model, option, index);
 }
 
-void EvaluatorDelegate::setupToolBar(QToolBar &toolBar)
+void EvaluatorDelegate::processAction(QAction *act)
 {
-	// toolBar.addActions({&save,&del,&duplicate});
-	toolBar.setFloatable(false);
-	toolBar.setMovable(false);
-	toolBar.layout()->setMargin(0);
-	toolBar.layout()->setContentsMargins(0, 0, 0, 0);
-	toolBar.setStyleSheet(
+	QWidget *editor = qobject_cast<QWidget *>(sender());
+	QVariant var;
+	var.setValue(actionToFlags(act));
+	editor->setProperty("btnFlags", var);
+	Q_EMIT commitData(editor);
+}
+
+EvaluatorDelegate::ButtonFlags
+EvaluatorDelegate::actionToFlags(QAction *act) const
+{
+	ButtonFlags flgs;
+	if (act == &save)
+		flgs.save = true;
+	else if (act == &del)
+		flgs.remove = true;
+	else if (act == &duplicate)
+		flgs.duplicate = true;
+	else
+		std::cerr << "ERROR! Unknown action triggered!\n";
+	return flgs;
+}
+
+void EvaluatorDelegate::setupToolBar(QToolBar *toolBar)
+{
+	toolBar->setFloatable(false);
+	toolBar->setMovable(false);
+	toolBar->layout()->setMargin(0);
+	toolBar->layout()->setContentsMargins(0, 0, 0, 0);
+	toolBar->setStyleSheet(
 		"QToolBar { background-color : rgba(255,255,255,0);"
 		" color:white; border-color: transparent;}  QToolButton{} ");
-	toolBar.setFocusPolicy(Qt::NoFocus);
+	toolBar->setFocusPolicy(Qt::NoFocus);
 }
 
-/*
-void EvaluatorDelegate::paint(QPainter *painter, const QStyleOptionViewItem
-&option, const QModelIndex &index) const
+void EvaluatorDelegate::fillToolbar(QToolBar *toolBar,
+				    const ButtonFlags &btnFlags) const
 {
-	if (index.data().canConvert<std::shared_ptr<AbstractEvaluator>>()) {
-		QString
-name=QString::fromStdString(index.data().value<std::shared_ptr<AbstractEvaluator>>()->name());
-
-		if (option.state & QStyle::State_Selected)
-		    painter->fillRect(option.rect, option.palette.highlight());
-
-
-		painter->save();
-		painter->setBrush(option.palette.foreground());
-		painter->translate(option.rect.x(), option.rect.y());
-		painter->drawEllipse(0,0, 10,10);
-		painter->restore();
-	    } else {
-		QStyledItemDelegate::paint(painter, option, index);
-	    }
+	QList<QAction *> actions;
+	if (btnFlags.save)
+		actions.push_back(&save);
+	if (btnFlags.remove)
+		actions.push_back(&del);
+	if (btnFlags.duplicate)
+		actions.push_back(&duplicate);
+	toolBar->clear();
+	toolBar->addActions(actions);
 }
-*/
