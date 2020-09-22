@@ -90,7 +90,7 @@ EvaluatorAvFile::calculate(const PositionSimulationResult &av,
 	} else if (_openDX) {
 		isSaved = av.dump_dxmap(fname + ".dx");
 	} else {
-		isSaved = av.dumpXyz(fname + ".xyz");
+		isSaved = av.dumpPqr(fname + ".pqr");
 	}
 	return std::make_shared<CalcResult<bool>>(isSaved);
 }

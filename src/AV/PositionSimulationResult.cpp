@@ -271,7 +271,7 @@ std::ostream &PositionSimulationResult::dump_xyz(std::ostream &os) const
 	os << std::setprecision(5);
 
 	for (int i = 0; i < n; i++) {
-		if (_points.at(i)[3] > 1.0f) {
+		if (_points.at(i)[3] != 1.0f) {
 			os << "AVc ";
 		} else {
 			os << "AV ";
@@ -299,8 +299,12 @@ std::ostream &PositionSimulationResult::dump_pqr(std::ostream &os) const
 	// ATOM      1   AV  AV     0        -0.0    -8.5   -18.9    0.75  0.450
 	for (int i = 0; i < n; i++) {
 		const Eigen::Vector4f &p = _points.at(i);
-		os << "ATOM";
-		os << setw(7) << i << "   AV  AV";
+		os << "ATOM" << setw(7) << i;
+		if (_points.at(i)[3] != 1.0f) {
+			os << "  AVc  AV";
+		} else {
+			os << "   AV  AV";
+		}
 		os << setw(6) << i << "    ";
 		for (int d = 0; d < p.size(); ++d) {
 			os << fixed << setw(8) << setprecision(2) << p[d];
@@ -308,7 +312,16 @@ std::ostream &PositionSimulationResult::dump_pqr(std::ostream &os) const
 		os << fixed << setw(7) << setprecision(3) << 1.0;
 		os << "\n";
 	}
-	// meanPosition();
+	meanPosition();
+	os << "ATOM";
+	os << setw(7) << n + 1 << " AVmp  AV";
+	os << setw(6) << n + 1 << "    ";
+	for (int d = 0; d < 3; ++d) {
+		os << fixed << setw(8) << setprecision(2) << _meanPosition[d];
+	}
+	os << setw(8) << 1.0;
+	os << fixed << setw(7) << setprecision(3) << 1.0 << "\n";
+	os << "\n";
 	os.flags(osflags);
 	return os;
 }
@@ -400,6 +413,20 @@ std::ostream &PositionSimulationResult::dumpShellXyz(std::ostream &os) const
 	   << _meanPosition[2] << "\n";
 	os.flags(osflags);
 	return os;
+}
+
+bool PositionSimulationResult::dumpPqr(const std::string &fileName) const
+{
+	std::ofstream outfile;
+	outfile.open(fileName, std::ifstream::out);
+	if (!outfile.is_open()) {
+		std::cerr << "could not open the file for writing: " + fileName
+				     + "\n";
+		return false;
+	}
+	dump_pqr(outfile);
+	outfile.close();
+	return true;
 }
 
 bool PositionSimulationResult::dumpXyz(const std::string &fileName) const

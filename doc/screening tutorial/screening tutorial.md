@@ -68,7 +68,7 @@ We can rename evaluator from default `new LP`  to, e.g. `D36` by double-clicking
 1. Create the "AV file" evaluator. In dropdown menu select `AV File` and press `+`. New evaluator will appear in `AV File` section of the "Evaluators" panel.
    ![Create AV file](create%20AV%20file.png)
 
-2. Select the labelling position (`position_name = D36`), and directory to save the files (`write_dir`). If `write_dir` is empty, directory of the PDB file is used. Once the AV File evaluator is saved, program will automatically simulate AVs and save AV clouds for each of the loaded PDBs. By default `.xyz` format is used to save AV files, it can be changed to `openDX` by setting `openDX = true`.
+2. Select the labelling position (`position_name = D36`), and directory to save the files (`write_dir`). If `write_dir` is empty, directory of the PDB file is used. Once the AV File evaluator is saved, program will automatically simulate AVs and save AV clouds for each of the loaded PDBs. By default `.pqr` format is used to save AV files, it can be changed to `openDX` by setting `openDX = true`.
    ![Accessible Volume file settings](AV%20file%20settings.png)
 
 3. AV cloud files can be now found in the `write_dir`. Here Pymol software is used to view the resulting cloud.

@@ -50,6 +50,7 @@ public:
 	std::ostream &dump_xyz(std::ostream &os) const;
 	std::ostream &dump_pqr(std::ostream &os) const;
 	std::ostream &dumpShellXyz(std::ostream &os) const;
+	bool dumpPqr(const std::string &fileName) const;
 	bool dumpXyz(const std::string &fileName) const;
 	bool dumpShellXyz(const std::string &fileName) const;
 	std::ostream &dump_dxmap(std::ostream &os) const;

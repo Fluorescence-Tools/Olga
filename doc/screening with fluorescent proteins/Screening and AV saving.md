@@ -46,7 +46,7 @@ New labelling position will appear in the evaluators panel. Unfold it to see its
 ## Saving the Accessible Volume files
 1. Create "AV file" evaluator. ![Create AV file](create%20AV%20file.png)
 
-2. Select the labelling position, format (openDX or .xyz) and directory to save the files (write_dir). If write_dir is empty, directory of the PDB file is used. Once the AV File evaluator is saved, program will automatically simulate AVs and save AV clouds for each of the loaded PDBs.
+2. Select the labelling position, format (openDX or .pqr) and directory to save the files (write_dir). If write_dir is empty, directory of the PDB file is used. Once the AV File evaluator is saved, program will automatically simulate AVs and save AV clouds for each of the loaded PDBs.
 
 ![AV file settings](AV%20file%20settings.png)
 
