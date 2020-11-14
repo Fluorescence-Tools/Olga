@@ -12,8 +12,8 @@ else:unix: LIBS += -L$$OUT_PWD/../irmsd/ -lirmsd
 
 win32: QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_SSE3
 
-LIBS += -lpteros
-!system("grep Ubuntu /etc/os-release -q"): LIBS += -lspdlog -lfmt
+LIBS += -lpteros -lspdlog -lfmt
+DEFINES += SPDLOG_FMT_EXTERNAL
 
 SOURCES += \
         main.cpp
