@@ -17,6 +17,9 @@ build-ubuntu:
     expire_in: 1 day
     paths:
       - ${CI_BUILD_NAME}/src/gui/Olga
+      - ${CI_BUILD_NAME}/src/bestpairs/bestpairs
+      - ${CI_BUILD_NAME}/src/av2restraints/av2restraints
+      - ${CI_BUILD_NAME}/src/screen-nox/screen-nox
       - ${CI_BUILD_NAME}/src/irmsd/libirmsd.so.1.0.0
 
 build-win64:
@@ -34,6 +37,9 @@ build-win64:
     expire_in: 1 day
     paths:
       - ${CI_BUILD_NAME}/src/gui/release/Olga.exe
+      - ${CI_BUILD_NAME}/src/bestpairs/release/bestpairs.exe
+      - ${CI_BUILD_NAME}/src/av2restraints/release/av2restraints.exe
+      - ${CI_BUILD_NAME}/src/screen-nox/release/screen-nox.exe
       - ${CI_BUILD_NAME}/src/irmsd/release/irmsd.dll
 
 
@@ -52,6 +58,9 @@ build-win32:
     expire_in: 1 day
     paths:
       - ${CI_BUILD_NAME}/src/gui/release/Olga.exe
+      - ${CI_BUILD_NAME}/src/bestpairs/release/bestpairs.exe
+      - ${CI_BUILD_NAME}/src/av2restraints/release/av2restraints.exe
+      - ${CI_BUILD_NAME}/src/screen-nox/release/screen-nox.exe
       - ${CI_BUILD_NAME}/src/irmsd/release/irmsd.dll
 
 pack-ubuntu:

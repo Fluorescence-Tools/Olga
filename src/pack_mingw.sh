@@ -22,7 +22,7 @@ fi
 mkdir -p "${DESTDIR}"/platforms/
 mkdir -p "${DESTDIR}"/imageformats/
 mkdir -p "${DESTDIR}"/iconengines/
-cp "${BUILDDIR}"/src/gui/release/Olga.exe "${DESTDIR}"/
+cp "${BUILDDIR}"/src/*/release/*.exe "${DESTDIR}"/
 cp "${BUILDDIR}"/src/irmsd/release/irmsd.dll "${DESTDIR}"/
 cp "${SYSLIBPREFIX}"/bin/lib{async++,bz2-1,freetype-6,gcc_s_seh-1,gcc_s_sjlj-1,glib-2.0-0,harfbuzz-0,iconv-2,intl-8,pcre2-16-0,pcre-1,pcre16-0,png16-16,pteros,stdc++-6,winpthread-1,boost_filesystem,graphite2,gomp-1,ssp-0}.dll "${DESTDIR}"/
 cp "${SYSLIBPREFIX}"/bin/{Qt5Core,Qt5Gui,Qt5Multimedia,Qt5Network,Qt5Svg,Qt5Widgets,zlib1}.dll "${DESTDIR}"/

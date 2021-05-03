@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 BUILDDIR=$1
 DESTDIR=$2
 
@@ -27,7 +27,7 @@ EOF
 
 chmod +x "${DESTDIR}"/Olga.sh
 
-cp "${BUILDDIR}/src/gui/Olga" "${DESTDIR}"/
+cp "${BUILDDIR}/src/"*/{Olga,bestpairs,av2restraints,screen-nox} "${DESTDIR}"/
 cp "${BUILDDIR}/src/irmsd/libirmsd.so.1.0.0" "${DESTDIR}"/libirmsd.so.1
 
 cp /usr/lib/libtng_io.so "${DESTDIR}"/
