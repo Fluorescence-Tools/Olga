@@ -204,6 +204,7 @@ int main(int argc, char *argv[])
 {
 	pteros::set_log_level("off");
 	QCoreApplication a(argc, argv);
+	a.setApplicationVersion(APP_VERSION);
 	QCommandLineParser parser;
 	parser.addOptions({
                 {"data", "a file containing FRET efficiencies for an ensmeble",
@@ -216,6 +217,8 @@ int main(int argc, char *argv[])
                 {"distance-matrix",
                  "matrix of distances between conformers (e.g. RMSD)", "path"},
 	});
+    parser.addHelpOption();
+    parser.addVersionOption();
 	parser.process(a);
 
 	QString effsPath = parser.value("data");

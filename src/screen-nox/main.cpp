@@ -11,6 +11,7 @@
 int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
+	a.setApplicationVersion(APP_VERSION);
 	QCommandLineParser parser;
 	parser.addOptions(
 		{{{"j", "json"},
@@ -18,6 +19,8 @@ int main(int argc, char *argv[])
 		  "file"},
 		 {"pdb", "PDB file", "path"},
 		 {"dir", "a directory of PDB files", "path"}});
+	parser.addHelpOption();
+	parser.addVersionOption();
 	parser.process(a);
 	const QString jsonPath = parser.value("j");
 	// const QString resultsPath=parser.value("o");

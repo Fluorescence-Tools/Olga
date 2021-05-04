@@ -347,7 +347,10 @@ int main(int argc, char *argv[])
 		 {"f2", "Max force at the end of the run [pN]", "float"},
 		 {"nocap",
 		  "Do not limit the per-dummy total Force,only per-distance"}});
+    parser.addHelpOption();
+    parser.addVersionOption();
 	parser.process(a);
+
 	QString settingsFileName = parser.value("j");
 	QString pdbFileName = parser.value("p");
 	QString restartInFileName = parser.value("ir");
